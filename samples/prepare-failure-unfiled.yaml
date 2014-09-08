@@ -1,0 +1,12 @@
+pipline:
+    7926f958-1ac5-4eb1-b959-c05cbbc744dd:
+        jenkins_jobs:
+            pipeline_deploy:
+                status: PASSED
+                jenkins_job: 15623
+            pipeline_prepare:
+                status: FAILED
+                jenkins_job: 2237
+                bugs: 
+                    - unfiled-2b4b9e52-4082-4f31-9826-0c207c726323:
+
