@@ -3,11 +3,11 @@ from setuptools import setup, find_packages
 import doberman
 
 setup(
-    name="doberman"
+    name="doberman",
     version=oil_ci.__version__,
-    description="Statistical Analysis of OIL"
-    author="Ryan Harper, Darren Hoyland"
-    author_email="<ryan.harper@canonical.com>, <darren.hoyland@canonical.com>"
+    description="Statistical Analysis of OIL",
+    author="Ryan Harper, Darren Hoyland",
+    author_email="<ryan.harper@canonical.com>, <darren.hoyland@canonical.com>",
     url="http://launchpad.net/~oil-ci",
     packages=find_packages(),
     include_package_data=True,
