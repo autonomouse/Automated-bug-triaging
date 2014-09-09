@@ -1,1 +1,3 @@
 etc/doberman/* etc/doberman/
+tools/* usr/share/doberman/tools
+samples/* usr/share/doberman/samples

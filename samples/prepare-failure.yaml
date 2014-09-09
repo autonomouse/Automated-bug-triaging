@@ -1,0 +1,15 @@
+pipline:
+    96c5c7b2-cfaa-46e5-852f-e9a5b5f96ffb:
+        jenkins_jobs:
+            pipeline_deploy:
+                status: PASSED
+                jenkins_job: 12379
+            pipeline_prepare:
+                status: FAILED
+                jenkins_job: 1271
+                bugs: 
+                    - 14288372:
+                        regex: "ERROR: failed to upload image to glance"
+                        vendors: sm15k
+                        machines: hayward-01.oil
+                        units: glance/0
