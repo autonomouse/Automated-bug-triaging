@@ -1,0 +1,6 @@
+# Regexes for lines to exclude from consideration
+[report]
+exclude_lines =
+    if __name__ == .__main__.:
+include=
+    doberman/*
