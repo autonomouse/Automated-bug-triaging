@@ -1,0 +1,19 @@
+pipeline:
+    7926f958-1ac5-4eb1-b959-c05cbbc744dd:
+        jenkins_jobs:
+            pipeline_deploy:
+                status: PASSED
+                jenkins_job: 17119
+            pipeline_prepare:
+                status: PASSED
+                jenkins_job: 1984
+            test_tempest_smoke:
+                status: FAILURE
+                jenkins_job: 2423
+                bugs:
+                    unfiled-6ca40fbf-5830-476c-924b-8339a65f3abb:
+                        classname: tempest.api.compute.servers.test_server_actions.ServerActionsTestJSON
+                        testname: test_reboot_server_hard[gate,smoke]
+                        unit: nova-compute/0 
+
+

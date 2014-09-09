@@ -1,0 +1,28 @@
+pipeline:
+    7926f958-1ac5-4eb1-b959-c05cbbc744dd:
+        jenkins_jobs:
+            pipeline_deploy:
+                status: FAILURE
+                jenkins_job: 15623
+                bugs: 
+                    - 13233347:
+                        regex: "ERROR: cinder-vnx.*install failed"
+                        vendors: sm15k
+                        machines: hayward-01.oil
+                        units: cinder-vnx/0
+                    - 13233373:
+                        regex: "ERROR: nova-cloud-controller.*relation-changed"
+                        vendors: hp-proliant-dl320
+                        machines: eyeore.oil
+                        units: nova-cloud-controller/0
+                    - 13234444:
+                        regex: "ERROR: ceph.*mon-relation-falied"
+                        vendors: hp-proliant-dl320, sm15k, dell-foobar
+                        machines: dell1, hayword12, foo
+                        units: ceph/0, ceph/1, ceph/2
+
+
+
+
+
+

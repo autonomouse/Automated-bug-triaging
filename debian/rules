@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+VERS=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
+
+%:
+	dh $@ --with python2
+
+override_dh_auto_test:
+	./run_tests.sh unit
+
+override_dh_install:
+	dh_install
+
+get-orig-source:
+	python ./setup.py sdist
+	cp dist/*.tar.gz ../doberman_${VERS}.orig.tar.gz
+	cp dist/*.tar.gz /tmp/doberman_${VERS}.orig.tar.gz
+	rm -rf dist
+	dh_auto_clean

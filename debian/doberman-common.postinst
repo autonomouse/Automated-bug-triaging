@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ]
+then
+	if ! getent group doberman > /dev/null 2>&1
+	then
+		addgroup --system doberman >/dev/null
+	fi
+	if ! getent passwd doberman > /dev/null 2>&1
+	then
+        adduser --system --home /var/lib/doberman --ingroup doberman --no-create-home --shell /bin/false doberman
+	fi
+	chown -R doberman:adm /var/log/doberman/
+	chmod 0755 /var/log/doberman/
+	chown doberman:doberman -R /var/lib/doberman/ /etc/doberman/
+	chmod 0755 /etc/doberman/
+  	chmod g+w /var/lib/doberman/
+fi
+
+#DEBHELPER#
