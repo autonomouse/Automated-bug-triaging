@@ -9,7 +9,8 @@ Build-Depends: debhelper (>= 8.0.0),
  python-bzrlib,
  python-requests,
  python-setuptools,
- python-yaml
+ python-yaml,
+ python-nose
 Standards-Version: 3.9.3
 XS-Python-Version: >= 2.6
 
