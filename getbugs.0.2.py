@@ -18,8 +18,8 @@
 ##bugObj = LaunchpadBugs("maas", "hp", None)
 ##bugObj.setTag("hp")
 ##
-# EXAMPLES for getting bug tags and duplicates - you can copy and paste and
-# replace by your own parameter
+### EXAMPLES for getting bug tags and duplicates - you can copy and paste and
+### replace by your own parameter
 ##bugObj.setBugNumber(1237215)
 ##bug = bugObj.getBugByBugNumber()
 ##tags = bugObj.getTagsByBugNumber()
@@ -31,7 +31,7 @@
 ##if (duplicates != None):
 ##    for i in range(len(duplicates)):
 ##        print("Duplicate bug: " + duplicates[i])
-##
+
 ### EXAMPLES for getting bugs by tags
 ##bug = bugObj.getFirstTaggedBug()
 ##if (bug != None):
@@ -90,7 +90,7 @@ class LaunchpadBugs():
     # Method: getTagsByBugNumber()
     # Description: Return current bug
     def getTagsByBugNumber(self):
-        if (self.bugs == None):
+        if (self.currentBug == None):
             print("No bug was fetch - call getBugsByBugNumber first")
             return None
         return self.currentBug.bug.tags
@@ -99,7 +99,7 @@ class LaunchpadBugs():
     # Description: Return current bug
     def getCurrentBugDuplicates(self):
         retdup = []
-        if (self.bugs == None):
+        if (self.currentBug == None):
             print("No bug was fetch - call getBugsByBugNumber first")
             return None
     
@@ -209,8 +209,30 @@ class LaunchpadBugs():
     def getLastTaggedBug(self):
         # get the next tag until there are no more tags
         print("empty")
- 
 
+if __name__ == "__main__":
+    launchpad = Launchpad.login_with('getbugs.py', 'production')
+
+    people = launchpad.people
+    lmic = people['lmic']
+    print(lmic.display_name)  
+    bugObj = LaunchpadBugs("maas", "hp", None)
+    bugObj.setTag("hp")
+
+    # EXAMPLES for getting bug tags and duplicates - you can copy and paste and
+    # replace by your own parameter
+    bugObj.setBugNumber(1237215)
+    bug = bugObj.getBugByBugNumber()
+    tags = bugObj.getTagsByBugNumber()
+
+    if (tags != None):
+        print("List of tags:")
+        print(tags)
+
+    duplicates = bugObj.getCurrentBugDuplicates()
+    if (duplicates != None):
+        for i in range(len(duplicates)):
+            print("Duplicate bug: " + duplicates[i])
                 
 
 
