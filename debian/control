@@ -7,6 +7,7 @@ Build-Depends: debhelper (>= 8.0.0),
  jenkinsapi (>= 0.2.16),
  python-all (>= 2.6.6-3~),
  python-bzrlib,
+ python-keyring,
  python-nose,
  python-requests,
  python-setuptools,
@@ -19,6 +20,7 @@ Package: python-doberman
 Architecture: all
 Section: python
 Depends: jenkinsapi (>= 0.2.16),
+ python-keyring,
  python-requests,
  python-yaml,
  ${misc:Depends},
