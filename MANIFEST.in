@@ -1,0 +1,6 @@
+graft etc
+graft doberman/tests
+graft tools
+include TODO
+include run_tests.sh
+include .coveragerc

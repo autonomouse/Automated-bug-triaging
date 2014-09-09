@@ -1,0 +1,55 @@
+Source: doberman
+Section: python
+Priority: extra
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Ryan Harper <ryan.harper@canonical.com>
+Build-Depends: debhelper (>= 8.0.0),
+ jenkinsapi (>= 0.2.16),
+ python-all (>= 2.6.6-3~),
+ python-bzrlib,
+ python-requests,
+ python-setuptools,
+ python-yaml
+Standards-Version: 3.9.3
+XS-Python-Version: >= 2.6
+
+Package: python-doberman
+Architecture: all
+Section: python
+Depends: jenkinsapi (>= 0.2.16),
+ python-requests,
+ python-yaml,
+ ${misc:Depends},
+ ${python:Depends}
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Description: Canonical OIL statistics and analysis
+ Contains python modules and utilities for analysing Canonical OIL.
+ .
+ This package provides the python modules.
+
+Package: doberman-common
+Architecture: all
+Section: python
+Depends: python-doberman (= ${source:Version}),
+ ${misc:Depends},
+ ${python:Depends}
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Description: Canonical OIL statistics and analysis
+ Contains python modules and utilities for analysing Canonical OIL.
+ .
+ This package provides common configs and directories.
+
+Package: doberman
+Architecture: all
+Section: python
+Depends: doberman-common (= ${source:Version}),
+ ${misc:Depends},
+ ${python:Depends}
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Description: Canonical OIL statistics and analysis
+ Contains python modules and utilities for analysing Canonical OIL.
+ .
+ This package provides the OIL analysis tools
