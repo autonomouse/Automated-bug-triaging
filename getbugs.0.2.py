@@ -46,10 +46,11 @@ import re
 
 # class to get process launchpad bugs based on tag
 class LaunchpadBugs():
-    def __init__(self, indist, inTag, inbug):
+    def __init__(self, indist, inTag, inBugNum, inLaunchpadObj):
         self.dist = indist
-        self.tags = []
-        self.bugnumber = str(inbug)
+        self.tags = inTag
+        self.bugnumber = str(inBugNum)
+        self.launchpadObj = inLaunchpadObj
         self.currentIdx = 0
         self.bugtasks = []
         self.currentBug = None
@@ -61,7 +62,6 @@ class LaunchpadBugs():
     # Description: Return current bug
     def setBugNumber(self, numinput):
         self.bugnumber = str(numinput)
-        print("Set bug number to " + self.bugnumber)
 
     # Method: getBugNumber()
     # Description: Return current bug
@@ -72,8 +72,7 @@ class LaunchpadBugs():
     # Description: Return current bug
     def getBugByBugNumber(self):
         if (self.getBugNumber() == None):
-            print("Bug number is not set - call setNumber() first")
-            return None
+            raise ValueError("ERROR - bug number is not set - call setNumber() first")
         
         for i in range(len(self.bugtasks)):
             self.currentBug = self.bugtasks[i]
@@ -91,8 +90,8 @@ class LaunchpadBugs():
     # Description: Return current bug
     def getTagsByBugNumber(self):
         if (self.currentBug == None):
-            print("No bug was fetch - call getBugsByBugNumber first")
-            return None
+            raise ValueError("ERROR - There is no bug in memory - call getBugsByBugNumber first")
+
         return self.currentBug.bug.tags
 
     # Method: getCurrentBugDuplicates()
@@ -100,37 +99,35 @@ class LaunchpadBugs():
     def getCurrentBugDuplicates(self):
         retdup = []
         if (self.currentBug == None):
-            print("No bug was fetch - call getBugsByBugNumber first")
-            return None
+            raise ValueError("ERROR - No bug was fetched - call getBugsByBugNumber first")
     
         duplicates = self.currentBug.bug.duplicates
         for dup in duplicates:
-            print(dup.id)
             retdup.append(str(dup.id))
+
         return retdup
 
     # Method: getAllTasks()
     # Description: This returns all the bugs in distribution
     # 
     def getAllTasks(self):
-        distobj = launchpad.distributions[self.dist]
+        distobj = self.launchpadObj.distributions[self.dist]
         self.bugtasks = distobj.searchTasks()
         self.len = len(self.bugtasks)
         print(self.len)
 
-    # Method: getFirstBugByTag()
+    # Method: getFirstBug()
     # Description: Return the first bug in the list.
     def getFirstBug(self):
         bug = self.bugtasks[0]
         self.currentIdx = 1
         return bug  
 
-    # Method: getNextBugByTag()
+    # Method: getNextBug()
     # Description: Return the next bug in the list.
     def getNextBug(self):
         if (self.currentIdx == self.len):
-            print("Reached end of list")
-            retname = ""
+            bug = None
         else:
             bug = self.bugtasks[self.currentIdx]
             self.currentIdx += 1
@@ -161,8 +158,7 @@ class LaunchpadBugs():
     # Description: Return the first bug in the list.
     def getFirstTaggedBug(self):
         if (self.tags == []):
-            print("There are no tags set")
-            return self.getFirstBug()
+            raise ValueError("ERROR - There are no tags set - call setTag() first")
         else:
             return self.getNextTaggedBug()       
    
@@ -174,7 +170,7 @@ class LaunchpadBugs():
         ret = None
         
         if (self.currentIdx == self.len):
-            print("Reached end of list")
+            # reached end of list
             ret = None
         else:
             numtags = len(self.tags)
@@ -200,7 +196,6 @@ class LaunchpadBugs():
             # return match or nothing
             if (found == numtags):
                 ret = bug
-                print("Found next entry: " + bug.title)
                       
         return ret
 
@@ -208,15 +203,13 @@ class LaunchpadBugs():
     # Description: Return the first bug in the list.
     def getLastTaggedBug(self):
         # get the next tag until there are no more tags
-        print("empty")
+        # To be completed
+        print("To be completed")
 
 if __name__ == "__main__":
     launchpad = Launchpad.login_with('getbugs.py', 'production')
 
-    people = launchpad.people
-    lmic = people['lmic']
-    print(lmic.display_name)  
-    bugObj = LaunchpadBugs("maas", "hp", None)
+    bugObj = LaunchpadBugs("maas", "hp", None, launchpad)
     bugObj.setTag("hp")
 
     # EXAMPLES for getting bug tags and duplicates - you can copy and paste and
