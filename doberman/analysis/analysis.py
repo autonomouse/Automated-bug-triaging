@@ -1,60 +1,62 @@
 #! /usr/bin/env python2
+# disable pylinter
 
 import sys
-import subprocess
 import os
 import re
 import yaml # sudo pip install PyYAML
 import pandas as pd
-import json
 import socket
 import urlparse
 import tarfile
 import shutil
 import uuid
-import test_catalog
+import json
+from doberman.common import pycookiecheat
+from test_catalog.client.api import TCClient as tc_client
+from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame, Series  # sudo pip install pandas==0.13.1
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins # Ryan's PPA
 
 
-def connect_to_jenkins(url="http://oil-jenkins.canonical.com",
-                       jenkins_auth="oil-jenkins-auth.json"):
+def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
-    cookies = json.load(open(jenkins_auth))
-    return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
-
-def get_pipelines(pipeline, remote=False):
-    """ Using test-catalog, return the build numbers for the jobs that are part
-    of the given pipeline. """
-    api = "https://oil.canonical.com/api/"
-    auth_file = "oil-auth.json"
-
+    #cookies = json.load(open(jenkins_auth))  # "oil-jenkins-auth.json"
     if remote:
-        p1 = subprocess.Popen(['test-catalog', '-e', api, '-t', auth_file,
-                               '-p', pipeline], stdout=subprocess.PIPE)
+        print "Fetching cookies for %s" %(netloc)
+        cookies = pycookiecheat.chrome_cookies(netloc)
+        return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
     else:
-        p1 = subprocess.Popen(['test-catalog', '-p', pipeline],
-                              stdout=subprocess.PIPE)
-    output = p1.communicate()[0]
-    if output == '':
-        raise("Test catalog(ue) error")
+        return Jenkins(baseurl=url, netloc=netloc)
+
+def get_pipelines(pipeline, api, auth_file=None):
+    """
+    Using test-catalog, return the build numbers for the jobs that are part
+    of the given pipeline.
+    """
+    if auth_file:
+        client = tc_client(endpoint=api, cookies=json.load(open(auth_file)))
+    else:  # If no auth_file, then assume running oon jenkins
+        client = tc_client(endpoint=api)
+    pl_tcat = TCCTestPipeline(client, pipeline)
     try:
-        deploy_build = \
-            output.split("jenkins-pipeline_deploy-")[1].split(' ')[0]
+        deploy_dict = pl_tcat.dict['parent']
+        deploy_build = deploy_dict['build_tag'].split("-")[-1]
     except:
         deploy_build = None
     try:
-        prepare_build = \
-            output.split("jenkins-pipeline_prepare-")[1].split(' ')[0]
+        prepare_dict = deploy_dict['children'][0]
+        prepare_build = prepare_dict['build_tag'].split("-")[-1]
     except:
         prepare_build = None
     try:
-        tempest_build = \
-            output.split("jenkins-test_tempest_smoke-")[1].split(' ')[0]
+        tempest_dict = prepare_dict['children'][0]
+        tempest_build = tempest_dict['build_tag'].split("-")[-1]
     except:
         tempest_build = None
+
     return (deploy_build, prepare_build, tempest_build)
 
 def get_triage_data(jenkins, build_num, job, reportdir):
@@ -285,8 +287,8 @@ def process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df,
         test = fail.getparent().attrib['classname'] + " - " + \
                                             fail.getparent().attrib['name']
         failure_type = fail.get('type')
-        info = "\nWithin the " + test + " test, there was a " + \
-                                                    failure_type + " error."
+        info = "\nWithin the " + test + " test, there was a "
+        info += failure_type + " error."
         error_found = False
         earlier_matching_bugs = matching_bugs
         matching_bugs, build_status = bug_hunt('test_tempest_smoke', jenkins,
@@ -364,7 +366,8 @@ def export_to_yaml(yaml_dict, job, reportdir):
 
 
 if __name__ == "__main__":
-    jenkins = connect_to_jenkins()
+    run_remote = True  # Change to False is being run from jenkins
+    jenkins = connect_to_jenkins(run_remote)
 
     pipeline_ids = sys.argv[1:]
     if not pipeline_ids:
@@ -375,6 +378,10 @@ if __name__ == "__main__":
     #                 "1b07c919-776c-4092-b010-15085ec8caea",
     #                 "4456de2f-0043-49f2-870f-10a2e35e9de8"]
     reportdir = './example_reportdir'
+    api = "https://oil.canonical.com/api/"
+
+    # If auth_file is None, then assumes remote:
+    auth_file = "./analysis/doberman/analysis/oil-auth.json"
 
     # Temporarily use mock_database yaml file, not db:
     with open('mock_database.yml', "r") as mock_db_file:
@@ -393,8 +400,8 @@ if __name__ == "__main__":
         if [8, 4, 4, 4, 12] != [len(x) for x in pipeline_ids[0].split('-')]:
             raise Exception("Pipeline ID %s is an unrecognised format")
 
-        deploy_build, prepare_build, tempest_build = get_pipelines(pipeline,
-                                                                   remote=True)
+        deploy_build, prepare_build, tempest_build = \
+            get_pipelines(pipeline, api=api, auth_file=auth_file)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
         if prepare_build:
             get_triage_data(jenkins, prepare_build, 'pipeline_prepare',
@@ -424,4 +431,3 @@ if __name__ == "__main__":
     shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
     shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
     shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
-
