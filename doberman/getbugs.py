@@ -146,9 +146,8 @@ class LaunchpadBugs():
     # Method: getLastBugTask()
     # Description: Return the first bug in the list.
     def getLastBugTask(self):
-        bug = self.bugtasks[self.bugtaskslength - 1]
         self.currentIdx = self.bugtaskslength
-        return bugtask
+        return self.bugtasks[-1]
 
     # Method: setTag()
     # Description: Takes as input space separated list of tags and update
@@ -187,7 +186,8 @@ class LaunchpadBugs():
 
             # Look for the next entry in task list which matches all the
             # tags passed in
-            while (found != numtags) and (self.currentIdx != self.bugtaskslength):
+            while (self.currentIdx != self.bugtaskslength) and \
+                  (found != numtags):
                 bugtask = self.bugtasks[self.currentIdx]
                 bugtags = bugtask.bug.tags
                 found = 0
