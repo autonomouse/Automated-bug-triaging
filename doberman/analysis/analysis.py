@@ -11,7 +11,6 @@ import tarfile
 import shutil
 import uuid
 import json
-from doberman.common import pycookiecheat
 from test_catalog.client.api import TCClient as tc_client
 from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame, Series
@@ -31,13 +30,16 @@ def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
     else:
         return Jenkins(baseurl=url, netloc=netloc)
 
-def get_pipelines(pipeline, api, auth_file=None):
+def get_pipelines(pipeline, api, remote=False):
     """ Using test-catalog, return the build numbers for the jobs that are
         part of the given pipeline.
 
     """
-    if auth_file:
-        client = tc_client(endpoint=api, cookies=json.load(open(auth_file)))
+
+    if remote:
+        print "Fetching cookies for %s" %(api)
+        cookies = pycookiecheat.chrome_cookies(api)
+        client = tc_client(endpoint=api, cookies=cookies)  #json.load(open(auth_file)))
     else:  # If no auth_file, then assume running oon jenkins
         client = tc_client(endpoint=api)
     pl_tcat = TCCTestPipeline(client, pipeline)
@@ -236,8 +238,8 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     matching_bugs, build_status = \
         bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, reportdir,
                  oil_df, 'console.txt', console_output)
-    yaml_dict = add_to_yaml(pline, deploy_build, bugs, matching_bugs,
-                            build_status, existing_dict=yaml_dict)
+    yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
+                            existing_dict=yaml_dict)
     return (oil_df, yaml_dict)
 
 def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, oil_df,
@@ -377,7 +379,7 @@ def main():
     run_remote = cfg.get('DEFAULT', 'run_remote')
     reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
     database = cfg.get('DEFAULT', 'database_uri')
-    auth_file = cfg.get('DEFAULT', 'path_to_auth_file')
+    #auth_file = cfg.get('DEFAULT', 'path_to_auth_file')
     api = cfg.get('DEFAULT', 'oil_api_url')
 
     # Get arguments:
@@ -405,7 +407,7 @@ def main():
         if [8, 4, 4, 4, 12] != [len(x) for x in pipeline.split('-')]:
             raise Exception("Pipeline ID %s is an unrecognised format")
         deploy_build, prepare_build, tempest_build = \
-            get_pipelines(pipeline, api=api, auth_file=auth_file)
+            get_pipelines(pipeline, api=api, remote=run_remote)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
         if prepare_build:
             get_triage_data(jenkins, prepare_build,
