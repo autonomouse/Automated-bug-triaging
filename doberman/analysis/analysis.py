@@ -1,5 +1,4 @@
 #! /usr/bin/env python2
-# disable pylinter
 
 import sys
 import os
@@ -369,14 +368,15 @@ if __name__ == "__main__":
     run_remote = True  # Change to False is being run from jenkins
     jenkins = connect_to_jenkins(run_remote)
 
+    # Mock data:
+    # pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7",
+    #                 "1b07c919-776c-4092-b010-15085ec8caea",
+    #                 "4456de2f-0043-49f2-870f-10a2e35e9de8"]
     pipeline_ids = sys.argv[1:]
     if not pipeline_ids:
         raise Exception("No pipeline IDs provided")
 
-    # Mock data (will be a list eventually)
-    # pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7",
-    #                 "1b07c919-776c-4092-b010-15085ec8caea",
-    #                 "4456de2f-0043-49f2-870f-10a2e35e9de8"]
+
     reportdir = './example_reportdir'
     api = "https://oil.canonical.com/api/"
 
