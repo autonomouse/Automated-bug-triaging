@@ -10,7 +10,6 @@ import urlparse
 import tarfile
 import shutil
 import uuid
-import json
 from test_catalog.client.api import TCClient as tc_client
 from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame, Series
@@ -18,9 +17,11 @@ from lxml import etree
 from jenkinsapi.jenkins import Jenkins
 from doberman.common import pycookiecheat, utils
 
+LOG = utils.get_logger('doberman.analysis')
+
 def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
-    LOG = utils.get_logger('doberman.analysis')
+
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
 
     if remote:
@@ -35,12 +36,11 @@ def get_pipelines(pipeline, api, remote=False):
         part of the given pipeline.
 
     """
-
     if remote:
         print "Fetching cookies for %s" %(api)
         cookies = pycookiecheat.chrome_cookies(api)
-        client = tc_client(endpoint=api, cookies=cookies)  #json.load(open(auth_file)))
-    else:  # If no auth_file, then assume running oon jenkins
+        client = tc_client(endpoint=api, cookies=cookies)
+    else:  # If no auth_file, then assume running on jenkins
         client = tc_client(endpoint=api)
     pl_tcat = TCCTestPipeline(client, pipeline)
     try:
@@ -169,9 +169,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
             units_dict = juju_status['services'][serv]['units']
             # Raise this services sub-dictionary to the top level:
             for key in units_dict.keys():
-                serv_key = key.replace('/', '').replace('0', '')
-                unit[serv_key] = \
-                    juju_status['services'][serv]['units'][key]
+                unit[key] = juju_status['services'][serv]['units'][key]
         except:
             pass
     relations = DataFrame(rel).T  # transpose
@@ -365,9 +363,8 @@ def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
 
     return yaml_dict
 
-
 def export_to_yaml(yaml_dict, job, reportdir):
-    """ . """
+    """ Write output files. """
     filename = 'triage_' + job + '.yml'
     file_path = os.path.join(reportdir, filename)
     with open(file_path, 'w') as outfile:
@@ -379,7 +376,6 @@ def main():
     run_remote = cfg.get('DEFAULT', 'run_remote')
     reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
     database = cfg.get('DEFAULT', 'database_uri')
-    #auth_file = cfg.get('DEFAULT', 'path_to_auth_file')
     api = cfg.get('DEFAULT', 'oil_api_url')
 
     # Get arguments:
@@ -425,7 +421,6 @@ def main():
                                      reportdir, bugs, oil_df,
                                      prepare_yaml_dict)
         if tempest_build:
-
             tempest_yaml_dict = \
                 process_tempest_data(pipeline, tempest_build, jenkins,
                                      reportdir, bugs, oil_df,
