@@ -1,0 +1,9 @@
+bugs:
+    '1358393':
+        description: "prodstack: nvp-transport-node hook failed config-changed"
+        category: None
+        pipeline_deploy:
+            'console.txt'
+                regexp: ["nvp-transport-node.*hook failed:.*config-changed"]              
+            'other_file.txt'
+                regexp: ["nvp-transport-node.*hook failed:.*config-changed","other regexp"]
