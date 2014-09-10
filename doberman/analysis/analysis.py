@@ -3,7 +3,7 @@
 import sys
 import os
 import re
-import yaml # sudo pip install PyYAML
+import yaml
 import pandas as pd
 import socket
 import urlparse
@@ -14,15 +14,16 @@ import json
 from doberman.common import pycookiecheat
 from test_catalog.client.api import TCClient as tc_client
 from test_catalog.client.base import TCCTestPipeline
-from pandas import DataFrame, Series  # sudo pip install pandas==0.13.1
+from pandas import DataFrame, Series
 from lxml import etree
-from jenkinsapi.jenkins import Jenkins # Ryan's PPA
-
+from jenkinsapi.jenkins import Jenkins
+from doberman.common import pycookiecheat, utils
 
 def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
+    LOG = utils.get_logger('doberman.analysis')
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
-    #cookies = json.load(open(jenkins_auth))  # "oil-jenkins-auth.json"
+
     if remote:
         print "Fetching cookies for %s" %(url)
         cookies = pycookiecheat.chrome_cookies(url)
@@ -31,9 +32,9 @@ def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
         return Jenkins(baseurl=url, netloc=netloc)
 
 def get_pipelines(pipeline, api, auth_file=None):
-    """
-    Using test-catalog, return the build numbers for the jobs that are part
-    of the given pipeline.
+    """ Using test-catalog, return the build numbers for the jobs that are
+        part of the given pipeline.
+
     """
     if auth_file:
         client = tc_client(endpoint=api, cookies=json.load(open(auth_file)))
@@ -59,11 +60,11 @@ def get_pipelines(pipeline, api, auth_file=None):
     return (deploy_build, prepare_build, tempest_build)
 
 def get_triage_data(jenkins, build_num, job, reportdir):
-    """ get the artifacts from jenkins via jenkinsapi object. """
+    """ Get the artifacts from jenkins via jenkinsapi object. """
     jenkins_job = jenkins[job]
     build = jenkins_job.get_build(int(build_num))
     outdir = os.path.join(reportdir, job, str(build_num))
-    print 'Downloading debug data to: %s' %(outdir)
+    print 'Downloading debug data to: %s' % (outdir)
     try:
         os.makedirs(outdir)
     except OSError:
@@ -81,17 +82,18 @@ def get_triage_data(jenkins, build_num, job, reportdir):
         extract_and_delete_archive(outdir, artifact)
 
 def extract_and_delete_archive(outdir, artifact):
-    """
-    Extracts the contents of a tarball and places it into a new file of the
-    samename without the .tar.gz suffix (N.B. this leaves .ring.gz intact
-    as they seem to contain binary ring files that I'm not sure what to do with
-    at this point).
+    """ Extracts the contents of a tarball and places it into a new file
+        of the samename without the .tar.gz suffix (N.B. this leaves
+        .ring.gz intact as they seem to contain binary ring files that
+        I'm not sure what to do with at this point).
+
     """
 
     if 'tar.gz' in artifact.filename:
         path_to_artifact = os.path.join(outdir, artifact.filename)
         with tarfile.open(path_to_artifact, 'r:gz') as tar:
-            tarlist = [member for member in tar.getmembers() if member.isfile()]
+            tarlist = \
+                [member for member in tar.getmembers() if member.isfile()]
             for compressed_file in tarlist:
                 slug = compressed_file.name.replace('/', '_')
                 with open(os.path.join(outdir, slug), 'w') as new_file:
@@ -102,7 +104,9 @@ def extract_and_delete_archive(outdir, artifact):
 def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                         yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
-    metadata DataFrames """
+        metadata DataFrames
+
+    """
     pipeline_deploy_path = os.path.join(reportdir, 'pipeline_deploy',
                                         deploy_build)
 
@@ -126,20 +130,20 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     # Read oil nodes file:
     with open(oil_node_location, "r") as nodes_file:
         oil_nodes = DataFrame(yaml.load(nodes_file)['oil_nodes'])
-        oil_nodes.rename(columns={'host':'node'}, inplace=True)
+        oil_nodes.rename(columns={'host': 'node'}, inplace=True)
 
     # Read juju status file:
     with open(juju_status_location, "r") as jjstat_file:
         juju_status = yaml.load(jjstat_file)
 
     # Put machines data into a pandas DataFrame:
-    machines = DataFrame(juju_status['machines']).T # transpose
+    machines = DataFrame(juju_status['machines']).T  # transpose
     machines.index.name = 'machine'
     machines.reset_index(level=0, inplace=True)
-    machines.rename(columns={'dns-name':'node'}, inplace=True)
+    machines.rename(columns={'dns-name': 'node'}, inplace=True)
 
     # Put service data into a pandas DataFrame (without relations/units)
-    service = DataFrame(juju_status['services']).T # transpose
+    service = DataFrame(juju_status['services']).T  # transpose
     try:
         service.pop('relations')
     except:
@@ -165,14 +169,14 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
             for key in units_dict.keys():
                 serv_key = key.replace('/', '').replace('0', '')
                 unit[serv_key] = \
-                            juju_status['services'][serv]['units'][key]
+                    juju_status['services'][serv]['units'][key]
         except:
             pass
-    relations = DataFrame(rel).T # transpose
+    relations = DataFrame(rel).T  # transpose
     relations.index.name = 'service'
     relations.reset_index(level=0, inplace=True)
 
-    units = DataFrame(unit).T # transpose
+    units = DataFrame(unit).T  # transpose
     units.index.name = 'service'
     units.reset_index(level=0, inplace=True)
     try:
@@ -201,7 +205,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
         oil_df.sort_index(inplace=True)
         vendor = {}
         for key in vendor_mapping.keys():
-            vendor[key.replace('_','-')] = vendor_mapping[key]
+            vendor[key.replace('_', '-')] = vendor_mapping[key]
         oil_df['vendor'] = Series(vendor, index=oil_df['service']).values
     except:
         oil_df = DataFrame()
@@ -221,27 +225,29 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
         if not ("Pipeline Metadata" in line) and \
            re.sub(r'[^\w]', ' ', line).replace(' ', '') != '':
             if "Pipeline Jobs" in line:
-                break # I could get the build_status from here, but I'm not
-                      # sure that I trust it, so I've used a jenkins poll
-                      # instead, below
+                break
+                # I could get the build_status from here, but I'm not sure
+                # that I trust it, so I've used a jenkins poll instead, below
             else:
                 split_line = line.lstrip('|').rstrip(' |\n').split('|')
                 metadata[split_line[0].lstrip().rstrip()] = \
                     split_line[1].lstrip().rstrip()
-    matching_bugs, build_status = bug_hunt('pipeline_deploy', jenkins,
-                                           deploy_build, bugs, reportdir,
-                                           oil_df, 'console.txt',
-                                           console_output)
-    yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
-                            existing_dict=yaml_dict)
+
+    matching_bugs, build_status = \
+        bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, reportdir,
+                 oil_df, 'console.txt', console_output)
+    yaml_dict = add_to_yaml(pline, deploy_build, bugs, matching_bugs,
+                            build_status, existing_dict=yaml_dict)
     return (oil_df, yaml_dict)
 
 def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, oil_df,
                          yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
-    metadata DataFrames """
+        metadata DataFrames.
+
+    """
     prepare_path = os.path.join(reportdir, 'pipeline_prepare',
-                            prepare_build)
+                                prepare_build)
 
     # Get paths of data files:
     console_location = os.path.join(prepare_path, 'console.txt')
@@ -250,10 +256,9 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, oil_df,
     with open(console_location, 'r') as grep_me:
         console_output = grep_me.read()
 
-    matching_bugs, build_status = bug_hunt('pipeline_prepare', jenkins,
-                                           prepare_build, bugs, reportdir,
-                                           oil_df, 'console.txt',
-                                           console_output)
+    matching_bugs, build_status = \
+        bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, reportdir,
+                 oil_df, 'console.txt', console_output)
 
     yaml_dict = add_to_yaml(pline, prepare_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
@@ -261,8 +266,11 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, oil_df,
 
 def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, oil_df,
                          yaml_dict):
-    """ Parses the artifacts files from a single pipeline into data and
-    metadata DataFrames """
+    """
+    Parses the artifacts files from a single pipeline into data and
+    metadata DataFrames
+
+    """
     tts_path = os.path.join(reportdir, 'test_tempest_smoke', tempest_build)
 
     # Get paths of data files:
@@ -274,10 +282,9 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, oil_df,
         console_output = grep_me.read()
 
     # Check console
-    matching_bugs, build_status = bug_hunt('test_tempest_smoke', jenkins,
-                                           tempest_build, bugs, reportdir,
-                                           oil_df, 'console.txt',
-                                           console_output)
+    matching_bugs, build_status = \
+        bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, reportdir,
+                 oil_df, 'console.txt', console_output)
 
     # Get tempest results:
     doc = etree.parse(tempest_xml_location).getroot()
@@ -291,23 +298,23 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, oil_df,
         info += failure_type + " error."
         error_found = False
         earlier_matching_bugs = matching_bugs
-        matching_bugs, build_status = bug_hunt('test_tempest_smoke', jenkins,
-                                               tempest_build, bugs, reportdir,
-                                               oil_df, 'tempest_xunit.xml',
-                                               pre_log)
+        matching_bugs, build_status = \
+            bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs,
+                     reportdir, oil_df, 'tempest_xunit.xml', pre_log)
 
         # Merge matching_bugs dictionaries:
         matching_bugs = dict(list(earlier_matching_bugs.items()) +
                              list(matching_bugs.items()))
 
-    yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs, build_status,
-                            existing_dict=yaml_dict)
+    yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
+                            build_status, existing_dict=yaml_dict)
     return yaml_dict
 
 def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
     """ Searches provided text for each regexp from the bugs database. """
-    build_status = [build_info for build_info in jenkins[job]._poll()['builds']
-                    if build_info['number'] == int(build)][0]['result']
+    build_status = \
+        [build_info for build_info in jenkins[job]._poll()['builds']
+         if build_info['number'] == int(build)][0]['result']
     matching_bugs = {}
     units_list = oil_df['service'].tolist()
     machines_list = oil_df['node'].tolist()
@@ -317,7 +324,7 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
         if job in bugs[bug_id]:
             # TODO: This may need to be changed once we're using a DB:
             regexp = bugs[bug_id][job]['regexp']
-            if regexp != 'None' and regexp != None and regexp != '':
+            if regexp not in ['None', None, '']:
                 if target == bugs[bug_id][job]['target_file']:
                     matches = re.compile(regexp, re.DOTALL).findall(text)
                     if len(matches):
@@ -332,16 +339,17 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
     if bug_unmatched:
         bid = 'unfiled-' + str(uuid.uuid4())
         matching_bugs[bid] = {'regexp': 'NO REGEX - UNFILED/UNMATCHED BUG',
-                              # Placeholder until I think of something better.
                               'vendors': vendors_list,
                               'machines': machines_list,
                               'units': units_list}
     return (matching_bugs, build_status)
 
+
 def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
     """
     Creates a yaml dict and populates with data in the right format and  merges
     with existing yaml dict.
+
     """
     # Make dict
     yaml_dict = {}
@@ -355,6 +363,7 @@ def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
 
     return yaml_dict
 
+
 def export_to_yaml(yaml_dict, job, reportdir):
     """ . """
     filename = 'triage_' + job + '.yml'
@@ -363,9 +372,26 @@ def export_to_yaml(yaml_dict, job, reportdir):
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
         print(filename + " written to " + reportdir)
 
-def main(run_remote, pipeline_ids, reportdir, api, auth_file, bugs):
-    """ Main method. Makes is go. """
+def main():
+    cfg = utils.get_config()
+    run_remote = cfg.get('DEFAULT', 'run_remote')
+    reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
+    database = cfg.get('DEFAULT', 'database_uri')
+    auth_file = cfg.get('DEFAULT', 'path_to_auth_file')
+    api = cfg.get('DEFAULT', 'oil_api_url')
+
+    # Get arguments:
+    pipeline_ids = sys.argv[1:]
+    if not pipeline_ids:
+        raise Exception("No pipeline IDs provided")
+
+    # Establish a connection to jenkins:
     jenkins = connect_to_jenkins(run_remote)
+
+    # Connect to bugs DB: # TODO: use a real db, not yaml
+    with open(database, "r") as mock_db_file:
+        mock_db = yaml.load(mock_db_file)
+    bugs = mock_db['bugs']
 
     # Clean up data folders:
     if os.path.isdir(reportdir):
@@ -376,30 +402,32 @@ def main(run_remote, pipeline_ids, reportdir, api, auth_file, bugs):
     tempest_yaml_dict = {}
     for pipeline in pipeline_ids:
         # Make sure pipeline is in fact a pipeline id:
-        if [8, 4, 4, 4, 12] != [len(x) for x in pipeline_ids[0].split('-')]:
+        if [8, 4, 4, 4, 12] != [len(x) for x in pipeline.split('-')]:
             raise Exception("Pipeline ID %s is an unrecognised format")
-
         deploy_build, prepare_build, tempest_build = \
             get_pipelines(pipeline, api=api, auth_file=auth_file)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
         if prepare_build:
-            get_triage_data(jenkins, prepare_build, 'pipeline_prepare',
-                            reportdir)
+            get_triage_data(jenkins, prepare_build,
+                            'pipeline_prepare', reportdir)
         if tempest_build:
-            get_triage_data(jenkins, tempest_build, 'test_tempest_smoke',
-                            reportdir)
+            get_triage_data(jenkins, tempest_build,
+                            'test_tempest_smoke', reportdir)
 
-        oil_df, deploy_yaml_dict = process_deploy_data(pipeline, deploy_build,
-                                                       jenkins, reportdir, bugs,
-                                                       deploy_yaml_dict)
+        oil_df, deploy_yaml_dict = \
+            process_deploy_data(pipeline, deploy_build, jenkins, reportdir,
+                                bugs, deploy_yaml_dict)
         if prepare_build:
-            prepare_yaml_dict = process_prepare_data(pipeline, prepare_build,
-                                                     jenkins, reportdir, bugs,
-                                                     oil_df, prepare_yaml_dict)
+            prepare_yaml_dict = \
+                process_prepare_data(pipeline, prepare_build, jenkins,
+                                     reportdir, bugs, oil_df,
+                                     prepare_yaml_dict)
         if tempest_build:
-            tempest_yaml_dict = process_tempest_data(pipeline, tempest_build,
-                                                     jenkins, reportdir, bugs,
-                                                     oil_df, tempest_yaml_dict)
+
+            tempest_yaml_dict = \
+                process_tempest_data(pipeline, tempest_build, jenkins,
+                                     reportdir, bugs, oil_df,
+                                     tempest_yaml_dict)
 
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
@@ -413,25 +441,4 @@ def main(run_remote, pipeline_ids, reportdir, api, auth_file, bugs):
 
 
 if __name__ == "__main__":
-    run_remote = True  # Change to False is being run from jenkins
-    pipeline_ids = sys.argv[1:]
-    if not pipeline_ids:
-        raise Exception("No pipeline IDs provided")
-    # Mock data:
-    # pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7",
-    #                 "1b07c919-776c-4092-b010-15085ec8caea",
-    #                 "4456de2f-0043-49f2-870f-10a2e35e9de8"]
-
-    reportdir = './example_reportdir'
-    api = "https://oil.canonical.com/api/"
-
-    # If auth_file is None, then assumes remote:
-    auth_file = "/home/darren/Repositories/Canonical/doberman/analysis/"
-    auth_file += "doberman/analysis/oil-auth.json"
-
-    # Temporarily use mock_database yaml file, not db:
-    with open('mock_database.yml', "r") as mock_db_file:
-        mock_db = yaml.load(mock_db_file)
-    bugs = mock_db['bugs']
-
-    main(run_remote, pipeline_ids, reportdir, api, auth_file, bugs)
+    sys.exit(main())

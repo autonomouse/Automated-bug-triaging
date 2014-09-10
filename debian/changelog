@@ -1,3 +1,10 @@
+doberman (0.0.1-0ubuntu3) precise; urgency=low
+
+  * add in crude-analysis from Darren
+  * fix up some lint changes from the last commit to getbugs.
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Wed, 10 Sep 2014 15:40:24 -0500
+
 doberman (0.0.1-0ubuntu2) precise; urgency=low
 
   * add and install sample report yaml information
