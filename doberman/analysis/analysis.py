@@ -24,8 +24,8 @@ def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
     #cookies = json.load(open(jenkins_auth))  # "oil-jenkins-auth.json"
     if remote:
-        print "Fetching cookies for %s" %(netloc)
-        cookies = pycookiecheat.chrome_cookies(netloc)
+        print "Fetching cookies for %s" %(url)
+        cookies = pycookiecheat.chrome_cookies(url)
         return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
     else:
         return Jenkins(baseurl=url, netloc=netloc)
@@ -99,7 +99,8 @@ def extract_and_delete_archive(outdir, artifact):
                     new_file.writelines(data)
         os.remove(os.path.join(outdir, artifact.filename))
 
-def process_deploy_data(deploy_build, jenkins, reportdir, bugs, yaml_dict):
+def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
+                        yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
     metadata DataFrames """
     pipeline_deploy_path = os.path.join(reportdir, 'pipeline_deploy',
@@ -231,11 +232,11 @@ def process_deploy_data(deploy_build, jenkins, reportdir, bugs, yaml_dict):
                                            deploy_build, bugs, reportdir,
                                            oil_df, 'console.txt',
                                            console_output)
-    yaml_dict = add_to_yaml(deploy_build, matching_bugs, build_status,
+    yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
     return (oil_df, yaml_dict)
 
-def process_prepare_data(prepare_build, jenkins, reportdir, bugs, oil_df,
+def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, oil_df,
                          yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
     metadata DataFrames """
@@ -254,11 +255,11 @@ def process_prepare_data(prepare_build, jenkins, reportdir, bugs, oil_df,
                                            oil_df, 'console.txt',
                                            console_output)
 
-    yaml_dict = add_to_yaml(prepare_build, matching_bugs, build_status,
+    yaml_dict = add_to_yaml(pline, prepare_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
     return yaml_dict
 
-def process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df,
+def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, oil_df,
                          yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
     metadata DataFrames """
@@ -299,7 +300,7 @@ def process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df,
         matching_bugs = dict(list(earlier_matching_bugs.items()) +
                              list(matching_bugs.items()))
 
-    yaml_dict = add_to_yaml(tempest_build, matching_bugs, build_status,
+    yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
     return yaml_dict
 
@@ -337,7 +338,7 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
                               'units': units_list}
     return (matching_bugs, build_status)
 
-def add_to_yaml(build, matching_bugs, build_status, existing_dict=None):
+def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
     """
     Creates a yaml dict and populates with data in the right format and  merges
     with existing yaml dict.
@@ -345,9 +346,9 @@ def add_to_yaml(build, matching_bugs, build_status, existing_dict=None):
     # Make dict
     yaml_dict = {}
     if matching_bugs != {}:
-        yaml_dict['pipeline'] = {pipeline: {'status': build_status,
-                                            'build': build,
-                                            'bugs': matching_bugs}}
+        yaml_dict['pipeline'] = {pline: {'status': build_status,
+                                         'build': build,
+                                         'bugs': matching_bugs}}
     # Merge with existing dict:
     if existing_dict:
         yaml_dict = dict(list(existing_dict.items()) + list(yaml_dict.items()))
@@ -362,31 +363,9 @@ def export_to_yaml(yaml_dict, job, reportdir):
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
         print(filename + " written to " + reportdir)
 
-
-
-if __name__ == "__main__":
-    run_remote = True  # Change to False is being run from jenkins
+def main(run_remote, pipeline_ids, reportdir, api, auth_file, bugs):
+    """ Main method. Makes is go. """
     jenkins = connect_to_jenkins(run_remote)
-
-    # Mock data:
-    # pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7",
-    #                 "1b07c919-776c-4092-b010-15085ec8caea",
-    #                 "4456de2f-0043-49f2-870f-10a2e35e9de8"]
-    pipeline_ids = sys.argv[1:]
-    if not pipeline_ids:
-        raise Exception("No pipeline IDs provided")
-
-
-    reportdir = './example_reportdir'
-    api = "https://oil.canonical.com/api/"
-
-    # If auth_file is None, then assumes remote:
-    auth_file = "./analysis/doberman/analysis/oil-auth.json"
-
-    # Temporarily use mock_database yaml file, not db:
-    with open('mock_database.yml', "r") as mock_db_file:
-        mock_db = yaml.load(mock_db_file)
-    bugs = mock_db['bugs']
 
     # Clean up data folders:
     if os.path.isdir(reportdir):
@@ -410,17 +389,17 @@ if __name__ == "__main__":
             get_triage_data(jenkins, tempest_build, 'test_tempest_smoke',
                             reportdir)
 
-        oil_df, deploy_yaml_dict = process_deploy_data(deploy_build, jenkins,
-                                                       reportdir, bugs,
+        oil_df, deploy_yaml_dict = process_deploy_data(pipeline, deploy_build,
+                                                       jenkins, reportdir, bugs,
                                                        deploy_yaml_dict)
         if prepare_build:
-            prepare_yaml_dict = process_prepare_data(prepare_build, jenkins,
-                                                     reportdir, bugs, oil_df,
-                                                     prepare_yaml_dict)
+            prepare_yaml_dict = process_prepare_data(pipeline, prepare_build,
+                                                     jenkins, reportdir, bugs,
+                                                     oil_df, prepare_yaml_dict)
         if tempest_build:
-            tempest_yaml_dict = process_tempest_data(tempest_build, jenkins,
-                                                     reportdir, bugs, oil_df,
-                                                     tempest_yaml_dict)
+            tempest_yaml_dict = process_tempest_data(pipeline, tempest_build,
+                                                     jenkins, reportdir, bugs,
+                                                     oil_df, tempest_yaml_dict)
 
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
@@ -431,3 +410,28 @@ if __name__ == "__main__":
     shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
     shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
     shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
+
+
+if __name__ == "__main__":
+    run_remote = True  # Change to False is being run from jenkins
+    pipeline_ids = sys.argv[1:]
+    if not pipeline_ids:
+        raise Exception("No pipeline IDs provided")
+    # Mock data:
+    # pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7",
+    #                 "1b07c919-776c-4092-b010-15085ec8caea",
+    #                 "4456de2f-0043-49f2-870f-10a2e35e9de8"]
+
+    reportdir = './example_reportdir'
+    api = "https://oil.canonical.com/api/"
+
+    # If auth_file is None, then assumes remote:
+    auth_file = "/home/darren/Repositories/Canonical/doberman/analysis/"
+    auth_file += "doberman/analysis/oil-auth.json"
+
+    # Temporarily use mock_database yaml file, not db:
+    with open('mock_database.yml', "r") as mock_db_file:
+        mock_db = yaml.load(mock_db_file)
+    bugs = mock_db['bugs']
+
+    main(run_remote, pipeline_ids, reportdir, api, auth_file, bugs)
