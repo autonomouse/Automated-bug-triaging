@@ -10,8 +10,10 @@ Build-Depends: debhelper (>= 8.0.0),
  python-crypto,
  python-keyring,
  python-nose,
+ python-pandas,
  python-requests,
  python-setuptools,
+ python-test-catalog,
  python-testtools,
  python-yaml
 Standards-Version: 3.9.3
@@ -23,7 +25,9 @@ Section: python
 Depends: jenkinsapi (>= 0.2.16),
  python-crypto,
  python-keyring,
+ python-pandas,
  python-requests,
+ python-test-catalog,
  python-yaml,
  ${misc:Depends},
  ${python:Depends}
