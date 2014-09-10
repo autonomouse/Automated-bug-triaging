@@ -5,7 +5,6 @@ import subprocess
 import os
 import re
 import yaml # sudo pip install PyYAML
-import numpy as np
 import pandas as pd
 import json
 import socket
@@ -13,41 +12,47 @@ import urlparse
 import tarfile
 import shutil
 import uuid
+import test_catalog
 from pandas import DataFrame, Series  # sudo pip install pandas==0.13.1
-from pprint import pprint
-from lxml.etree import Element, SubElement
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins # Ryan's PPA
 
 
-def connect_to_jenkins(url="http://oil-jenkins.canonical.com", jenkins_auth="oil-jenkins-auth.json"):
+def connect_to_jenkins(url="http://oil-jenkins.canonical.com",
+                       jenkins_auth="oil-jenkins-auth.json"):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
     cookies = json.load(open(jenkins_auth))
     return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
 
 def get_pipelines(pipeline, remote=False):
-    """ Using test-catalog, return the build numbers for the jobs that are part of the given pipeline. """
+    """ Using test-catalog, return the build numbers for the jobs that are part
+    of the given pipeline. """
     api = "https://oil.canonical.com/api/"
     auth_file = "oil-auth.json"
 
-    if remote: 
-        p1 = subprocess.Popen(['test-catalog', '-e', api, '-t', auth_file, '-p', pipeline], stdout=subprocess.PIPE)
+    if remote:
+        p1 = subprocess.Popen(['test-catalog', '-e', api, '-t', auth_file,
+                               '-p', pipeline], stdout=subprocess.PIPE)
     else:
-        p1 = subprocess.Popen(['test-catalog', '-p', pipeline], stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(['test-catalog', '-p', pipeline],
+                              stdout=subprocess.PIPE)
     output = p1.communicate()[0]
     if output == '':
         raise("Test catalog(ue) error")
     try:
-        deploy_build = output.split("jenkins-pipeline_deploy-")[1].split(' ')[0]
+        deploy_build = \
+            output.split("jenkins-pipeline_deploy-")[1].split(' ')[0]
     except:
         deploy_build = None
     try:
-        prepare_build = output.split("jenkins-pipeline_prepare-")[1].split(' ')[0]
+        prepare_build = \
+            output.split("jenkins-pipeline_prepare-")[1].split(' ')[0]
     except:
         prepare_build = None
     try:
-        tempest_build = output.split("jenkins-test_tempest_smoke-")[1].split(' ')[0]
+        tempest_build = \
+            output.split("jenkins-test_tempest_smoke-")[1].split(' ')[0]
     except:
         tempest_build = None
     return (deploy_build, prepare_build, tempest_build)
@@ -63,16 +68,16 @@ def get_triage_data(jenkins, build_num, job, reportdir):
     except OSError:
         if not os.path.isdir(outdir):
             raise
-    with open(os.path.join(outdir, "console.txt"), "w") as c:
+    with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
         print 'Saving console @ %s to %s' % (build.baseurl, outdir)
         console = build.get_console()
-        c.write(console)
-        c.write('\n')
-        c.flush()
+        cnsl.write(console)
+        cnsl.write('\n')
+        cnsl.flush()
 
     for artifact in build.get_artifacts():
         artifact.save_to_dir(outdir)
-        files = extract_and_delete_archive(outdir, artifact)
+        extract_and_delete_archive(outdir, artifact)
 
 def extract_and_delete_archive(outdir, artifact):
     """
@@ -214,19 +219,23 @@ def process_deploy_data(deploy_build, jenkins, reportdir, bugs, yaml_dict):
         if not ("Pipeline Metadata" in line) and \
            re.sub(r'[^\w]', ' ', line).replace(' ', '') != '':
             if "Pipeline Jobs" in line:
-                break
-                # I could get the build_status from here, but I'm not sure that I trust it, so I've used a jenkins poll instead, below
+                break # I could get the build_status from here, but I'm not
+                      # sure that I trust it, so I've used a jenkins poll
+                      # instead, below
             else:
                 split_line = line.lstrip('|').rstrip(' |\n').split('|')
                 metadata[split_line[0].lstrip().rstrip()] = \
                     split_line[1].lstrip().rstrip()
-    matching_bugs, build_status = bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, reportdir, oil_df, 'console.txt', console_output)
-    #export_to_yaml('pipeline_deploy', jenkins, deploy_build, bugs, reportdir, matching_bugs, build_status)
-    #return oil_df
-    yaml_dict = add_to_yaml(deploy_build, bugs, matching_bugs, build_status, existing_dict=yaml_dict)
+    matching_bugs, build_status = bug_hunt('pipeline_deploy', jenkins,
+                                           deploy_build, bugs, reportdir,
+                                           oil_df, 'console.txt',
+                                           console_output)
+    yaml_dict = add_to_yaml(deploy_build, matching_bugs, build_status,
+                            existing_dict=yaml_dict)
     return (oil_df, yaml_dict)
 
-def process_prepare_data(prepare_build, jenkins, reportdir, bugs, oil_df, yaml_dict):
+def process_prepare_data(prepare_build, jenkins, reportdir, bugs, oil_df,
+                         yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
     metadata DataFrames """
     prepare_path = os.path.join(reportdir, 'pipeline_prepare',
@@ -239,13 +248,17 @@ def process_prepare_data(prepare_build, jenkins, reportdir, bugs, oil_df, yaml_d
     with open(console_location, 'r') as grep_me:
         console_output = grep_me.read()
 
-    matching_bugs, build_status = bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, reportdir, oil_df, 'console.txt', console_output)
-    #export_to_yaml('pipeline_prepare', jenkins, prepare_build, bugs, reportdir, matching_bugs, build_status)
-    
-    yaml_dict = add_to_yaml(prepare_build, bugs, matching_bugs, build_status, existing_dict=yaml_dict)
+    matching_bugs, build_status = bug_hunt('pipeline_prepare', jenkins,
+                                           prepare_build, bugs, reportdir,
+                                           oil_df, 'console.txt',
+                                           console_output)
+
+    yaml_dict = add_to_yaml(prepare_build, matching_bugs, build_status,
+                            existing_dict=yaml_dict)
     return yaml_dict
 
-def process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df, yaml_dict):
+def process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df,
+                         yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
     metadata DataFrames """
     tts_path = os.path.join(reportdir, 'test_tempest_smoke', tempest_build)
@@ -259,8 +272,11 @@ def process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df, yaml_d
         console_output = grep_me.read()
 
     # Check console
-    matching_bugs, build_status = bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, reportdir, oil_df, 'console.txt', console_output)
-    
+    matching_bugs, build_status = bug_hunt('test_tempest_smoke', jenkins,
+                                           tempest_build, bugs, reportdir,
+                                           oil_df, 'console.txt',
+                                           console_output)
+
     # Get tempest results:
     doc = etree.parse(tempest_xml_location).getroot()
     errors_and_fails = doc.xpath('.//failure') + doc.xpath('.//error')
@@ -273,18 +289,23 @@ def process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df, yaml_d
                                                     failure_type + " error."
         error_found = False
         earlier_matching_bugs = matching_bugs
-        matching_bugs, build_status = bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, reportdir, oil_df, 'tempest_xunit.xml', pre_log)
-        
+        matching_bugs, build_status = bug_hunt('test_tempest_smoke', jenkins,
+                                               tempest_build, bugs, reportdir,
+                                               oil_df, 'tempest_xunit.xml',
+                                               pre_log)
+
         # Merge matching_bugs dictionaries:
-        matching_bugs = dict(list(earlier_matching_bugs.items()) + list(matching_bugs.items()))
-    
-    #export_to_yaml('test_tempest_smoke', jenkins, tempest_build, bugs, reportdir, matching_bugs, build_status)
-    yaml_dict = add_to_yaml(tempest_build, bugs, matching_bugs, build_status, existing_dict=yaml_dict)
+        matching_bugs = dict(list(earlier_matching_bugs.items()) +
+                             list(matching_bugs.items()))
+
+    yaml_dict = add_to_yaml(tempest_build, matching_bugs, build_status,
+                            existing_dict=yaml_dict)
     return yaml_dict
 
-def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text_to_grep):
+def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
     """ Searches provided text for each regexp from the bugs database. """
-    build_status = [build_info for build_info in jenkins[job]._poll()['builds'] if build_info['number'] == int(build)][0]['result']
+    build_status = [build_info for build_info in jenkins[job]._poll()['builds']
+                    if build_info['number'] == int(build)][0]['result']
     matching_bugs = {}
     units_list = oil_df['service'].tolist()
     machines_list = oil_df['node'].tolist()
@@ -292,27 +313,34 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text_to_grep)
     bug_unmatched = True
     for bug_id in bugs.keys():
         if job in bugs[bug_id]:
-            regexp = bugs[bug_id][job]['regexp'] # TODO: This will probably need to be changed once we're using a DB
+            # TODO: This may need to be changed once we're using a DB:
+            regexp = bugs[bug_id][job]['regexp']
             if regexp != 'None' and regexp != None and regexp != '':
                 if target == bugs[bug_id][job]['target_file']:
-                    bug_category = bugs[bug_id][job]['target_file']
-                    matches = re.compile(regexp, re.DOTALL).findall(text_to_grep)
+                    matches = re.compile(regexp, re.DOTALL).findall(text)
                     if len(matches):
-                        # TODO: For now, we'll just include everything - guilt by association - but the next step would be to only associate the machines implied by bug_category
+                        # TODO: For now, just include everything - guilt by
+                        # association - but the next step would be to only
+                        # associate the machines implied by bug_category
                         matching_bugs[bug_id] = {'regexp': regexp,
                                                  'vendors': vendors_list,
                                                  'machines': machines_list,
                                                  'units': units_list}
                         bug_unmatched = False
     if bug_unmatched:
-        matching_bugs['unfiled-' + str(uuid.uuid4())] = {'regexp': 'UNMATCHED BUG',  # Placeholder until I work out what to put here. Include traceback.
-                                 'vendors': vendors_list,
-                                 'machines': machines_list,
-                                 'units': units_list}
+        bid = 'unfiled-' + str(uuid.uuid4())
+        matching_bugs[bid] = {'regexp': 'NO REGEX - UNFILED/UNMATCHED BUG',
+                              # Placeholder until I think of something better.
+                              'vendors': vendors_list,
+                              'machines': machines_list,
+                              'units': units_list}
     return (matching_bugs, build_status)
 
-def add_to_yaml(build, bugs, matching_bugs, build_status, existing_dict=None):
-    """ Creates a yaml dict and populates with data in the right format and merges with existing yaml dict. """
+def add_to_yaml(build, matching_bugs, build_status, existing_dict=None):
+    """
+    Creates a yaml dict and populates with data in the right format and  merges
+    with existing yaml dict.
+    """
     # Make dict
     yaml_dict = {}
     if matching_bugs != {}:
@@ -322,14 +350,14 @@ def add_to_yaml(build, bugs, matching_bugs, build_status, existing_dict=None):
     # Merge with existing dict:
     if existing_dict:
         yaml_dict = dict(list(existing_dict.items()) + list(yaml_dict.items()))
-    
+
     return yaml_dict
 
 def export_to_yaml(yaml_dict, job, reportdir):
     """ . """
     filename = 'triage_' + job + '.yml'
-    OPfile_path = os.path.join(reportdir, filename)
-    with open(OPfile_path, 'w') as outfile:
+    file_path = os.path.join(reportdir, filename)
+    with open(file_path, 'w') as outfile:
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
         print(filename + " written to " + reportdir)
 
@@ -337,15 +365,15 @@ def export_to_yaml(yaml_dict, job, reportdir):
 
 if __name__ == "__main__":
     jenkins = connect_to_jenkins()
-    # try:
-    #     pipeline_ids = sys.argv[1:]
-    # except:
-    # 	pass
-    #pipeline_ids = ["c1aa5aae-08f0-4f4f-809e-4f28fa052dbc"] if pipeline_ids == None else pipeline_ids
+
+    pipeline_ids = sys.argv[1:]
+    if not pipeline_ids:
+        raise Exception("No pipeline IDs provided")
 
     # Mock data (will be a list eventually)
-    pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7", "1b07c919-776c-4092-b010-15085ec8caea", "4456de2f-0043-49f2-870f-10a2e35e9de8"]
-    #raise("No pipeline IDs provided")    
+    # pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7",
+    #                 "1b07c919-776c-4092-b010-15085ec8caea",
+    #                 "4456de2f-0043-49f2-870f-10a2e35e9de8"]
     reportdir = './example_reportdir'
 
     # Temporarily use mock_database yaml file, not db:
@@ -361,26 +389,39 @@ if __name__ == "__main__":
     prepare_yaml_dict = {}
     tempest_yaml_dict = {}
     for pipeline in pipeline_ids:
-        deploy_build, prepare_build, tempest_build = get_pipelines(pipeline, remote=True)
+        # Make sure pipeline is in fact a pipeline id:
+        if [8, 4, 4, 4, 12] != [len(x) for x in pipeline_ids[0].split('-')]:
+            raise Exception("Pipeline ID %s is an unrecognised format")
+
+        deploy_build, prepare_build, tempest_build = get_pipelines(pipeline,
+                                                                   remote=True)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
         if prepare_build:
-            get_triage_data(jenkins, prepare_build, 'pipeline_prepare', reportdir)
+            get_triage_data(jenkins, prepare_build, 'pipeline_prepare',
+                            reportdir)
         if tempest_build:
-            get_triage_data(jenkins, tempest_build, 'test_tempest_smoke', reportdir)
+            get_triage_data(jenkins, tempest_build, 'test_tempest_smoke',
+                            reportdir)
 
-        oil_df, deploy_yaml_dict = process_deploy_data(deploy_build, jenkins, reportdir, bugs, deploy_yaml_dict)
+        oil_df, deploy_yaml_dict = process_deploy_data(deploy_build, jenkins,
+                                                       reportdir, bugs,
+                                                       deploy_yaml_dict)
         if prepare_build:
-            prepare_yaml_dict = process_prepare_data(prepare_build, jenkins, reportdir, bugs, oil_df, prepare_yaml_dict)
+            prepare_yaml_dict = process_prepare_data(prepare_build, jenkins,
+                                                     reportdir, bugs, oil_df,
+                                                     prepare_yaml_dict)
         if tempest_build:
-            tempest_yaml_dict = process_tempest_data(tempest_build, jenkins, reportdir, bugs, oil_df, tempest_yaml_dict)
+            tempest_yaml_dict = process_tempest_data(tempest_build, jenkins,
+                                                     reportdir, bugs, oil_df,
+                                                     tempest_yaml_dict)
 
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
     export_to_yaml(prepare_yaml_dict, 'pipeline_prepare', reportdir)
     export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', reportdir)
-         
+
     # Clean up data folders (just leaving yaml files):
     shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
     shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
     shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
-    
+
