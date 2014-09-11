@@ -1,17 +1,17 @@
 #! /usr/bin/env python2
 
 import sys
-import subprocess
 import os
 import re
 import yaml
 import pandas as pd
-import json
 import socket
 import urlparse
 import tarfile
 import shutil
 import uuid
+from test_catalog.client.api import TCClient as tc_client
+from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame, Series
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins
@@ -20,55 +20,52 @@ from doberman.common import pycookiecheat, utils
 LOG = utils.get_logger('doberman.analysis')
 
 
-def connect_to_jenkins(url="http://oil-jenkins.canonical.com",
-                       jenkins_auth="oil-jenkins-auth.json"):
+def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
+
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
-    cookies = pycookiecheat.chrome_cookies(url)
-    return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
+
+    if remote:
+        print("Fetching cookies for %s" % url)
+        cookies = pycookiecheat.chrome_cookies(url)
+        return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
+    else:
+        return Jenkins(baseurl=url, netloc=netloc)
 
 
-def get_pipelines(pipeline, remote=False):
-    """ Using test-catalog, return the build numbers for the jobs
-        that are part of the given pipeline.
+def get_pipelines(pipeline, api, remote=False):
+    """ Using test-catalog, return the build numbers for the jobs that are
+        part of the given pipeline.
 
     """
-    api = "https://oil.canonical.com/api/"
     if remote:
-        auth_file = "oil-auth.json"
+        print("Fetching cookies for %s" % api)
         cookies = pycookiecheat.chrome_cookies(api)
-        with open(auth_file, "w") as o:
-            o.write(json.dumps(cookies))
-            o.close()
-        p1 = subprocess.Popen(['test-catalog', '-e', api, '-t',
-                              auth_file, '-p', pipeline],
-                              stdout=subprocess.PIPE)
-    else:
-        p1 = subprocess.Popen(['test-catalog', '-p', pipeline],
-                              stdout=subprocess.PIPE)
-    output = p1.communicate()[0]
-    if output == '':
-        raise("Test catalog(ue) error")
+        client = tc_client(endpoint=api, cookies=cookies)
+    else:  # If no auth_file, then assume running on jenkins
+        client = tc_client(endpoint=api)
+    pl_tcat = TCCTestPipeline(client, pipeline)
     try:
-        deploy_build = \
-            output.split("jenkins-pipeline_deploy-")[1].split(' ')[0]
+        deploy_dict = pl_tcat.dict['parent']
+        deploy_build = deploy_dict['build_tag'].split("-")[-1]
     except:
         deploy_build = None
     try:
-        prepare_build = \
-            output.split("jenkins-pipeline_prepare-")[1].split(' ')[0]
+        prepare_dict = deploy_dict['children'][0]
+        prepare_build = prepare_dict['build_tag'].split("-")[-1]
     except:
         prepare_build = None
     try:
-        tempest_build = \
-            output.split("jenkins-test_tempest_smoke-")[1].split(' ')[0]
+        tempest_dict = prepare_dict['children'][0]
+        tempest_build = tempest_dict['build_tag'].split("-")[-1]
     except:
         tempest_build = None
+
     return (deploy_build, prepare_build, tempest_build)
 
 
 def get_triage_data(jenkins, build_num, job, reportdir):
-    """ get the artifacts from jenkins via jenkinsapi object. """
+    """ Get the artifacts from jenkins via jenkinsapi object. """
     jenkins_job = jenkins[job]
     build = jenkins_job.get_build(int(build_num))
     outdir = os.path.join(reportdir, job, str(build_num))
@@ -78,12 +75,12 @@ def get_triage_data(jenkins, build_num, job, reportdir):
     except OSError:
         if not os.path.isdir(outdir):
             raise
-    with open(os.path.join(outdir, "console.txt"), "w") as c:
+    with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
         print 'Saving console @ %s to %s' % (build.baseurl, outdir)
         console = build.get_console()
-        c.write(console)
-        c.write('\n')
-        c.flush()
+        cnsl.write(console)
+        cnsl.write('\n')
+        cnsl.flush()
 
     for artifact in build.get_artifacts():
         artifact.save_to_dir(outdir)
@@ -91,11 +88,11 @@ def get_triage_data(jenkins, build_num, job, reportdir):
 
 
 def extract_and_delete_archive(outdir, artifact):
-    """
-    Extracts the contents of a tarball and places it into a new file of the
-    samename without the .tar.gz suffix (N.B. this leaves .ring.gz intact
-    as they seem to contain binary ring files that I'm not sure what to do with
-    at this point).
+    """ Extracts the contents of a tarball and places it into a new file
+        of the samename without the .tar.gz suffix (N.B. this leaves
+        .ring.gz intact as they seem to contain binary ring files that
+        I'm not sure what to do with at this point).
+
     """
 
     if 'tar.gz' in artifact.filename:
@@ -111,10 +108,12 @@ def extract_and_delete_archive(outdir, artifact):
         os.remove(os.path.join(outdir, artifact.filename))
 
 
-def process_deploy_data(pipeline, deploy_build, jenkins, reportdir,
-                        bugs, yaml_dict):
+def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
+                        yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
-    metadata DataFrames """
+        metadata DataFrames
+
+    """
     pipeline_deploy_path = os.path.join(reportdir, 'pipeline_deploy',
                                         deploy_build)
 
@@ -175,9 +174,7 @@ def process_deploy_data(pipeline, deploy_build, jenkins, reportdir,
             units_dict = juju_status['services'][serv]['units']
             # Raise this services sub-dictionary to the top level:
             for key in units_dict.keys():
-                serv_key = key.replace('/', '').replace('0', '')
-                unit[serv_key] = \
-                    juju_status['services'][serv]['units'][key]
+                unit[key] = juju_status['services'][serv]['units'][key]
         except:
             pass
     relations = DataFrame(rel).T  # transpose
@@ -240,18 +237,22 @@ def process_deploy_data(pipeline, deploy_build, jenkins, reportdir,
                 split_line = line.lstrip('|').rstrip(' |\n').split('|')
                 metadata[split_line[0].lstrip().rstrip()] = \
                     split_line[1].lstrip().rstrip()
+
     matching_bugs, build_status = \
         bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, reportdir,
                  oil_df, 'console.txt', console_output)
-    yaml_dict = add_to_yaml(pipeline, deploy_build, bugs, matching_bugs,
-                            build_status, existing_dict=yaml_dict)
+    yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
+                            existing_dict=yaml_dict)
+
     return (oil_df, yaml_dict)
 
 
-def process_prepare_data(pipeline, prepare_build, jenkins, reportdir,
-                         bugs, oil_df, yaml_dict):
+def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
+                         oil_df, yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
-    metadata DataFrames """
+        metadata DataFrames.
+
+    """
     prepare_path = os.path.join(reportdir, 'pipeline_prepare',
                                 prepare_build)
 
@@ -266,15 +267,18 @@ def process_prepare_data(pipeline, prepare_build, jenkins, reportdir,
         bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, reportdir,
                  oil_df, 'console.txt', console_output)
 
-    yaml_dict = add_to_yaml(pipeline, prepare_build, bugs, matching_bugs,
-                            build_status, existing_dict=yaml_dict)
+    yaml_dict = add_to_yaml(pline, prepare_build, matching_bugs, build_status,
+                            existing_dict=yaml_dict)
     return yaml_dict
 
 
-def process_tempest_data(pipeline, tempest_build, jenkins, reportdir,
-                         bugs, oil_df, yaml_dict):
-    """ Parses the artifacts files from a single pipeline into data and
-    metadata DataFrames """
+def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
+                         oil_df, yaml_dict):
+    """
+    Parses the artifacts files from a single pipeline into data and
+    metadata DataFrames
+
+    """
     tts_path = os.path.join(reportdir, 'test_tempest_smoke', tempest_build)
 
     # Get paths of data files:
@@ -295,6 +299,11 @@ def process_tempest_data(pipeline, tempest_build, jenkins, reportdir,
     errors_and_fails = doc.xpath('.//failure') + doc.xpath('.//error')
     for num, fail in enumerate(errors_and_fails):
         pre_log = fail.get('message').split("begin captured logging")[0]
+        test = fail.getparent().attrib['classname'] + " - " + \
+            fail.getparent().attrib['name']
+        failure_type = fail.get('type')
+        info = "\nWithin the " + test + " test, there was a "
+        info += failure_type + " error."
         earlier_matching_bugs = matching_bugs
         matching_bugs, build_status = \
             bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs,
@@ -304,13 +313,12 @@ def process_tempest_data(pipeline, tempest_build, jenkins, reportdir,
         matching_bugs = dict(list(earlier_matching_bugs.items()) +
                              list(matching_bugs.items()))
 
-    yaml_dict = add_to_yaml(pipeline, tempest_build, bugs, matching_bugs,
+    yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
 
 
-def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df,
-             target, text_to_grep):
+def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
     """ Searches provided text for each regexp from the bugs database. """
     build_status = \
         [build_info for build_info in jenkins[job]._poll()['builds']
@@ -322,37 +330,33 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df,
     bug_unmatched = True
     for bug_id in bugs.keys():
         if job in bugs[bug_id]:
-            # TODO: This will probably need to be changed once we're using a DB
+            # TODO: This may need to be changed once we're using a DB:
             regexp = bugs[bug_id][job]['regexp']
             if regexp not in ['None', None, '']:
                 if target == bugs[bug_id][job]['target_file']:
-                    #bug_category = bugs[bug_id][job]['target_file']
-                    matches = \
-                        re.compile(regexp, re.DOTALL).findall(text_to_grep)
+                    matches = re.compile(regexp, re.DOTALL).findall(text)
                     if len(matches):
-                        # TODO: For now, we'll just include everything
-                        # - guilt by association - but the next step would be
-                        # to only associate the machines implied by
-                        # bug_category
+                        # TODO: For now, just include everything - guilt by
+                        # association - but the next step would be to only
+                        # associate the machines implied by bug_category
                         matching_bugs[bug_id] = {'regexp': regexp,
                                                  'vendors': vendors_list,
                                                  'machines': machines_list,
                                                  'units': units_list}
                         bug_unmatched = False
     if bug_unmatched:
-        # Placeholder until I work out what to put here. Include traceback.
-        matching_bugs['unfiled-' + str(uuid.uuid4())] = \
-            {'regexp': 'UNMATCHED BUG',
-             'vendors': vendors_list,
-             'machines': machines_list,
-             'units': units_list}
+        bid = 'unfiled-' + str(uuid.uuid4())
+        matching_bugs[bid] = {'regexp': 'NO REGEX - UNFILED/UNMATCHED BUG',
+                              'vendors': vendors_list,
+                              'machines': machines_list,
+                              'units': units_list}
     return (matching_bugs, build_status)
 
 
-def add_to_yaml(pline, build, bugs, matching_bugs, build_status,
-                existing_dict=None):
-    """ Creates a yaml dict and populates with data in the right
-        format and merges with existing yaml dict.
+def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
+    """
+    Creates a yaml dict and populates with data in the right format and  merges
+    with existing yaml dict.
 
     """
     # Make dict
@@ -363,44 +367,37 @@ def add_to_yaml(pline, build, bugs, matching_bugs, build_status,
                                          'bugs': matching_bugs}}
     # Merge with existing dict:
     if existing_dict:
-        yaml_dict = \
-            dict(list(existing_dict.items()) + list(yaml_dict.items()))
+        yaml_dict = dict(list(existing_dict.items()) + list(yaml_dict.items()))
 
     return yaml_dict
 
 
 def export_to_yaml(yaml_dict, job, reportdir):
-    """ . """
+    """ Write output files. """
     filename = 'triage_' + job + '.yml'
-    OPfile_path = os.path.join(reportdir, filename)
-    with open(OPfile_path, 'w') as outfile:
+    file_path = os.path.join(reportdir, filename)
+    with open(file_path, 'w') as outfile:
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
         print(filename + " written to " + reportdir)
 
 
 def main():
     cfg = utils.get_config()
-
-    jenkins = connect_to_jenkins()
-    # try:
-    #     pipeline_ids = sys.argv[1:]
-    # except:
-    # 	pass
-    # pipeline_ids = \
-    #    ["c1aa5aae-08f0-4f4f-809e-4f28fa052dbc"] \
-    #         if pipeline_ids == None else pipeline_ids
-
-    # Mock data (will be a list eventually)
-    pipeline_ids = ["4c657c2d-ef25-44fb-b17a-ccdf290d89f7",
-                    "1b07c919-776c-4092-b010-15085ec8caea",
-                    "4456de2f-0043-49f2-870f-10a2e35e9de8"]
-
+    run_remote = cfg.get('DEFAULT', 'run_remote')
     reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
+    database = cfg.get('DEFAULT', 'database_uri')
+    api = cfg.get('DEFAULT', 'oil_api_url')
 
-    # Temporarily use mock_database yaml file, not db:
-    mock_database_file = cfg.get('DEFAULT', 'database_uri')
+    # Get arguments:
+    pipeline_ids = sys.argv[1:]
+    if not pipeline_ids:
+        raise Exception("No pipeline IDs provided")
 
-    with open(mock_database_file, "r") as mock_db_file:
+    # Establish a connection to jenkins:
+    jenkins = connect_to_jenkins(run_remote)
+
+    # Connect to bugs DB: # TODO: use a real db, not yaml
+    with open(database, "r") as mock_db_file:
         mock_db = yaml.load(mock_db_file)
     bugs = mock_db['bugs']
 
@@ -412,8 +409,11 @@ def main():
     prepare_yaml_dict = {}
     tempest_yaml_dict = {}
     for pipeline in pipeline_ids:
+        # Make sure pipeline is in fact a pipeline id:
+        if [8, 4, 4, 4, 12] != [len(x) for x in pipeline.split('-')]:
+            raise Exception("Pipeline ID %s is an unrecognised format")
         deploy_build, prepare_build, tempest_build = \
-            get_pipelines(pipeline, remote=True)
+            get_pipelines(pipeline, api=api, remote=run_remote)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
         if prepare_build:
             get_triage_data(jenkins, prepare_build,
