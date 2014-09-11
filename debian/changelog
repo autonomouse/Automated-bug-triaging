@@ -1,3 +1,9 @@
+doberman (0.0.1-0ubuntu4) precise; urgency=medium
+
+  * Merge in support for using tc_client to interface with test-catalog
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Thu, 11 Sep 2014 09:22:16 -0500
+
 doberman (0.0.1-0ubuntu3) precise; urgency=low
 
   * add in crude-analysis from Darren
