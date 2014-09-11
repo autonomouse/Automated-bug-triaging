@@ -10,27 +10,62 @@ import urlparse
 import tarfile
 import shutil
 import uuid
+import optparse
 from test_catalog.client.api import TCClient as tc_client
 from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame, Series
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins
+from jenkinsapi.custom_exceptions import *
 from doberman.common import pycookiecheat, utils
 
 LOG = utils.get_logger('doberman.analysis')
+_tc_client = []
+_jenkins = []
 
 
-def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
+def get_jenkins(url, remote=False):
+    if _jenkins and not url:
+        return _jenkins[0]
+
+    jenkins = connect_to_jenkins(url, remote)
+    _jenkins.append(jenkins)
+    return jenkins
+
+
+def get_tc_client(api, remote=False):
+    if _tc_client and not api:
+        return _tc_client[0]
+
+    tc_client = connect_to_testcatalog(api, remote)
+    _tc_client.append(tc_client)
+    return tc_client
+
+
+def connect_to_testcatalog(api, remote=False):
+    LOG.debug('Connecting to test-catalog @ %s remote=%s' % (api, remote))
+    if remote:
+        print("Fetching cookies for %s" % api)
+        cookies = pycookiecheat.chrome_cookies(api)
+        return tc_client(endpoint=api, cookies=cookies)
+    else:  # If no auth_file, then assume running on jenkins
+        return tc_client(endpoint=api)
+
+
+def connect_to_jenkins(url, remote=False):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
 
+    LOG.debug('Connecting to jenkins @ %s remote=%s' % (url, remote))
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
+    cookies = None
 
     if remote:
         print("Fetching cookies for %s" % url)
         cookies = pycookiecheat.chrome_cookies(url)
+    try:
         return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
-    else:
-        return Jenkins(baseurl=url, netloc=netloc)
+    except JenkinsAPIException:
+        LOG.exception('Failed to connect to Jenkins')
 
 
 def get_pipelines(pipeline, api, remote=False):
@@ -38,12 +73,8 @@ def get_pipelines(pipeline, api, remote=False):
         part of the given pipeline.
 
     """
-    if remote:
-        print("Fetching cookies for %s" % api)
-        cookies = pycookiecheat.chrome_cookies(api)
-        client = tc_client(endpoint=api, cookies=cookies)
-    else:  # If no auth_file, then assume running on jenkins
-        client = tc_client(endpoint=api)
+    LOG.info('Fetching data on pipeline: %s' % (pipeline))
+    client = get_tc_client(api, remote)
     pl_tcat = TCCTestPipeline(client, pipeline)
     try:
         deploy_dict = pl_tcat.dict['parent']
@@ -381,25 +412,101 @@ def export_to_yaml(yaml_dict, job, reportdir):
         print(filename + " written to " + reportdir)
 
 
+def open_bug_database(database_uri, remote=False):
+    if len(database_uri):
+        if not database_uri.startswith("/"):
+            filename = os.path.join(os.getcwd(), database_uri)
+
+        LOG.info("Connecting to database file: %s" % (filename))
+        with open(filename, "r") as mock_db_file:
+            return yaml.load(mock_db_file)['bugs']
+    elif database_uri in [None, 'None', 'none', '']:
+        LOG.info("Connecting to test-catalog bug/regex database")
+        client = get_tc_client(remote, database_uri)
+        return client.get_bug_info(force_refresh=True)
+    else:
+        LOG.error('Unknown database: %s' % (database_uri))
+        raise Exception('Invalid Database configuration')
+
+
 def main():
-    cfg = utils.get_config()
-    run_remote = cfg.get('DEFAULT', 'run_remote')
-    reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
-    database = cfg.get('DEFAULT', 'database_uri')
-    api = cfg.get('DEFAULT', 'oil_api_url')
+    usage = "usage: %prog [options] pipeline_id1 pipeline_id2 ..."
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-c', '--config', action='store', dest='configfile',
+                      default=None,
+                      help='specify path to configuration file')
+    parser.add_option('-d', '--dburi', action='store', dest='database',
+                      default=None,
+                      help='set URI to bug/regex db: /path/to/mock_db.yaml')
+    parser.add_option('-J', '--jenkins', action='store', dest='jenkins_host',
+                      default=None,
+                      help='URL to Jenkins server')
+    parser.add_option('-n', '--netloc', action='store', dest='netloc',
+                      default=None,
+                      help='Specify an IP to rewrite URLs')
+    parser.add_option('-r', '--remote', action='store_true', dest='run_remote',
+                      default=False,
+                      help='set if running analysis remotely')
+    parser.add_option('-o', '--output', action='store', dest='report_dir',
+                      default=None,
+                      help='specific the report output directory')
+    parser.add_option('-T', '--testcatalog', action='store', dest='tc_host',
+                      default=None,
+                      help='URL to test-catalog API server')
+    (opts, args) = parser.parse_args()
+
+    # cli override of config values
+    if opts.configfile:
+        cfg = utils.get_config(opts.configfile)
+    else:
+        cfg = utils.get_config()
+
+    database = opts.database
+    print "database=%s" % database
+    # database filepath might be set in config
+    if database is None:
+        print 'get it from config'
+        database = cfg.get('DEFAULT', 'database_uri')
+        print 'database=%s' % database
+
+    if opts.jenkins_host:
+        jenkins_host = opts.jenkins_host
+    else:
+        jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
+
+    if opts.run_remote:
+        run_remote = opts.run_remote
+    else:
+        run_remote = cfg.get('DEFAULT', 'run_remote')
+
+    if opts.report_dir:
+        reportdir = opts.report_dir
+    else:
+        reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
+
+    if opts.tc_host:
+        tc_host = opts.tc_host
+    else:
+        tc_host = cfg.get('DEFAULT', 'oil_api_url')
+
+    if jenkins_host in [None, 'None', 'none', '']:
+        LOG.error("Missing jenkins configuration")
+        raise Exception("Missing jenkins configuration")
+
+    if tc_host in [None, 'None', 'none', '']:
+        LOG.error("Missing test-catalog configuration")
+        raise Exception("Missing test-catalog configuration")
 
     # Get arguments:
-    pipeline_ids = sys.argv[1:]
+    pipeline_ids = args
     if not pipeline_ids:
         raise Exception("No pipeline IDs provided")
 
     # Establish a connection to jenkins:
-    jenkins = connect_to_jenkins(run_remote)
+    jenkins = get_jenkins(jenkins_host, run_remote)
 
-    # Connect to bugs DB: # TODO: use a real db, not yaml
-    with open(database, "r") as mock_db_file:
-        mock_db = yaml.load(mock_db_file)
-    bugs = mock_db['bugs']
+    # Connect to bugs DB:
+    bugs = open_bug_database(database, run_remote)
 
     # Clean up data folders:
     if os.path.isdir(reportdir):
@@ -413,7 +520,7 @@ def main():
         if [8, 4, 4, 4, 12] != [len(x) for x in pipeline.split('-')]:
             raise Exception("Pipeline ID %s is an unrecognised format")
         deploy_build, prepare_build, tempest_build = \
-            get_pipelines(pipeline, api=api, remote=run_remote)
+            get_pipelines(pipeline, api=tc_host, remote=run_remote)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
         if prepare_build:
             get_triage_data(jenkins, prepare_build,
