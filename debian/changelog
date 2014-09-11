@@ -1,3 +1,10 @@
+doberman (0.0.1-0ubuntu5) precise; urgency=medium
+
+  * add cli interface
+  * use new tc_client method for querying bug/regex database
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Thu, 11 Sep 2014 12:19:46 -0500
+
 doberman (0.0.1-0ubuntu4) precise; urgency=medium
 
   * Merge in support for using tc_client to interface with test-catalog
