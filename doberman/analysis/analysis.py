@@ -19,17 +19,19 @@ from doberman.common import pycookiecheat, utils
 
 LOG = utils.get_logger('doberman.analysis')
 
+
 def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
 
     netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
 
     if remote:
-        print "Fetching cookies for %s" %(url)
+        print("Fetching cookies for %s" % url)
         cookies = pycookiecheat.chrome_cookies(url)
         return Jenkins(baseurl=url, cookies=cookies, netloc=netloc)
     else:
         return Jenkins(baseurl=url, netloc=netloc)
+
 
 def get_pipelines(pipeline, api, remote=False):
     """ Using test-catalog, return the build numbers for the jobs that are
@@ -37,7 +39,7 @@ def get_pipelines(pipeline, api, remote=False):
 
     """
     if remote:
-        print "Fetching cookies for %s" %(api)
+        print("Fetching cookies for %s" % api)
         cookies = pycookiecheat.chrome_cookies(api)
         client = tc_client(endpoint=api, cookies=cookies)
     else:  # If no auth_file, then assume running on jenkins
@@ -61,6 +63,7 @@ def get_pipelines(pipeline, api, remote=False):
 
     return (deploy_build, prepare_build, tempest_build)
 
+
 def get_triage_data(jenkins, build_num, job, reportdir):
     """ Get the artifacts from jenkins via jenkinsapi object. """
     jenkins_job = jenkins[job]
@@ -83,6 +86,7 @@ def get_triage_data(jenkins, build_num, job, reportdir):
         artifact.save_to_dir(outdir)
         extract_and_delete_archive(outdir, artifact)
 
+
 def extract_and_delete_archive(outdir, artifact):
     """ Extracts the contents of a tarball and places it into a new file
         of the samename without the .tar.gz suffix (N.B. this leaves
@@ -102,6 +106,7 @@ def extract_and_delete_archive(outdir, artifact):
                     data = tar.extractfile(compressed_file).readlines()
                     new_file.writelines(data)
         os.remove(os.path.join(outdir, artifact.filename))
+
 
 def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                         yaml_dict):
@@ -238,10 +243,12 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                  oil_df, 'console.txt', console_output)
     yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
+
     return (oil_df, yaml_dict)
 
-def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, oil_df,
-                         yaml_dict):
+
+def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
+                         oil_df, yaml_dict):
     """ Parses the artifacts files from a single pipeline into data and
         metadata DataFrames.
 
@@ -264,8 +271,9 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, oil_df,
                             existing_dict=yaml_dict)
     return yaml_dict
 
-def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, oil_df,
-                         yaml_dict):
+
+def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
+                         oil_df, yaml_dict):
     """
     Parses the artifacts files from a single pipeline into data and
     metadata DataFrames
@@ -292,11 +300,10 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, oil_df,
     for num, fail in enumerate(errors_and_fails):
         pre_log = fail.get('message').split("begin captured logging")[0]
         test = fail.getparent().attrib['classname'] + " - " + \
-                                            fail.getparent().attrib['name']
+            fail.getparent().attrib['name']
         failure_type = fail.get('type')
         info = "\nWithin the " + test + " test, there was a "
         info += failure_type + " error."
-        error_found = False
         earlier_matching_bugs = matching_bugs
         matching_bugs, build_status = \
             bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs,
@@ -309,6 +316,7 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, oil_df,
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
+
 
 def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
     """ Searches provided text for each regexp from the bugs database. """
@@ -363,6 +371,7 @@ def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
 
     return yaml_dict
 
+
 def export_to_yaml(yaml_dict, job, reportdir):
     """ Write output files. """
     filename = 'triage_' + job + '.yml'
@@ -370,6 +379,7 @@ def export_to_yaml(yaml_dict, job, reportdir):
     with open(file_path, 'w') as outfile:
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
         print(filename + " written to " + reportdir)
+
 
 def main():
     cfg = utils.get_config()
