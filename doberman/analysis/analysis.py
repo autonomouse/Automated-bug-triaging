@@ -344,7 +344,7 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
                                                  'machines': machines_list,
                                                  'units': units_list}
                         bug_unmatched = False
-    if bug_unmatched:
+    if bug_unmatched and build_status == 'FAILURE':
         bid = 'unfiled-' + str(uuid.uuid4())
         matching_bugs[bid] = {'regexp': 'NO REGEX - UNFILED/UNMATCHED BUG',
                               'vendors': vendors_list,
@@ -355,7 +355,7 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
 
 def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
     """
-    Creates a yaml dict and populates with data in the right format and  merges
+    Creates a yaml dict and populates with data in the right format and merges
     with existing yaml dict.
 
     """
