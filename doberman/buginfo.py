@@ -15,7 +15,6 @@ class BugInfo():
     def __init__(self, launchpad, dist="oil"):
         self.launchpad = launchpad
         self.dist = dist
-        self.bugdictionary = {}
         self.bugtasks = None
         self.get_tasks()
 
@@ -24,12 +23,8 @@ class BugInfo():
     def get_tasks(self):
         distobj = self.launchpad.distributions[self.dist]
         self.bugtasks = distobj.searchTasks()
-        
-        # create a dictionary so we can get bug task by bug number.
-        for bug in self.bugtasks:
-            self.bugdictionary[self.get_bugno(bug)] = bug
 
-   # Method: get_duplicates()
+    # Method: get_duplicates()
     # Description: Return duplicates for bug number passed in.
     def get_duplicates(self, bugno):
         retdup = []
@@ -41,9 +36,9 @@ class BugInfo():
             LOG.exception(msg)
             raise ValueError(msg)
         
-        matchedbug = self.bugdictionary[bugno]
+        matchedbug = self.launchpad.bugs[bugno]
 
-        duplicates = matchedbug.bug.duplicates
+        duplicates = matchedbug.duplicates
         for dup in duplicates:
             allowedgroups = ["nobody"]
             newentry = []
@@ -58,12 +53,12 @@ class BugInfo():
     def get_tags(self, bugno):
         ret_tags = []
         
-        if (bugno < 1):
-            msg = "Invalid bug number."
+        try:
+            ret_tags = self.launchpad.bugs[bugno].tags
+        except KeyError as ke:
+            msg = "Invalid key"
             LOG.exception(msg)
             raise ValueError(msg)
-
-        ret_tags = self.bugdictionary[bugno].bug.tags
 
         return ret_tags
 
@@ -72,18 +67,20 @@ class BugInfo():
     def get_description(self, bugno):     
         description = None
 
-        if (bugno < 1):
-            msg = "Invalid bug number."
+        try:
+            description = self.launchpad.bugs[bugno].description
+        except KeyError as ke:
+            msg = "Invalid key"
             LOG.exception(msg)
             raise ValueError(msg)
-
-        description = self.bugdictionary[bugno].bug.description
 
         return description
 
     # Method: get_bugs()
     # Description: return list of bug number that matches tags. Pass list of
-    #              tags or a string space separated tags.
+    #              tags or a string space separated tags. This can be later
+    #              refined if we find a way to access the the oil bugs without
+    #              going through searchTasks.
     def get_bugs(self, tags):
         retbugs = []
         
@@ -113,39 +110,29 @@ class BugInfo():
     #              replace here.
 
     def get_bugno(self, bugtask):
-        bugnum = -1
-        title = bugtask.title
-        numre = re.search('Bug #(\d+) ', title)
-        if (numre is not None):
-            numstr = numre.group(1)
-
-        bugnum = int(numstr)
-
-        return(bugnum)
+        return(bugtask.bug.id)
 
     # Method: get_category()
     # Description: return tags category-
     def get_category(self, bugno):
-        # call get_tags() and match category-
-        tags = self.bugdictionary[bugno].bug.tags
-        rettags = []
-        for tag in tags:
-            if (tag.find("category-") != -1):
-                rettags.append(tag)
-
+        try:
+            tags = self.launchpad.bugs[bugno].tags
+            rettags = [tag.replace("category-", "", 1) for tag in tags if tag.startswith("category-")]
+        except KeyError as ke:
+            msg = "Invalid key"
+            LOG.exception(msg)
+            raise ValueError(msg)
         return(rettags)
         
 
-    # Method: get_affects()
-    # Description: return tags affect-
+    # Method: get_affect()
+    # Description: return tags affect_
     def get_affects(self, bugno):
-        # call get_tags() and match affects-
-        tags = self.bugdictionary[bugno].bug.tags
-        rettags = []
-        for tag in tags:
-            print(tag)
-            if (tag.find("affects-") != -1):
-                rettags.append(tag)
-
+        try:
+            tags = self.launchpad[bugno].tags
+            rettags = [tag.replace("affects-", "", 1) for tag in tags if tag.startswith("affects-")]
+        except KeyError as ke:
+            msg = "Invalid key"
+            LOG.exception(msg)
+            raise ValueError(msg)
         return(rettags) 
-
