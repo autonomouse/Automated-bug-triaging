@@ -124,11 +124,6 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     pipeline_status_location = os.path.join(pipeline_deploy_path,
                                             'pipeline_status')
     mapping_location = os.path.join(pipeline_deploy_path, 'mapping.json')
-    console_location = os.path.join(pipeline_deploy_path, 'console.txt')
-
-    # Get console output:
-    with open(console_location, 'r') as grep_me:
-        console_output = grep_me.read()
 
     # Get vendor mapping:
     with open(mapping_location, "r") as mapping_file:
@@ -239,8 +234,9 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                     split_line[1].lstrip().rstrip()
 
     matching_bugs, build_status = \
-        bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, reportdir,
-                 oil_df, 'console.txt', console_output)
+        bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, oil_df, \
+        pipeline_deploy_path, ignore=["tempest_xunit.xml"])
+
     yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
 
@@ -255,17 +251,9 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
     """
     prepare_path = os.path.join(reportdir, 'pipeline_prepare',
                                 prepare_build)
-
-    # Get paths of data files:
-    console_location = os.path.join(prepare_path, 'console.txt')
-
-    # Get console output:
-    with open(console_location, 'r') as grep_me:
-        console_output = grep_me.read()
-
     matching_bugs, build_status = \
-        bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, reportdir,
-                 oil_df, 'console.txt', console_output)
+        bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, oil_df, \
+        prepare_path, ignore=["tempest_xunit.xml"])
 
     yaml_dict = add_to_yaml(pline, prepare_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
@@ -284,45 +272,24 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
     # Get paths of data files:
     console_location = os.path.join(tts_path, 'console.txt')
     tempest_xml_location = os.path.join(tts_path, 'tempest_xunit.xml')
+    xml_target_file = "tempest_xunit.xml"
 
-    # Get console output:
-    with open(console_location, 'r') as grep_me:
-        console_output = grep_me.read()
-
-    # Check console
     matching_bugs, build_status = \
-        bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, reportdir,
-                 oil_df, 'console.txt', console_output)
+        bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, oil_df, \
+        tts_path, ignore=[xml_target_file])
 
-    # Get tempest results:
-    doc = etree.parse(tempest_xml_location).getroot()
-    errors_and_fails = doc.xpath('.//failure') + doc.xpath('.//error')
-    for num, fail in enumerate(errors_and_fails):
-        pre_log = fail.get('message').split("begin captured logging")[0]
-        test = fail.getparent().attrib['classname'] + " - " + \
-            fail.getparent().attrib['name']
-        failure_type = fail.get('type')
-        info = "\nWithin the " + test + " test, there was a "
-        info += failure_type + " error."
-        earlier_matching_bugs = matching_bugs
-        matching_bugs, build_status = \
-            bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs,
-                     reportdir, oil_df, 'tempest_xunit.xml', pre_log)
-
-        # Merge matching_bugs dictionaries:
-        matching_bugs = dict(list(earlier_matching_bugs.items()) +
-                             list(matching_bugs.items()))
+    matching_bugs = xml_rematch(bugs, tts_path, xml_target_file, matching_bugs,
+                                'test_tempest_smoke', build_status, oil_df)
 
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
 
 
-def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
+def bug_hunt(job, jenkins, build, bugs, oil_df, path, ignore=[]):
     """ Searches provided text for each regexp from the bugs database. """
-    build_status = \
-        [build_info for build_info in jenkins[job]._poll()['builds']
-         if build_info['number'] == int(build)][0]['result']
+    build_status = [build_info for build_info in jenkins[job]._poll()['builds']
+                    if build_info['number'] == int(build)][0]['result']
     matching_bugs = {}
     units_list = oil_df['service'].tolist()
     machines_list = oil_df['node'].tolist()
@@ -330,20 +297,26 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
     bug_unmatched = True
     for bug_id in bugs.keys():
         if job in bugs[bug_id]:
-            # TODO: This may need to be changed once we're using a DB:
-            regexp = bugs[bug_id][job]['regexp']
-            if regexp not in ['None', None, '']:
-                if target == bugs[bug_id][job]['target_file']:
-                    matches = re.compile(regexp, re.DOTALL).findall(text)
-                    if len(matches):
-                        # TODO: For now, just include everything - guilt by
-                        # association - but the next step would be to only
-                        # associate the machines implied by bug_category
-                        matching_bugs[bug_id] = {'regexp': regexp,
-                                                 'vendors': vendors_list,
-                                                 'machines': machines_list,
-                                                 'units': units_list}
-                        bug_unmatched = False
+            # Any of the dicts in bugs[bug_id][job] can match (or):
+            OR_dict = bugs[bug_id][job]
+            for AND_dict in OR_dict:
+                # Within the dictionary all have to match (and):
+                hit_list = []
+                # Load up the file for each target_file in the DB for this bug:
+                for target_file in AND_dict.keys():
+                    target_location = os.path.join(path, target_file)
+                    if not (target_file in ignore):
+                        # TODO: raise error if no file ... or make unfiled bug...?
+                        with open(target_location, 'r') as grep_me:
+                            text = grep_me.read()
+                        hit_list = rematch(hit_list, AND_dict, target_file, text)
+
+                if hit_list:
+                    matching_bugs[bug_id] = {'regexp': hit_list,
+                                             'vendors': vendors_list,
+                                             'machines': machines_list,
+                                             'units': units_list}
+                    bug_unmatched = False
     if bug_unmatched and build_status == 'FAILURE':
         bid = 'unfiled-' + str(uuid.uuid4())
         matching_bugs[bid] = {'regexp': 'NO REGEX - UNFILED/UNMATCHED BUG',
@@ -351,6 +324,68 @@ def bug_hunt(job, jenkins, build, bugs, reportdir, oil_df, target, text):
                               'machines': machines_list,
                               'units': units_list}
     return (matching_bugs, build_status)
+
+
+def rematch(hit_list, bugs, target_file, text):
+    """ Search files in bugs for multiple matching regexps. """
+    regexps = bugs[target_file]['regexp']
+    if type(regexps) == list:
+        if len(regexps) > 1:
+            regexp = '|'.join(regexps)
+        else:
+            regexp = regexps[0]
+        set_re = set(regexps)
+    else:
+        regexp = regexps
+        set_re = set([regexps])
+    if regexp not in ['None', None, '']:
+        matches = re.compile(regexp, re.DOTALL).findall(text)
+        # TODO: This checks that they match, but not that they do so in the correct order yet:
+        if set_re == set(matches):
+            hit_list.append({target_file: regexps})
+        else:
+            hit_list = []
+    return hit_list
+
+
+def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
+                oil_df):
+    """ Search xml file for tests that return text containing regexps. """
+    units_list = oil_df['service'].tolist()
+    machines_list = oil_df['node'].tolist()
+    vendors_list = oil_df['vendor'].tolist()
+    tempest_xml_location = os.path.join(path, xml_target_file)
+    if os.path.isfile(tempest_xml_location):
+        # Get tempest results:
+        doc = etree.parse(tempest_xml_location).getroot()
+        errors_and_fails = doc.xpath('.//failure') + doc.xpath('.//error')
+        hit = []
+        for num, fail in enumerate(errors_and_fails):
+            pre_log = fail.get('message').split("begin captured logging")[0]
+            test = fail.getparent().attrib['classname'] + " - " + \
+                fail.getparent().attrib['name']
+            failure_type = fail.get('type')
+            earlier_matching_bugs = matching_bugs
+            for bug in bugs:
+                if job in bugs[bug]:
+                    # TODO: multiple or just use [0]?
+                    tempest_bug = bugs[bug][job][0]
+                    regexp = tempest_bug[xml_target_file]['regexp']
+                    hit = rematch(hit, tempest_bug, xml_target_file,
+                                       pre_log)
+                    if hit:
+                        matching_bugs[bug] = {'regexp': hit,
+                                              'vendors': vendors_list,
+                                              'machines': machines_list,
+                                              'units': units_list}
+                        bug_unmatched = False
+
+                        # Merge matching_bugs dictionaries:
+                        matching_bugs = dict(list(earlier_matching_bugs.items()) +
+                                             list(matching_bugs.items()))
+        else:
+            bug_unmatched = True
+    return (matching_bugs, bug_unmatched)
 
 
 def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
