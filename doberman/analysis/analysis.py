@@ -4,7 +4,6 @@ import sys
 import os
 import re
 import yaml
-import pandas as pd
 import socket
 import urlparse
 import tarfile
@@ -13,7 +12,7 @@ import uuid
 import optparse
 from test_catalog.client.api import TCClient as tc_client
 from test_catalog.client.base import TCCTestPipeline
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins
 from jenkinsapi.custom_exceptions import *
@@ -154,13 +153,6 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
     juju_status_location = os.path.join(pipeline_deploy_path,
                                         'juju_status.yaml')
-    pipeline_status_location = os.path.join(pipeline_deploy_path,
-                                            'pipeline_status')
-    mapping_location = os.path.join(pipeline_deploy_path, 'mapping.json')
-
-    # Get vendor mapping:
-    with open(mapping_location, "r") as mapping_file:
-        vendor_mapping = yaml.load(mapping_file)
 
     # Read oil nodes file:
     with open(oil_node_location, "r") as nodes_file:
@@ -171,100 +163,20 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     with open(juju_status_location, "r") as jjstat_file:
         juju_status = yaml.load(jjstat_file)
 
-    # Put machines data into a pandas DataFrame:
-    machines = DataFrame(juju_status['machines']).T  # transpose
-    machines.index.name = 'machine'
-    machines.reset_index(level=0, inplace=True)
-    machines.rename(columns={'dns-name': 'node'}, inplace=True)
+    oil_df = DataFrame(columns=('node', 'vendor', 'service'))
+    row = 0
+    for service in juju_status['services']:
+        for unit in juju_status['services'][service]['units']:
+            this_unit = juju_status['services'][service]['units'][unit]
+            machine = this_unit['public-address']
+            nptags = oil_nodes[oil_nodes['node'] == machine]['tags'].apply(str)
+            tags = nptags.tolist()[0].replace("[", "").replace("]", "")\
+                .split(', ')
+            hardware = [x.replace("'", "") for x in tags if 'hardware' in x]
 
-    # Put service data into a pandas DataFrame (without relations/units)
-    service = DataFrame(juju_status['services']).T  # transpose
-    try:
-        service.pop('relations')
-    except:
-        pass
-    try:
-        service.pop('units')
-    except:
-        pass
-    service.index.name = 'service'
-    service.reset_index(level=0, inplace=True)
-
-    # Put relations and units data into pandas DataFrames:
-    rel = {}
-    unit = {}
-    for serv in juju_status['services'].keys():
-        try:
-            rel[serv] = juju_status['services'][serv]['relations']
-        except:
-            pass
-        try:
-            units_dict = juju_status['services'][serv]['units']
-            # Raise this services sub-dictionary to the top level:
-            for key in units_dict.keys():
-                unit[key] = juju_status['services'][serv]['units'][key]
-        except:
-            pass
-    relations = DataFrame(rel).T  # transpose
-    relations.index.name = 'service'
-    relations.reset_index(level=0, inplace=True)
-
-    units = DataFrame(unit).T  # transpose
-    units.index.name = 'service'
-    units.reset_index(level=0, inplace=True)
-    try:
-        units.pop('agent-state')
-    except:
-        pass
-    try:
-        units.pop('agent-version')
-    except:
-        pass
-
-    # Merge units and relations DataFrames, using the service column:
-    unit_and_rels = pd.merge(units, relations, how='outer')
-
-    # Merge service & unit_and_rels DataFrames, using services column:
-    services = pd.merge(service, unit_and_rels, how='outer')
-
-    # Merge oil_nodes with machines, using node column:
-    nodes = oil_nodes.merge(machines)
-
-    # Merge nodes and services DataFrames, using the machine column:
-    try:
-        oil_df = pd.merge(nodes, services, how='outer')
-        oil_df['machine'] = oil_df['machine'].dropna().astype('int')
-        oil_df = oil_df.set_index('machine')
-        oil_df.sort_index(inplace=True)
-        vendor = {}
-        for key in vendor_mapping.keys():
-            vendor[key.replace('_', '-')] = vendor_mapping[key]
-        oil_df['vendor'] = Series(vendor, index=oil_df['service']).values
-    except:
-        oil_df = DataFrame()
-        oil_df['node'] = None
-        oil_df['vendor'] = None
-        oil_df['service'] = None
-
-    # Get pipeline_status:
-    with open(pipeline_status_location, "r") as pls_file:
-        pipeline_status = pls_file.readlines()
-
-    # Get metadata:
-    metadata = {}
-    metadata['environment'] = juju_status['environment']
-
-    for line in pipeline_status:
-        if not ("Pipeline Metadata" in line) and \
-           re.sub(r'[^\w]', ' ', line).replace(' ', '') != '':
-            if "Pipeline Jobs" in line:
-                break
-                # I could get the build_status from here, but I'm not sure
-                # that I trust it, so I've used a jenkins poll instead, below
-            else:
-                split_line = line.lstrip('|').rstrip(' |\n').split('|')
-                metadata[split_line[0].lstrip().rstrip()] = \
-                    split_line[1].lstrip().rstrip()
+            oil_df.loc[row] = [machine, unit, ', '.join(hardware)
+                               .replace('hardware-', '')]
+            row += 1
 
     matching_bugs, build_status = \
         bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, oil_df,
