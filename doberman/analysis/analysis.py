@@ -411,10 +411,7 @@ def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
                                               'units': units_list}
                         bug_unmatched = False
 
-                        # Merge matching_bugs dictionaries:
-                        earlier_items = list(earlier_matching_bugs.items())
-                        current_items = list(matching_bugs.items())
-                        matching_bugs = dict(earlier_items + current_items)
+                        matching_bugs = join_dicts(earlier_matching_bugs, matching_bugs)
 
     return (matching_bugs, bug_unmatched)
 
@@ -426,15 +423,22 @@ def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
 
     """
     # Make dict
+    pipeline_dict = {}
     yaml_dict = {}
+
     if matching_bugs != {}:
-        yaml_dict['pipeline'] = {pline: {'status': build_status,
-                                         'build': build,
-                                         'bugs': matching_bugs}}
+        pipeline_dict = {pline: {'status': build_status,
+                                 'build': build,
+                                 'bugs': matching_bugs}}
     # Merge with existing dict:
     if existing_dict:
-        yaml_dict = dict(list(existing_dict.items()) + list(yaml_dict.items()))
-
+        if 'pipeline' in existing_dict:
+            yaml_dict['pipeline'] = join_dicts(existing_dict['pipeline'],
+                                               pipeline_dict)
+        else:
+            yaml_dict['pipeline'] = join_dicts(existing_dict, pipeline_dict)
+    else:
+        yaml_dict['pipeline'] = pipeline_dict
     return yaml_dict
 
 
@@ -463,6 +467,11 @@ def open_bug_database(database_uri, remote=False):
         LOG.error('Unknown database: %s' % (database_uri))
         raise Exception('Invalid Database configuration')
 
+def join_dicts(old_dict, new_dict):
+    """ Merge matching_bugs dictionaries. """
+    earlier_items = list(old_dict.items())
+    current_items = list(new_dict.items())
+    return dict(earlier_items + current_items)
 
 def main():
     usage = "usage: %prog [options] pipeline_id1 pipeline_id2 ..."
@@ -572,16 +581,19 @@ def main():
         oil_df, deploy_yaml_dict = \
             process_deploy_data(pipeline, deploy_build, jenkins, reportdir,
                                 bugs, deploy_yaml_dict, xmls)
+
         if prepare_build:
             prepare_yaml_dict = \
                 process_prepare_data(pipeline, prepare_build, jenkins,
                                      reportdir, bugs, oil_df,
                                      prepare_yaml_dict, xmls)
+
         if tempest_build:
             tempest_yaml_dict = \
                 process_tempest_data(pipeline, tempest_build, jenkins,
                                      reportdir, bugs, oil_df,
                                      tempest_yaml_dict, xmls)
+
 
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
@@ -589,9 +601,9 @@ def main():
     export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', reportdir)
 
     # Clean up data folders (just leaving yaml files):
-    # shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
-    # shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
-    # shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
+    shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
+    shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
+    shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
 
 
 if __name__ == "__main__":
