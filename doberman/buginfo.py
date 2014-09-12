@@ -8,6 +8,7 @@ from doberman.common import utils
 
 LOG = utils.get_logger('doberman.getbugs')
 
+
 class BugInfo():
     def __init__(self, launchpad, dist="oil"):
         self.launchpad = launchpad
@@ -21,7 +22,6 @@ class BugInfo():
         retdup = []
 
         bug = self.get_bug(bugno)
-        
         duplicates = bug.duplicates
         for dup in duplicates:
             allowedgroups = ["nobody"]
@@ -44,7 +44,7 @@ class BugInfo():
 
     # Method: get_description()
     # Description: Return description
-    def get_description(self, bugno):     
+    def get_description(self, bugno):
         description = None
 
         bug = self.get_bug(bugno)
@@ -59,10 +59,8 @@ class BugInfo():
     #              going through searchTasks.
     def get_bugs(self, tags):
         retbugs = []
-        
-        # tags can be passed in as list or string, but we'll operate on list.
-        intaglist = tags
 
+        # tags passed as a list.
         distobj = self.launchpad.distributions[self.dist]
         bugtasks = distobj.searchTasks()
 
@@ -88,19 +86,20 @@ class BugInfo():
     def get_category(self, bugno):
         bug = self.get_bug(bugno)
         tags = bug.tags
-        rettags = [tag.replace("category-", "", 1) for tag in tags if tag.startswith("category-")]
+        rettags = [tag.replace("category-", "", 1)
+                   for tag in tags if tag.startswith("category-")]
 
         return(rettags)
-        
 
     # Method: get_affect()
     # Description: return tags affect_
     def get_affects(self, bugno):
         bug = self.get_bug(bugno)
         tags = bug.tags
-        rettags = [tag.replace("affects-", "", 1) for tag in tags if tag.startswith("affects-")]
+        rettags = [tag.replace("affects-", "", 1)
+                   for tag in tags if tag.startswith("affects-")]
 
-        return(rettags) 
+        return(rettags)
 
     # Method: get_bug()
     # Description: return cached bug or fetches it from launchpad
@@ -116,4 +115,3 @@ class BugInfo():
                 raise ValueError(msg)
 
         return self.bug
-
