@@ -317,7 +317,8 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
 
 
 def bug_hunt(job, jenkins, build, bugs, oil_df, path, ignore=[]):
-    """ Searches provided text for each regexp from the bugs database. """
+    """ Using information from the bugs database, opens target file and
+        searches the text for each associated regexp. """
     build_status = [build_info for build_info in jenkins[job]._poll()['builds']
                     if build_info['number'] == int(build)][0]['result']
     matching_bugs = {}
@@ -398,7 +399,7 @@ def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
             earlier_matching_bugs = matching_bugs
             for bug in bugs:
                 if job in bugs[bug]:
-                    # TODO: multiple or just use [0]?
+                    # There should not be multiple here, so just using [0]:
                     tempest_bug = bugs[bug][job][0]
                     hit = rematch(hit, tempest_bug, xml_target_file,
                                   pre_log)
@@ -525,7 +526,7 @@ def main():
     else:
         tc_host = cfg.get('DEFAULT', 'oil_api_url')
 
-    if opts.tc_host:
+    if opts.xmls:
         xmls = opts.xmls
     else:
         xmls = cfg.get('DEFAULT', 'xmls_to_defer')
