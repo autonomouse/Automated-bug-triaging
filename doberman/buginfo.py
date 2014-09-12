@@ -1,8 +1,6 @@
 # These are examples on how to to use this class:
 # 1) Pass the launchpad object and the distribution if not oil
 # 2) Call the provided methods to retrieve bug information
-# Note that this class will keep an internal list of the tasks
-# object for each bug and store it as a dictionary.
 
 from doberman.common import utils
 
