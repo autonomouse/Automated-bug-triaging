@@ -66,21 +66,13 @@ class BugInfo():
         distobj = self.launchpad.distributions[self.dist]
         bugtasks = distobj.searchTasks()
 
-
         # Go through list of bug tasks, and find the bugs that has all
         # the tags passed in.
         for bugtask in bugtasks:
+
             bugtags = bugtask.bug.tags
-            found = 0
-            for intag in intaglist:
-                for bugtag in bugtags:
-                    bugtagstr = str(bugtag)
-                    if (bugtagstr.find(intag) != -1):
-                        found += 1
-
-            if (found == len(intaglist) and (found != 0)):
+            if set(tags) <= set(bugtags):
                 retbugs.append(self.get_bugno(bugtask))
-
 
         return retbugs
 
