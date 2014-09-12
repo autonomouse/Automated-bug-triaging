@@ -4,8 +4,6 @@
 # Note that this class will keep an internal list of the tasks
 # object for each bug and store it as a dictionary.
 
-
-import re
 from doberman.common import utils
 
 LOG = utils.get_logger('doberman.getbugs')
@@ -21,7 +19,6 @@ class BugInfo():
     # Description: Return duplicates for bug number passed in.
     def get_duplicates(self, bugno):
         retdup = []
-        matchedbug = None
 
         bug = self.get_bug(bugno)
         
@@ -121,7 +118,7 @@ class BugInfo():
             try:
                 self.bug = self.launchpad.bugs[bugno]
                 self.bugno = bugno
-            except KeyError as ke:
+            except KeyError:
                 msg = "Invalid key"
                 LOG.exception(msg)
                 raise ValueError(msg)
