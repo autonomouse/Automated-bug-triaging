@@ -33,6 +33,17 @@ def connect_to_jenkins(remote=False, url="http://oil-jenkins.canonical.com"):
         return Jenkins(baseurl=url, netloc=netloc)
 
 
+def connect_to_database(database):
+    """ Connect to bugs DB or use a mock db yaml file. """
+    if 'yml' in database:
+        with open(database, "r") as mock_db_file:
+            mock_db = yaml.load(mock_db_file)
+        bugs = mock_db['bugs']
+    else:
+        raise Exception("This is the part where you'd connect me to a real DB")
+    return bugs
+
+
 def get_pipelines(pipeline, api, remote=False):
     """ Using test-catalog, return the build numbers for the jobs that are
         part of the given pipeline.
@@ -109,7 +120,7 @@ def extract_and_delete_archive(outdir, artifact):
 
 
 def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
-                        yaml_dict):
+                        yaml_dict, xmls):
     """ Parses the artifacts files from a single pipeline into data and
         metadata DataFrames
 
@@ -234,8 +245,8 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                     split_line[1].lstrip().rstrip()
 
     matching_bugs, build_status = \
-        bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, oil_df, \
-        pipeline_deploy_path, ignore=["tempest_xunit.xml"])
+        bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, oil_df,
+                 pipeline_deploy_path, xmls)
 
     yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
@@ -244,7 +255,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
 
 
 def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
-                         oil_df, yaml_dict):
+                         oil_df, yaml_dict, xmls):
     """ Parses the artifacts files from a single pipeline into data and
         metadata DataFrames.
 
@@ -252,8 +263,8 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
     prepare_path = os.path.join(reportdir, 'pipeline_prepare',
                                 prepare_build)
     matching_bugs, build_status = \
-        bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, oil_df, \
-        prepare_path, ignore=["tempest_xunit.xml"])
+        bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, oil_df,
+                 prepare_path, xmls)
 
     yaml_dict = add_to_yaml(pline, prepare_build, matching_bugs, build_status,
                             existing_dict=yaml_dict)
@@ -261,7 +272,7 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
 
 
 def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
-                         oil_df, yaml_dict):
+                         oil_df, yaml_dict, xmls):
     """
     Parses the artifacts files from a single pipeline into data and
     metadata DataFrames
@@ -269,17 +280,14 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
     """
     tts_path = os.path.join(reportdir, 'test_tempest_smoke', tempest_build)
 
-    # Get paths of data files:
-    console_location = os.path.join(tts_path, 'console.txt')
-    tempest_xml_location = os.path.join(tts_path, 'tempest_xunit.xml')
-    xml_target_file = "tempest_xunit.xml"
-
     matching_bugs, build_status = \
-        bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, oil_df, \
-        tts_path, ignore=[xml_target_file])
+        bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, oil_df,
+                 tts_path, xmls)
 
-    matching_bugs = xml_rematch(bugs, tts_path, xml_target_file, matching_bugs,
-                                'test_tempest_smoke', build_status, oil_df)
+    for xml_target_file in xmls:
+        matching_bugs = xml_rematch(bugs, tts_path, xml_target_file,
+                                    matching_bugs, 'test_tempest_smoke',
+                                    build_status, oil_df)
 
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
@@ -306,10 +314,11 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, ignore=[]):
                 for target_file in AND_dict.keys():
                     target_location = os.path.join(path, target_file)
                     if not (target_file in ignore):
-                        # TODO: raise error if no file ... or make unfiled bug...?
+                        # TODO: raise error if no file (or make unfiled bug?)
                         with open(target_location, 'r') as grep_me:
                             text = grep_me.read()
-                        hit_list = rematch(hit_list, AND_dict, target_file, text)
+                        hit_list = rematch(hit_list, AND_dict, target_file,
+                                           text)
 
                 if hit_list:
                     matching_bugs[bug_id] = {'regexp': hit_list,
@@ -340,7 +349,8 @@ def rematch(hit_list, bugs, target_file, text):
         set_re = set([regexps])
     if regexp not in ['None', None, '']:
         matches = re.compile(regexp, re.DOTALL).findall(text)
-        # TODO: This checks that they match, but not that they do so in the correct order yet:
+        # TODO: This checks that they match, but not that they do so in the
+        # correct order yet:
         if set_re == set(matches):
             hit_list.append({target_file: regexps})
         else:
@@ -351,6 +361,7 @@ def rematch(hit_list, bugs, target_file, text):
 def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
                 oil_df):
     """ Search xml file for tests that return text containing regexps. """
+    bug_unmatched = True
     units_list = oil_df['service'].tolist()
     machines_list = oil_df['node'].tolist()
     vendors_list = oil_df['vendor'].tolist()
@@ -362,17 +373,17 @@ def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
         hit = []
         for num, fail in enumerate(errors_and_fails):
             pre_log = fail.get('message').split("begin captured logging")[0]
-            test = fail.getparent().attrib['classname'] + " - " + \
-                fail.getparent().attrib['name']
-            failure_type = fail.get('type')
+            # test = fail.getparent().attrib['classname'] + " - " + \
+            #     fail.getparent().attrib['name']
+            # failure_type = fail.get('type')
             earlier_matching_bugs = matching_bugs
             for bug in bugs:
                 if job in bugs[bug]:
                     # TODO: multiple or just use [0]?
                     tempest_bug = bugs[bug][job][0]
-                    regexp = tempest_bug[xml_target_file]['regexp']
+                    # regexp = tempest_bug[xml_target_file]['regexp']
                     hit = rematch(hit, tempest_bug, xml_target_file,
-                                       pre_log)
+                                  pre_log)
                     if hit:
                         matching_bugs[bug] = {'regexp': hit,
                                               'vendors': vendors_list,
@@ -381,10 +392,10 @@ def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
                         bug_unmatched = False
 
                         # Merge matching_bugs dictionaries:
-                        matching_bugs = dict(list(earlier_matching_bugs.items()) +
-                                             list(matching_bugs.items()))
-        else:
-            bug_unmatched = True
+                        earlier_items = list(earlier_matching_bugs.items())
+                        current_items = list(matching_bugs.items())
+                        matching_bugs = dict(earlier_items + current_items)
+
     return (matching_bugs, bug_unmatched)
 
 
@@ -418,10 +429,12 @@ def export_to_yaml(yaml_dict, job, reportdir):
 
 def main():
     cfg = utils.get_config()
-    run_remote = cfg.get('DEFAULT', 'run_remote')
-    reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
+    jenkins_url = cfg.get('DEFAULT', 'jenkins_url')
     database = cfg.get('DEFAULT', 'database_uri')
+    reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
+    run_remote = cfg.get('DEFAULT', 'run_remote')
     api = cfg.get('DEFAULT', 'oil_api_url')
+    xmls = cfg.get('DEFAULT', 'xmls_to_defer')
 
     # Get arguments:
     pipeline_ids = sys.argv[1:]
@@ -429,12 +442,10 @@ def main():
         raise Exception("No pipeline IDs provided")
 
     # Establish a connection to jenkins:
-    jenkins = connect_to_jenkins(run_remote)
+    jenkins = connect_to_jenkins(remote=run_remote, url=jenkins_url)
 
-    # Connect to bugs DB: # TODO: use a real db, not yaml
-    with open(database, "r") as mock_db_file:
-        mock_db = yaml.load(mock_db_file)
-    bugs = mock_db['bugs']
+    # Get bugs from bugs database:
+    bugs = connect_to_database(database)
 
     # Clean up data folders:
     if os.path.isdir(reportdir):
@@ -459,17 +470,17 @@ def main():
 
         oil_df, deploy_yaml_dict = \
             process_deploy_data(pipeline, deploy_build, jenkins, reportdir,
-                                bugs, deploy_yaml_dict)
+                                bugs, deploy_yaml_dict, xmls)
         if prepare_build:
             prepare_yaml_dict = \
                 process_prepare_data(pipeline, prepare_build, jenkins,
                                      reportdir, bugs, oil_df,
-                                     prepare_yaml_dict)
+                                     prepare_yaml_dict, xmls)
         if tempest_build:
             tempest_yaml_dict = \
                 process_tempest_data(pipeline, tempest_build, jenkins,
                                      reportdir, bugs, oil_df,
-                                     tempest_yaml_dict)
+                                     tempest_yaml_dict, xmls)
 
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
