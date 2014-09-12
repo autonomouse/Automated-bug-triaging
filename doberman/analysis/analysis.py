@@ -311,6 +311,7 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
                                     matching_bugs, 'test_tempest_smoke',
                                     build_status, oil_df)
 
+
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
@@ -530,6 +531,7 @@ def main():
         xmls = opts.xmls
     else:
         xmls = cfg.get('DEFAULT', 'xmls_to_defer')
+    xmls = xmls.replace(' ', '').split(',')
 
     if jenkins_host in [None, 'None', 'none', '']:
         LOG.error("Missing jenkins configuration")
@@ -587,9 +589,9 @@ def main():
     export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', reportdir)
 
     # Clean up data folders (just leaving yaml files):
-    shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
-    shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
-    shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
+    # shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
+    # shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
+    # shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
 
 
 if __name__ == "__main__":
