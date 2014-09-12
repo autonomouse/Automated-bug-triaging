@@ -10,35 +10,22 @@ from doberman.common import utils
 
 LOG = utils.get_logger('doberman.getbugs')
 
-
 class BugInfo():
     def __init__(self, launchpad, dist="oil"):
         self.launchpad = launchpad
         self.dist = dist
-        self.bugtasks = None
-        self.get_tasks()
-
-    # Method: get_tasks()
-    # Description: This returns all the tasks in distribution.
-    def get_tasks(self):
-        distobj = self.launchpad.distributions[self.dist]
-        self.bugtasks = distobj.searchTasks()
+        self.bug = None
+        self.bugno = None
 
     # Method: get_duplicates()
     # Description: Return duplicates for bug number passed in.
     def get_duplicates(self, bugno):
         retdup = []
-        bug = None
         matchedbug = None
 
-        if (self.bugtasks == None) or (self.bugtasks == []):
-            msg = "There are no bug tasks to work with."
-            LOG.exception(msg)
-            raise ValueError(msg)
+        bug = self.get_bug(bugno)
         
-        matchedbug = self.launchpad.bugs[bugno]
-
-        duplicates = matchedbug.duplicates
+        duplicates = bug.duplicates
         for dup in duplicates:
             allowedgroups = ["nobody"]
             newentry = []
@@ -52,13 +39,9 @@ class BugInfo():
     # Description: Return tag object bug number passed in.
     def get_tags(self, bugno):
         ret_tags = []
-        
-        try:
-            ret_tags = self.launchpad.bugs[bugno].tags
-        except KeyError as ke:
-            msg = "Invalid key"
-            LOG.exception(msg)
-            raise ValueError(msg)
+
+        bug = self.get_bug(bugno)
+        ret_tags = bug.tags
 
         return ret_tags
 
@@ -67,12 +50,8 @@ class BugInfo():
     def get_description(self, bugno):     
         description = None
 
-        try:
-            description = self.launchpad.bugs[bugno].description
-        except KeyError as ke:
-            msg = "Invalid key"
-            LOG.exception(msg)
-            raise ValueError(msg)
+        bug = self.get_bug(bugno)
+        description = bug.description
 
         return description
 
@@ -87,9 +66,13 @@ class BugInfo():
         # tags can be passed in as list or string, but we'll operate on list.
         intaglist = tags
 
+        distobj = self.launchpad.distributions[self.dist]
+        bugtasks = distobj.searchTasks()
+
+
         # Go through list of bug tasks, and find the bugs that has all
         # the tags passed in.
-        for bugtask in self.bugtasks:
+        for bugtask in bugtasks:
             bugtags = bugtask.bug.tags
             found = 0
             for intag in intaglist:
@@ -108,31 +91,40 @@ class BugInfo():
     # Description: return bug number. I haven't found exact field to read
     #              bug number from, so using regex. If better method found,
     #              replace here.
-
     def get_bugno(self, bugtask):
         return(bugtask.bug.id)
 
     # Method: get_category()
     # Description: return tags category-
     def get_category(self, bugno):
-        try:
-            tags = self.launchpad.bugs[bugno].tags
-            rettags = [tag.replace("category-", "", 1) for tag in tags if tag.startswith("category-")]
-        except KeyError as ke:
-            msg = "Invalid key"
-            LOG.exception(msg)
-            raise ValueError(msg)
+        bug = self.get_bug(bugno)
+        tags = bug.tags
+        rettags = [tag.replace("category-", "", 1) for tag in tags if tag.startswith("category-")]
+
         return(rettags)
         
 
     # Method: get_affect()
     # Description: return tags affect_
     def get_affects(self, bugno):
-        try:
-            tags = self.launchpad[bugno].tags
-            rettags = [tag.replace("affects-", "", 1) for tag in tags if tag.startswith("affects-")]
-        except KeyError as ke:
-            msg = "Invalid key"
-            LOG.exception(msg)
-            raise ValueError(msg)
+        bug = self.get_bug(bugno)
+        tags = bug.tags
+        rettags = [tag.replace("affects-", "", 1) for tag in tags if tag.startswith("affects-")]
+
         return(rettags) 
+
+    # Method: get_bug()
+    # Description: return cached bug or fetches it from launchpad
+    def get_bug(self, bugno):
+        if (bugno is not self.bugno):
+            # cache bug for future use
+            try:
+                self.bug = self.launchpad.bugs[bugno]
+                self.bugno = bugno
+            except KeyError as ke:
+                msg = "Invalid key"
+                LOG.exception(msg)
+                raise ValueError(msg)
+
+        return self.bug
+
