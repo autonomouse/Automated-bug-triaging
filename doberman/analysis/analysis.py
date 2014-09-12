@@ -395,15 +395,11 @@ def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
         hit = []
         for num, fail in enumerate(errors_and_fails):
             pre_log = fail.get('message').split("begin captured logging")[0]
-            # test = fail.getparent().attrib['classname'] + " - " + \
-            #     fail.getparent().attrib['name']
-            # failure_type = fail.get('type')
             earlier_matching_bugs = matching_bugs
             for bug in bugs:
                 if job in bugs[bug]:
                     # TODO: multiple or just use [0]?
                     tempest_bug = bugs[bug][job][0]
-                    # regexp = tempest_bug[xml_target_file]['regexp']
                     hit = rematch(hit, tempest_bug, xml_target_file,
                                   pre_log)
                     if hit:
