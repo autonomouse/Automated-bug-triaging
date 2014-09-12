@@ -311,7 +311,6 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
                                     matching_bugs, 'test_tempest_smoke',
                                     build_status, oil_df)
 
-
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
@@ -411,7 +410,8 @@ def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
                                               'units': units_list}
                         bug_unmatched = False
 
-                        matching_bugs = join_dicts(earlier_matching_bugs, matching_bugs)
+                        matching_bugs = join_dicts(earlier_matching_bugs,
+                                                   matching_bugs)
 
     return (matching_bugs, bug_unmatched)
 
@@ -467,11 +467,20 @@ def open_bug_database(database_uri, remote=False):
         LOG.error('Unknown database: %s' % (database_uri))
         raise Exception('Invalid Database configuration')
 
+
 def join_dicts(old_dict, new_dict):
     """ Merge matching_bugs dictionaries. """
     earlier_items = list(old_dict.items())
     current_items = list(new_dict.items())
     return dict(earlier_items + current_items)
+
+
+def remove_dirs(rootdir, folders_to_delete):
+    for folder in folders_to_delete:
+        kill_me = os.path.join(rootdir, folder)
+        if os.path.isdir(kill_me):
+            shutil.rmtree(kill_me)
+
 
 def main():
     usage = "usage: %prog [options] pipeline_id1 pipeline_id2 ..."
@@ -594,16 +603,14 @@ def main():
                                      reportdir, bugs, oil_df,
                                      tempest_yaml_dict, xmls)
 
-
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
     export_to_yaml(prepare_yaml_dict, 'pipeline_prepare', reportdir)
     export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', reportdir)
 
     # Clean up data folders (just leaving yaml files):
-    shutil.rmtree(os.path.join(reportdir, 'pipeline_deploy'))
-    shutil.rmtree(os.path.join(reportdir, 'pipeline_prepare'))
-    shutil.rmtree(os.path.join(reportdir, 'test_tempest_smoke'))
+    remove_dirs(reportdir, ['pipeline_deploy', 'pipeline_prepare',
+                            'test_tempest_smoke'])
 
 
 if __name__ == "__main__":

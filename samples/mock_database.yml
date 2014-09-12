@@ -6,29 +6,4 @@ bugs:
       -
         "console.txt":
           regexp:
-            - "Started by user admin"
-        "run_config":
-          regexp:
-            - /var/lib/jenkins
-            - fixed_net_cidr
-      -
-        console.txt:
-          regexp:
-            - "other by user admin"
-  "bug2":
-    category: None
-    description:
-    test_tempest_smoke:
-      -
-        "tempest_xunit.xml":
-          regexp: "AssertionError: Timed out waiting for"
-
-  "bug3":
-    category: None
-    description:
-    test_tempest_smoke:
-      -
-        "console.txt":
-          regexp: "a"
-        "tempest_xunit.xml":
-          regexp: "AssertionError: Timed out waiting for"
+            - "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
