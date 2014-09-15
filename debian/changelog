@@ -1,3 +1,11 @@
+doberman (0.0.1-0ubuntu6) precise; urgency=medium
+
+  * Much simpler mapping of machines/nodes
+  * Multi-regex in multi-file
+  * Fixes for output overwrite and manual testing results
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Mon, 15 Sep 2014 16:27:17 -0500
+
 doberman (0.0.1-0ubuntu5) precise; urgency=medium
 
   * add cli interface
