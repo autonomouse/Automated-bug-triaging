@@ -1,9 +1,349 @@
 bugs:
-    '1358393':
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3aba':
+        description: "prodstack: Could not query juju status"
+        category: None
+        pipeline_deploy:
+            regexp: "ERROR.*Could not query juju status"
+            target_file: console.txt
+    1358393:
         description: "prodstack: nvp-transport-node hook failed config-changed"
         category: None
         pipeline_deploy:
-            'console.txt'
-                regexp: ["nvp-transport-node.*hook failed:.*config-changed"]              
-            'other_file.txt'
-                regexp: ["nvp-transport-node.*hook failed:.*config-changed","other regexp"]
+            regexp: "nvp-transport-node.*hook failed:.*config-changed"
+            target_file: console.txt
+    1358326:
+        description: "prodstack: nova-vmware hooks failed: cloud-compute-relation-changed"
+        category: None
+        pipeline_deploy:
+            regexp: "nova-vmware.*hook failed.*cloud-compute-relation-changed"
+            target_file: console.txt
+    1355265:
+        description: "hook failed: \"mon-relation-joined\""
+        category: None
+        pipeline_deploy:
+            regexp: "ceph.*machine.*hook failed.*mon-relation-joined"
+            target_file: console.txt
+    1352503:
+        description: "nova-cloud-controller fails to install with neutron-nsx"
+        category: None
+        pipeline_deploy:
+            regexp: "nova-cloud-controller.*hook failed.*install"
+            target_file: console.txt
+    1346340:
+        description: "deployer fails with no route to host"
+        category: None
+        pipeline_deploy:
+            regexp: "ERROR.*Deployment failed:.*No route to host"
+            target_file: console.txt
+    1319855:
+        description: "On pipeline deploy sometimes get hook failed: \"shared-db-relation-changed\""
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3ab2':
+        description: "Pending Units"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1358393:
+        description: "prodstack: nvp-transport-node hook failed config-changed"
+        category: None
+        pipeline_deploy:
+            regexp: "nvp-transport-node.*hook failed:.*config-changed"
+            target_file: console.txt
+    1358326:
+        description: "prodstack: nova-vmware hooks failed: cloud-compute-relation-changed"
+        category: None
+        pipeline_deploy:
+            regexp: "nova-vmware.*hook failed.*cloud-compute-relation-changed"
+            target_file: console.txt
+    1353529:
+        description: "nova-vmware: nova-compute-vmware package not found"
+        category: None
+        pipeline_deploy:
+            regexp: "nova-vmware.*hook failed.*install"
+            target_file: console.txt
+    1355265:
+        description: "hook failed: \"mon-relation-joined\""
+        category: None
+        pipeline_deploy:
+            regexp: "ceph.*machine.*hook failed.*mon-relation-joined"
+            target_file: console.txt
+    1352506:
+        description: "prodstack: unit: nova-compute/1,2,3 hook failed \"ceph-relation-changed\""
+        category: None
+        pipeline_deploy:
+            regexp: "nova-compute.*hook failed.*ceph-relation-changed"
+            target_file: console.txt
+    1352503:
+        description: "nova-cloud-controller fails to install with neutron-nsx"
+        category: None
+        pipeline_deploy:
+            regexp: "nova-cloud-controller.*hook failed.*install"
+            target_file: console.txt
+    1346340:
+        description: "deployer fails with no route to host"
+        category: None
+        pipeline_deploy:
+            regexp: "no route to host"
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3ab3':
+        description: "Bootstrap timeout (30 minutes)"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1353529:
+        description: "nova-vmware: nova-compute-vmware package not found"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1352503:
+        description: "nova-cloud-controller fails to install with neutron-nsx"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1346597:
+        description: "mongo timeout? cannot get replica set configuration"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1319855:
+        description: "On pipeline deploy sometimes get hook failed: \"shared-db-relation-changed\""
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1355265:
+        description: "hook failed: \"mon-relation-joined\""
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1352506:
+        description: "prodstack: unit: nova-compute/1,2,3 hook failed \"ceph-relation-changed\""
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3ab4':
+        description: "Bootstrap timeout (30 minutes)"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3ab5':
+        description: "Pending Units"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1346338:
+        description: "juju bootstrap failed to init, unauthorized mongo access"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1319855:
+        description: "On pipeline deploy sometimes get hook failed: \"shared-db-relation-changed\""
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3ab6':
+        description: "Bootstrap timeout (10 minutes)"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3ab7':
+        description: "deployment timeout, no errors"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1335325:
+        description: "prodstack: error on deploying services Deployment failed: 'units'"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1336339:
+        description: "prodstack: cinder-iscsi charm failure Command"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1335325:
+        description: "prodstack: error on deploying services Deployment failed: 'units'"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    1319855:
+        description: "On pipeline deploy sometimes get hook failed: \"shared-db-relation-changed\""
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3ab8':
+        description: "Bootstrap timeout (10 minutes)"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3abz':
+        description: "Pending Units"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3abp':
+        description: "Deployment Timed out, no errors"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3abm':
+        description: "deployment timeout, juju status missing."
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3abn':
+        description: "deployment failed: [Errno -2] Name or Service not known"
+        category: None
+        pipeline_deploy:
+            regexp: None
+            target_file: console.txt
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3aza':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "AssertionError. Timed out waiting for.+to become reachable"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azb':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "itemNotFound.+FloatingIpPoolNotFound: Floating ip pool not found"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azc':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "itemNotFound.+Image not found"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azd':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "AssertionError: Timed out waiting for.+to become reachable"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3aze':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "MismatchError: '204' != '200'"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azf':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "MismatchError: [^'204' != '200'].+"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azg':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "ServerFault: Got server fault\nDetails: Failed to attach interface"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azh':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "type object 'ServerRescueV3Test.+' has no attribute 'volumes_client'"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azi':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "'message': 'Enabled field must be a boolean"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azj':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "Object not found\nDetails: No ResellerAdmin role found"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azk':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "An object with that identifier already exists\nDetails: {u'NeutronError': {u'message': u'No more IP addresses available on network.+', u'type': u'IpAddressGenerationFailure'"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azl':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "^No more IP addresses available on network.+"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azm':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "Unable to find network with name 'private'.+returned non-zero exit status 1"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azn':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "Request timed out\nDetails: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azo':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "Request timed out\nDetails: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azp':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "Request timed out\nDetails: Server .+ failed to reach ACTIVE status within the required time .+ Current status: BUILD"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azq':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "TimeoutException: Request timed out\nDetails: Server .+ failed to reach ACTIVE status.+within the required time .+ Current status: SHUTOFF"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azr':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "UnboundLocalError: local variable 'agent' referenced before assignment"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azs':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "SSHTimeout: Connection to the .+ via SSH timed out.\nUser: .+, Password: .+\n"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azt':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "assertFalse.+raise self.failureException.+AssertionError: True is not false"
+            target_file: tempest_xunit.xml
+    'unfiled-6ca40fbf-5830-476c-924b-8339a65f3azt':
+        description:
+        category: None
+        test_tempest_smoke:
+            regexp: "Server.+failed to build and is in ERROR status"
+            target_file: tempest_xunit.xml
