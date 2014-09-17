@@ -473,7 +473,7 @@ def main():
         raise Exception("Missing test-catalog configuration")
 
     # Get arguments:
-    pipeline_ids = args
+    pipeline_ids = set(args)
     if not pipeline_ids:
         raise Exception("No pipeline IDs provided")
 
@@ -487,9 +487,13 @@ def main():
     prepare_yaml_dict = {}
     tempest_yaml_dict = {}
     for pipeline in pipeline_ids:
-        # Make sure pipeline is in fact a pipeline id:
+        # Quickly cycle trhough to check all pipelines are in fact pipeline ids
         if [8, 4, 4, 4, 12] != [len(x) for x in pipeline.split('-')]:
-            raise Exception("Pipeline ID %s is an unrecognised format")
+            raise Exception("Pipeline ID \"%s\" is an unrecognised format"
+                            % pipeline)
+                            
+    for pipeline in pipeline_ids: 
+        # Now go through again and get pipeline data then process each:                           
         deploy_build, prepare_build, tempest_build = \
             get_pipelines(pipeline, api=tc_host, remote=run_remote)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
