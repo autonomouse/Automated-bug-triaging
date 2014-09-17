@@ -1,0 +1,72 @@
+bugs:
+  "bug1":
+    category: None
+    description: "Mock bug for regex-ing multiple signatures."
+    pipeline_deploy:
+      -
+        "console.txt":
+          regexp:
+            - "Started by user admin"
+        "run_config":
+          regexp:
+            - /var/lib/jenkins
+            - fixed_net_cidr
+      -
+        console.txt:
+          regexp:
+            - "other by user admin"
+  "bug2":
+    category: None
+    description:
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+          regexp: "AssertionError: Timed out waiting for"
+
+  "bug3":
+    category: None
+    description:
+    test_tempest_smoke:
+      -
+        "console.txt":
+          regexp: "a"
+        "tempest_xunit.xml":
+          regexp: "AssertionError: Timed out waiting"
+  "bug4a":
+    category: NOT MATCH
+    description:
+    test_tempest_smoke:
+      -
+        "console.txt":
+          regexp: "THIS SHOULD NOT BE IN THE CONSOLE SO THERE SHOULD BE NO MATCHED BUG 4A"
+        "tempest_xunit.xml":
+          regexp: "FloatingIpPoolNotFound: Floating ip pool not found"
+  "bug4B":
+    category: MATCH
+    description:
+    test_tempest_smoke:
+      -
+        "console.txt":
+          regexp: "PIPELINE_ID"
+        "tempest_xunit.xml":
+          regexp: "FloatingIpPoolNotFound: Floating ip pool not found"
+  "bug4C":
+    category: MATCH
+    description:
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+          regexp: "FloatingIpPoolNotFound: Floating ip pool not found"
+  "bug4d":
+    category: SHOULD STILL MATCH
+    description:
+    test_tempest_smoke:
+      -
+        "console.txt":
+          regexp: "THIS SHOULD NOT BE IN THE CONSOLE BUT THE OR BELOW SHOULD STILL MATCH"
+        "tempest_xunit.xml":
+          regexp: "FloatingIpPoolNotFound: Floating ip pool not found"
+      -
+        "tempest_xunit.xml":
+          regexp: "FloatingIpPoolNotFound: Floating ip pool not found"
+        

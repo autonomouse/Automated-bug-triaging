@@ -217,20 +217,18 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
     matching_bugs, build_status = \
         bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, oil_df,
                  tts_path, xmls)
-
-    for xml_target_file in xmls:
-        matching_bugs = xml_rematch(bugs, tts_path, xml_target_file,
-                                    matching_bugs, 'test_tempest_smoke',
-                                    build_status, oil_df)
-
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
 
 
-def bug_hunt(job, jenkins, build, bugs, oil_df, path, ignore=[]):
+def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
     """ Using information from the bugs database, opens target file and
         searches the text for each associated regexp. """
+    # TODO: As it stands, files are only searched if there is an entry in the
+    # DB. This shouldn't be a problem if there is always a dummy bug in the DB
+    # for the important files such as console and tempest_xunit.xml FOR EACH
+    # JOB TYPE (i.e. pipeline_deploy, pipeline_prepare and test_tempest_smoke).
     build_status = [build_info for build_info in jenkins[job]._poll()['builds']
                     if build_info['number'] == int(build)][0]['result']
     matching_bugs = {}
@@ -238,41 +236,69 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, ignore=[]):
     machines_list = oil_df['node'].tolist()
     vendors_list = oil_df['vendor'].tolist()
     bug_unmatched = True
+    info = ''
+    if not bugs:
+        raise Exception("No bugs in database!")
     for bug_id in bugs.keys():
         if job in bugs[bug_id]:
             # Any of the dicts in bugs[bug_id][job] can match (or):
-            OR_dict = bugs[bug_id][job]
-            for AND_dict in OR_dict:
+            or_dict = bugs[bug_id][job]
+            for and_dict in or_dict:
                 # Within the dictionary all have to match (and):
-                hit_list = []
+                hit_dict = {}
                 # Load up the file for each target_file in the DB for this bug:
-                for target_file in AND_dict.keys():
+                for target_file in and_dict.keys():
                     target_location = os.path.join(path, target_file)
-                    if not (target_file in ignore):
-                        # TODO: raise error if no file (or make unfiled bug?)
+                    if not os.path.isfile(target_location):
+                        info = target_file + " not present"
+                        break
+                    if not (target_file in parse_as_xml):
                         with open(target_location, 'r') as grep_me:
                             text = grep_me.read()
-                        hit_list = rematch(hit_list, AND_dict, target_file,
-                                           text)
-
-                if hit_list:
-                    matching_bugs[bug_id] = {'regexp': hit_list,
+                        hit = rematch(and_dict, target_file, text)
+                        if hit:
+                            hit_dict = join_dicts(hit_dict, hit)
+                        else:
+                            info = "Target file: " + target_file
+                            info += ".              " + text
+                    else:
+                        # Get tempest results:
+                        doc = etree.parse(target_location).getroot()
+                        errors_and_fails = doc.xpath('.//failure')
+                        errors_and_fails += doc.xpath('.//error')
+                        for num, fail in enumerate(errors_and_fails):
+                            pre_log = fail.get('message')\
+                                .split("begin captured logging")[0]
+                            hit = rematch(and_dict, target_file, pre_log)
+                            if hit:
+                                hit_dict = join_dicts(hit_dict, hit)
+                            else:
+                                info = "Target file: " + target_file
+                                info += ".              " + pre_log
+                if and_dict == hit_dict:
+                    matching_bugs[bug_id] = {'regexp': hit_dict,
                                              'vendors': vendors_list,
                                              'machines': machines_list,
                                              'units': units_list}
+                    hit_dict = {}
                     bug_unmatched = False
+                    break
     if bug_unmatched and build_status == 'FAILURE':
         bid = 'unfiled-' + str(uuid.uuid4())
         matching_bugs[bid] = {'regexp': 'NO REGEX - UNFILED/UNMATCHED BUG',
                               'vendors': vendors_list,
                               'machines': machines_list,
                               'units': units_list}
+        if info:
+            matching_bugs[bid]['additional info'] = info
+        hit_dict = {}
     return (matching_bugs, build_status)
 
 
-def rematch(hit_list, bugs, target_file, text):
+def rematch(bugs, target_file, text):
     """ Search files in bugs for multiple matching regexps. """
     regexps = bugs[target_file]['regexp']
+
     if type(regexps) == list:
         if len(regexps) > 1:
             regexp = '|'.join(regexps)
@@ -287,45 +313,7 @@ def rematch(hit_list, bugs, target_file, text):
         # TODO: This checks that they match, but not that they do so in the
         # correct order yet:
         if set_re == set(matches):
-            hit_list.append({target_file: regexps})
-        else:
-            hit_list = []
-    return hit_list
-
-
-def xml_rematch(bugs, path, xml_target_file, matching_bugs, job, build_status,
-                oil_df):
-    """ Search xml file for tests that return text containing regexps. """
-    bug_unmatched = True
-    units_list = oil_df['service'].tolist()
-    machines_list = oil_df['node'].tolist()
-    vendors_list = oil_df['vendor'].tolist()
-    tempest_xml_location = os.path.join(path, xml_target_file)
-    if os.path.isfile(tempest_xml_location):
-        # Get tempest results:
-        doc = etree.parse(tempest_xml_location).getroot()
-        errors_and_fails = doc.xpath('.//failure') + doc.xpath('.//error')
-        hit = []
-        for num, fail in enumerate(errors_and_fails):
-            pre_log = fail.get('message').split("begin captured logging")[0]
-            earlier_matching_bugs = matching_bugs
-            for bug in bugs:
-                if job in bugs[bug]:
-                    # There should not be multiple here, so just using [0]:
-                    tempest_bug = bugs[bug][job][0]
-                    hit = rematch(hit, tempest_bug, xml_target_file,
-                                  pre_log)
-                    if hit:
-                        matching_bugs[bug] = {'regexp': hit,
-                                              'vendors': vendors_list,
-                                              'machines': machines_list,
-                                              'units': units_list}
-                        bug_unmatched = False
-
-                        matching_bugs = join_dicts(earlier_matching_bugs,
-                                                   matching_bugs)
-
-    return (matching_bugs, bug_unmatched)
+            return {target_file: {'regexp': regexps}}
 
 
 def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
@@ -421,6 +409,9 @@ def main():
     parser.add_option('-x', '--xmls', action='store', dest='xmls',
                       default=None,
                       help='XUnit files to parse as XML, not as plain text')
+    parser.add_option('-k', '--keep', action='store', dest='keep_data',
+                      default=None,
+                      help='Do not delete extracted tarballs when finished')
     (opts, args) = parser.parse_args()
 
     # cli override of config values
@@ -456,6 +447,11 @@ def main():
         tc_host = opts.tc_host
     else:
         tc_host = cfg.get('DEFAULT', 'oil_api_url')
+
+    if opts.keep_data:
+        keep_data = opts.keep_data
+    else:
+        keep_data = cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
 
     if opts.xmls:
         xmls = opts.xmls
@@ -521,8 +517,9 @@ def main():
     export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', reportdir)
 
     # Clean up data folders (just leaving yaml files):
-    remove_dirs(reportdir, ['pipeline_deploy', 'pipeline_prepare',
-                            'test_tempest_smoke'])
+    if not keep_data:
+        remove_dirs(reportdir, ['pipeline_deploy', 'pipeline_prepare',
+                                'test_tempest_smoke'])
 
 
 if __name__ == "__main__":

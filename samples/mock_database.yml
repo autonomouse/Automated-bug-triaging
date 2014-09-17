@@ -1,34 +1,26 @@
 bugs:
-  "bug1":
+  "mock_bug_1":
     category: None
-    description: "Mock bug for regex-ing multiple signatures."
+    description: "Dummy bug"
     pipeline_deploy:
       -
         "console.txt":
           regexp:
-            - "Started by user admin"
-        "run_config":
-          regexp:
-            - /var/lib/jenkins
-            - fixed_net_cidr
-      -
-        console.txt:
-          regexp:
-            - "other by user admin"
-  "bug2":
+            - "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+  "mock_bug_2":
     category: None
-    description:
-    test_tempest_smoke:
+    description: "Dummy bug"
+    pipeline_prepare:
       -
-        "tempest_xunit.xml":
-          regexp: "AssertionError: Timed out waiting for"
-
-  "bug3":
+        "console.txt":
+          regexp:
+            - "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+  "mock_bug_3":
     category: None
-    description:
+    description: "Dummy bug"
     test_tempest_smoke:
       -
         "console.txt":
-          regexp: "a"
+          regexp: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
         "tempest_xunit.xml":
-          regexp: "AssertionError: Timed out waiting for"
+          regexp: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
