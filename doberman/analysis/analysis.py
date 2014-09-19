@@ -387,9 +387,25 @@ def remove_dirs(rootdir, folders_to_delete):
             shutil.rmtree(kill_me)
 
 
+def get_pipeline_from_deploy_build_number(jenkins, id_number):
+    deploy_bld_n = int(id_number)
+    try:
+        cons = jenkins['pipeline_deploy'].get_build(deploy_bld_n).get_console()
+    except:
+        msg = "Failed to fetch pipeline from deploy build: \"%s" % idn
+        msg += "\" - if this is already a pipeline id, run without the"
+        msg += " '-b' flag."
+        raise Exception(msg)
+    pl = cons.split('pipeline_id')[1].split('|\n')[0].replace('|', '').strip()
+    return pl
+
+
 def main():
     usage = "usage: %prog [options] pipeline_id1 pipeline_id2 ..."
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-b', '--usebuildnos', action='store_true',
+                      dest='use_deploy', default=False,
+                      help='use pipeline_deploy build numbers, not pipelines')    
     parser.add_option('-c', '--config', action='store', dest='configfile',
                       default=None,
                       help='specify path to configuration file')
@@ -399,24 +415,24 @@ def main():
     parser.add_option('-J', '--jenkins', action='store', dest='jenkins_host',
                       default=None,
                       help='URL to Jenkins server')
+    parser.add_option('-k', '--keep', action='store', dest='keep_data',
+                      default=None,
+                      help='Do not delete extracted tarballs when finished')
     parser.add_option('-n', '--netloc', action='store', dest='netloc',
                       default=None,
                       help='Specify an IP to rewrite URLs')
-    parser.add_option('-r', '--remote', action='store_true', dest='run_remote',
-                      default=False,
-                      help='set if running analysis remotely')
     parser.add_option('-o', '--output', action='store', dest='report_dir',
                       default=None,
                       help='specific the report output directory')
+    parser.add_option('-r', '--remote', action='store_true', dest='run_remote',
+                      default=False,
+                      help='set if running analysis remotely')
     parser.add_option('-T', '--testcatalog', action='store', dest='tc_host',
                       default=None,
                       help='URL to test-catalog API server')
     parser.add_option('-x', '--xmls', action='store', dest='xmls',
                       default=None,
                       help='XUnit files to parse as XML, not as plain text')
-    parser.add_option('-k', '--keep', action='store', dest='keep_data',
-                      default=None,
-                      help='Do not delete extracted tarballs when finished')
     (opts, args) = parser.parse_args()
 
     # cli override of config values
@@ -432,6 +448,12 @@ def main():
         LOG.info('get it from config')
         database = cfg.get('DEFAULT', 'database_uri')
         LOG.info('database=%s' % database)
+
+    if opts.use_deploy:
+        use_deploy = opts.use_deploy
+    else:
+        use_deploy = cfg.get('DEFAULT', 'use_deploy').lower() in \
+            ['true', 'yes']
 
     if opts.jenkins_host:
         jenkins_host = opts.jenkins_host
@@ -473,8 +495,8 @@ def main():
         raise Exception("Missing test-catalog configuration")
 
     # Get arguments:
-    pipeline_ids = set(args)
-    if not pipeline_ids:
+    ids = set(args)
+    if not ids:
         raise Exception("No pipeline IDs provided")
 
     # Establish a connection to jenkins:
@@ -486,14 +508,20 @@ def main():
     deploy_yaml_dict = {}
     prepare_yaml_dict = {}
     tempest_yaml_dict = {}
-    for pipeline in pipeline_ids:
-        # Quickly cycle trhough to check all pipelines are in fact pipeline ids
-        if [8, 4, 4, 4, 12] != [len(x) for x in pipeline.split('-')]:
-            raise Exception("Pipeline ID \"%s\" is an unrecognised format"
-                            % pipeline)
+    pipeline_ids = []    
+    for idn in ids:
+        if use_deploy:
+            pipeline = get_pipeline_from_deploy_build_number(jenkins, idn)
+        else:            
+            # Quickly cycle through to check all pipelines are real:
+            if [8, 4, 4, 4, 12] != [len(x) for x in idn.split('-')]:
+                raise Exception("Pipeline ID \"%s\" is an unrecognised format"
+                                % idn)
+            pipeline = idn
+        pipeline_ids.append(pipeline)
                             
     for pipeline in pipeline_ids: 
-        # Now go through again and get pipeline data then process each:                           
+        # Now go through again and get pipeline data then process each: 
         deploy_build, prepare_build, tempest_build = \
             get_pipelines(pipeline, api=tc_host, remote=run_remote)
         get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
