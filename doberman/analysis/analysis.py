@@ -100,6 +100,9 @@ def get_triage_data(jenkins, build_num, job, reportdir):
     build = jenkins_job.get_build(int(build_num))
     outdir = os.path.join(reportdir, job, str(build_num))
     LOG.info('Downloading debug data to: %s' % (outdir))
+    # Check to make sure it is not still running!:
+    if build._data['duration'] == 0:
+        return True
     try:
         os.makedirs(outdir)
     except OSError:
@@ -115,6 +118,7 @@ def get_triage_data(jenkins, build_num, job, reportdir):
     for artifact in build.get_artifacts():
         artifact.save_to_dir(outdir)
         extract_and_delete_archive(outdir, artifact)
+    return False
 
 
 def extract_and_delete_archive(outdir, artifact):
@@ -154,38 +158,46 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     juju_status_location = os.path.join(pipeline_deploy_path,
                                         'juju_status.yaml')
 
-    # Read oil nodes file:
-    with open(oil_node_location, "r") as nodes_file:
-        oil_nodes = DataFrame(yaml.load(nodes_file)['oil_nodes'])
-        oil_nodes.rename(columns={'host': 'node'}, inplace=True)
+    try:
+        # Read oil nodes file:
+        with open(oil_node_location, "r") as nodes_file:
+            oil_nodes = DataFrame(yaml.load(nodes_file)['oil_nodes'])
+            oil_nodes.rename(columns={'host': 'node'}, inplace=True)
 
-    # Read juju status file:
-    with open(juju_status_location, "r") as jjstat_file:
-        juju_status = yaml.load(jjstat_file)
+        # Read juju status file:
+        with open(juju_status_location, "r") as jjstat_file:
+            juju_status = yaml.load(jjstat_file)
 
-    oil_df = DataFrame(columns=('node', 'vendor', 'service'))
-    row = 0
-    for service in juju_status['services']:
-        for unit in juju_status['services'][service]['units']:
-            this_unit = juju_status['services'][service]['units'][unit]
-            machine = this_unit['public-address']
-            nptags = oil_nodes[oil_nodes['node'] == machine]['tags'].apply(str)
-            tags = nptags.tolist()[0].replace("[", "").replace("]", "")\
-                .split(', ')
-            hardware = [x.replace("'", "") for x in tags if 'hardware' in x]
+        oil_df = DataFrame(columns=('node', 'vendor', 'service'))
+        row = 0
+        for service in juju_status['services']:
+            for unit in juju_status['services'][service]['units']:
+                this_unit = juju_status['services'][service]['units'][unit]
+                machine = this_unit['public-address']
+                nptags = oil_nodes[oil_nodes['node'] == machine]['tags']\
+                    .apply(str)
+                tags = nptags.tolist()[0].replace("[", "").replace("]", "")\
+                    .split(', ')
+                hardware = [tag.replace("'", "") for tag in tags if 'hardware'
+                            in tag]
 
-            oil_df.loc[row] = [machine, unit, ', '.join(hardware)
-                               .replace('hardware-', '')]
-            row += 1
+                oil_df.loc[row] = [machine, unit, ', '.join(hardware)
+                                   .replace('hardware-', '')]
+                row += 1
+    except IOError, e:
+        LOG.error("%s or %s is not in artifacts folder (%s)"
+            % ('oil_nodes', 'juju_status.yaml', e[1]))
+    except Exception, err:
+        LOG.error(err)
+    finally:
+        matching_bugs, build_status = \
+            bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, oil_df,
+                     pipeline_deploy_path, xmls)
 
-    matching_bugs, build_status = \
-        bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, oil_df,
-                 pipeline_deploy_path, xmls)
+        yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
+                                existing_dict=yaml_dict)
 
-    yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
-                            existing_dict=yaml_dict)
-
-    return (oil_df, yaml_dict)
+        return (oil_df, yaml_dict)
 
 
 def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
@@ -511,12 +523,16 @@ def main():
     pipeline_ids = []    
     for idn in ids:
         if use_deploy:
+            msg = "Looking up pipeline ids for the following jenkins "
+            msg += "pipeline_deploy build numbers: %s"
+            LOG.info(msg % ", ".join([str(i) for i in ids]))
             pipeline = get_pipeline_from_deploy_build_number(jenkins, idn)
         else:            
             # Quickly cycle through to check all pipelines are real:
             if [8, 4, 4, 4, 12] != [len(x) for x in idn.split('-')]:
-                raise Exception("Pipeline ID \"%s\" is an unrecognised format"
-                                % idn)
+                msg = "Pipeline ID \"%s\" is an unrecognised format" % idn
+                LOG.error(msg)
+                raise Exception(msg)
             pipeline = idn
         pipeline_ids.append(pipeline)
                             
@@ -524,29 +540,33 @@ def main():
         # Now go through again and get pipeline data then process each: 
         deploy_build, prepare_build, tempest_build = \
             get_pipelines(pipeline, api=tc_host, remote=run_remote)
-        get_triage_data(jenkins, deploy_build, 'pipeline_deploy', reportdir)
-        if prepare_build:
-            get_triage_data(jenkins, prepare_build,
-                            'pipeline_prepare', reportdir)
-        if tempest_build:
-            get_triage_data(jenkins, tempest_build,
-                            'test_tempest_smoke', reportdir)
+        still_running = get_triage_data(jenkins, deploy_build,
+                                        'pipeline_deploy', reportdir)
+        if not still_running:
+            if prepare_build:
+                get_triage_data(jenkins, prepare_build,
+                                'pipeline_prepare', reportdir)
+            if tempest_build:
+                get_triage_data(jenkins, tempest_build,
+                                'test_tempest_smoke', reportdir)
 
-        oil_df, deploy_yaml_dict = \
-            process_deploy_data(pipeline, deploy_build, jenkins, reportdir,
-                                bugs, deploy_yaml_dict, xmls)
+            oil_df, deploy_yaml_dict = \
+                process_deploy_data(pipeline, deploy_build, jenkins,
+                                    reportdir, bugs, deploy_yaml_dict, xmls)
 
-        if prepare_build:
-            prepare_yaml_dict = \
-                process_prepare_data(pipeline, prepare_build, jenkins,
-                                     reportdir, bugs, oil_df,
-                                     prepare_yaml_dict, xmls)
+            if prepare_build:
+                prepare_yaml_dict = \
+                    process_prepare_data(pipeline, prepare_build, jenkins,
+                                         reportdir, bugs, oil_df,
+                                         prepare_yaml_dict, xmls)
 
-        if tempest_build:
-            tempest_yaml_dict = \
-                process_tempest_data(pipeline, tempest_build, jenkins,
-                                     reportdir, bugs, oil_df,
-                                     tempest_yaml_dict, xmls)
+            if tempest_build:
+                tempest_yaml_dict = \
+                    process_tempest_data(pipeline, tempest_build, jenkins,
+                                         reportdir, bugs, oil_df,
+                                         tempest_yaml_dict, xmls)
+        else:
+            LOG.error("%s is still running - skipping" % deploy_build)
 
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
