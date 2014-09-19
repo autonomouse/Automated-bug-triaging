@@ -520,12 +520,13 @@ def main():
     deploy_yaml_dict = {}
     prepare_yaml_dict = {}
     tempest_yaml_dict = {}
-    pipeline_ids = []    
+    pipeline_ids = []
+    if use_deploy:
+        msg = "Looking up pipeline ids for the following jenkins "
+        msg += "pipeline_deploy build numbers: %s"
+        LOG.info(msg % ", ".join([str(i) for i in ids]))
     for idn in ids:
         if use_deploy:
-            msg = "Looking up pipeline ids for the following jenkins "
-            msg += "pipeline_deploy build numbers: %s"
-            LOG.info(msg % ", ".join([str(i) for i in ids]))
             pipeline = get_pipeline_from_deploy_build_number(jenkins, idn)
         else:            
             # Quickly cycle through to check all pipelines are real:
