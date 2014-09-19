@@ -158,6 +158,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     juju_status_location = os.path.join(pipeline_deploy_path,
                                         'juju_status.yaml')
 
+    oil_df = DataFrame(columns=('node', 'vendor', 'service'))
     try:
         # Read oil nodes file:
         with open(oil_node_location, "r") as nodes_file:
@@ -167,8 +168,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
         # Read juju status file:
         with open(juju_status_location, "r") as jjstat_file:
             juju_status = yaml.load(jjstat_file)
-
-        oil_df = DataFrame(columns=('node', 'vendor', 'service'))
+        
         row = 0
         for service in juju_status['services']:
             for unit in juju_status['services'][service]['units']:
@@ -184,19 +184,19 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                 oil_df.loc[row] = [machine, unit, ', '.join(hardware)
                                    .replace('hardware-', '')]
                 row += 1
-    except IOError, e:
-        LOG.error("%s or %s is not in artifacts folder (%s)"
-            % ('oil_nodes', 'juju_status.yaml', e[1]))
-    except Exception, err:
-        LOG.error(err)
-    finally:
         matching_bugs, build_status = \
             bug_hunt('pipeline_deploy', jenkins, deploy_build, bugs, oil_df,
                      pipeline_deploy_path, xmls)
 
         yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
                                 existing_dict=yaml_dict)
-
+                
+    except IOError, e:
+        LOG.error("%s: %s or %s is not in artifacts folder (%s)"
+            % (pline, 'oil_nodes', 'juju_status.yaml', e[1]))
+    except Exception, err:
+        LOG.error(err)
+    finally:
         return (oil_df, yaml_dict)
 
 
@@ -427,7 +427,7 @@ def main():
     parser.add_option('-J', '--jenkins', action='store', dest='jenkins_host',
                       default=None,
                       help='URL to Jenkins server')
-    parser.add_option('-k', '--keep', action='store', dest='keep_data',
+    parser.add_option('-k', '--keep', action='store_true', dest='keep_data',
                       default=None,
                       help='Do not delete extracted tarballs when finished')
     parser.add_option('-n', '--netloc', action='store', dest='netloc',
