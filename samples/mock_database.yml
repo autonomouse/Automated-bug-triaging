@@ -31,7 +31,7 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "nvp-transport-node.*hook failed:.*config-changed"  
+            - "nvp-transport-node.*hook failed:.*config-changed"
   "1319855":
     category: None
     description: "On pipeline deploy sometimes get hook failed: \"shared-db-relation-changed\""
@@ -104,14 +104,6 @@ bugs:
         "console.txt":
             regexp: 
             - "ceph.*machine.*hook failed.*mon-relation-joined"
-  "1358393":
-    category: None
-    description: "prodstack: nvp-transport-node hook failed config-changed"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - "nvp-transport-node.*hook failed:.*config-changed"
   "1346597":
     category: None
     description: "mongo timeout? cannot get replica set configuration"
@@ -351,6 +343,19 @@ bugs:
         "tempest_xunit.xml":
             regexp: 
             - "Volume volume.+ failed to reach available status within the required time"
+
+  "Triage_025":
+    category: None
+    description: Bootstrap failure
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "ERROR bootstrap failed"
+
+
+
+
 
   "NeedsRegex_001":
     category: None
