@@ -308,7 +308,8 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
                             info += ".              " + text
                     else:
                         # Get tempest results:
-                        doc = etree.parse(target_location).getroot()
+                        p = etree.XMLParser(huge_tree=True)
+                        doc = etree.parse(target_location, parser=p).getroot()
                         errors_and_fails = doc.xpath('.//failure')
                         errors_and_fails += doc.xpath('.//error')
                         # TODO: There is not currently a way to do multiple
