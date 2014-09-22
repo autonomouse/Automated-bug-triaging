@@ -22,10 +22,11 @@ LOG = utils.get_logger('doberman.analysis')
 _tc_client = []
 _jenkins = []
 
-# A dictionary linking files to launchpad bug ids, for when the file is missing
-# TODO: This will need to be added to a yaml or something:
-absent_file_bugs = {'juju_status.yaml': 'absent_file_bugs_1',
-                    'oil_nodes': 'absent_file_bugs_2'}
+# A hard-coded dictionary linking the files that may be missing to a bug id on
+# launchpad: 
+# TODO: Decide whether to keep this hard-coded or to use an external yaml, etc:
+absent_file_bugs = {'juju_status.yaml': '1371792',
+                    'oil_nodes': '1372411'}
 
 
 def get_jenkins(url, remote=False):
