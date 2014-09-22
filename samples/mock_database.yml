@@ -300,7 +300,7 @@ bugs:
             regexp: 
             - "itemNotFound.+Image not found"
 
-  "Triage_021":
+  "1372459":
     category: None
     description: 
     test_tempest_smoke:

@@ -22,11 +22,12 @@ LOG = utils.get_logger('doberman.analysis')
 _tc_client = []
 _jenkins = []
 
-# A hard-coded dictionary linking the files that may be missing to a bug id on
-# launchpad: 
+# Special cases: A hard-coded dictionary linking the files that may be missing
+# to a bug id on launchpad: 
 # TODO: Decide whether to keep this hard-coded or to use an external yaml, etc:
-absent_file_bugs = {'juju_status.yaml': '1371792',
-                    'oil_nodes': '1372411'}
+special_cases = {'juju_status.yaml': '1372407',
+                 'oil_nodes': '1372411',
+                 'pipeline_id': '1372567'}
 
 
 def get_jenkins(url, remote=False):
@@ -156,23 +157,30 @@ def extract_and_delete_archive(outdir, artifact):
 
 
 def get_yaml(file_location, pline, build, yaml_dict):
-    matching_bugs = {}
-    file_name = file_location.split('/')[-1]
     try:
         with open(file_location, "r") as f:
             return (yaml.load(f), yaml_dict)
     except IOError, e:
+        file_name = file_location.split('/')[-1]
         LOG.error("%s: %s is not in artifacts folder (%s)"
                   % (pline, file_name, e[1]))
-        bug_id = absent_file_bugs[file_name]
-        err_msg = file_name + ' MISSING'
-        matching_bugs[bug_id] = {'regexp': err_msg, 'vendors': err_msg,
-                                 'machines': err_msg, 'units': err_msg}
-        yaml_dict = add_to_yaml(pline, build, matching_bugs, 'FAILURE',
-                                existing_dict=yaml_dict)
+        yaml_dict = non_db_bug(pline, build, special_cases[file_name],
+                               yaml_dict, 'FAILURE', file_name + ' MISSING')
         return (None, yaml_dict)
 
 
+def non_db_bug(pline, build, bug_id, existing_dict, status, err_msg):
+    """ Make non-database bugs for special cases, such as missing files that
+        cannot be, or are not yet, listed in the bugs database.
+
+    """
+    matching_bugs = {}
+    matching_bugs[bug_id] = {'regexp': err_msg, 'vendors': err_msg,
+                             'machines': err_msg, 'units': err_msg}
+    yaml_dict = add_to_yaml(pline, build, matching_bugs, 'FAILURE',
+                            existing_dict=existing_dict)
+    return yaml_dict
+    
 def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                         yaml_dict, xmls):
     """ Parses the artifacts files from a single pipeline into data and
@@ -183,7 +191,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                                         deploy_build)
 
     oil_df = DataFrame(columns=('node', 'vendor', 'service'))
-
+    
     # Read oil nodes file:
     oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
     oil_nodes_yml, yaml_dict = get_yaml(oil_node_location, pline,
@@ -398,6 +406,8 @@ def export_to_yaml(yaml_dict, job, reportdir):
     """ Write output files. """
     filename = 'triage_' + job + '.yml'
     file_path = os.path.join(reportdir, filename)
+    if not os.path.isdir(reportdir):
+        os.makedirs(reportdir)
     with open(file_path, 'w') as outfile:
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
         LOG.info(filename + " written to " + reportdir)
@@ -444,7 +454,20 @@ def get_pipeline_from_deploy_build_number(jenkins, id_number):
         msg += " '-b' flag."
         raise Exception(msg)
     pl = cons.split('pipeline_id')[1].split('|\n')[0].replace('|', '').strip()
-    return pl
+    if pipeline_check(pl):
+        return pl
+    else:
+        pl = cons.split('PIPELINE_ID=')[1].replace('\n++ ', '')
+        if pipeline_check(pl):
+            return pl
+        else:
+            msg = "Pipeline ID \"%s\" is an unrecognised format" % pl
+            LOG.error(msg)
+            raise Exception(msg)  
+
+
+def pipeline_check(pipeline_id):
+    return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
 
 
 def main():
@@ -565,22 +588,23 @@ def main():
         if use_deploy:
             pipeline = get_pipeline_from_deploy_build_number(jenkins, idn)
         else:
-            # Quickly cycle through to check all pipelines are real:
-            if [8, 4, 4, 4, 12] != [len(x) for x in idn.split('-')]:
-                msg = "Pipeline ID \"%s\" is an unrecognised format" % idn
-                LOG.error(msg)
-                raise Exception(msg)
             pipeline = idn
+        # Quickly cycle through to check all pipelines are real:
+        if not pipeline_check(pipeline):
+            msg = "Pipeline ID \"%s\" is an unrecognised format" % pipeline
+            LOG.error(msg)
+            raise Exception(msg)
         pipeline_ids.append(pipeline)
-
+    
     for pipeline in pipeline_ids:
-        # Now go through again and get pipeline data then process each:
-        deploy_build, prepare_build, tempest_build = \
-            get_pipelines(pipeline, api=tc_host, remote=run_remote)
-        # Pull console and artifacts from jenkins:
-        still_running = get_triage_data(jenkins, deploy_build,
-                                        'pipeline_deploy', reportdir)
         try:
+            # Now go through again and get pipeline data then process each:
+            deploy_build, prepare_build, tempest_build = \
+                get_pipelines(pipeline, api=tc_host, remote=run_remote)
+
+            # Pull console and artifacts from jenkins:
+            still_running = get_triage_data(jenkins, deploy_build,
+                                            'pipeline_deploy', reportdir)
             if not still_running:
                 if prepare_build:
                     get_triage_data(jenkins, prepare_build,
@@ -608,9 +632,16 @@ def main():
             else:
                 LOG.error("%s is still running - skipping" % deploy_build)
         except:
-            print("Problem with " + pipeline + " - skipping (deploy_build: " +
-                  deploy_build + ")")
-            problem_pipelines.append((pipeline, deploy_build))
+            if not 'deploy_build' in locals():
+                deploy_build = "cannot acquire pipeline deploy build number."
+                deploy_yaml_dict = non_db_bug(pipeline, deploy_build,
+                                              special_cases['pipeline_id'],
+                                              deploy_yaml_dict, 'FAILURE',
+                                              deploy_build)
+            else:     
+                print("Problem with " + pipeline + " - skipping (deploy_build: " +
+                      deploy_build + ")")
+                problem_pipelines.append((pipeline, deploy_build))
 
     # Export to yaml:
     export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', reportdir)
@@ -623,7 +654,7 @@ def main():
         with open(file_path, 'w') as pp_file:
             for problem_pipeline in problem_pipelines:
                 pp_file.write("%s (deploy build: %s) \n" % problem_pipeline)
-            errmsg = "There were some pipelines that could not be processed."
+            errmsg = "There were some pipelines that could not be processed. "
             errmsg += "This information was written to problem_pipelines.yaml "
             errmsg += "in " + reportdir
             LOG.error(errmsg)
