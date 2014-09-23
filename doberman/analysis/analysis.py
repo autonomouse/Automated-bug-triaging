@@ -11,7 +11,7 @@ import shutil
 import uuid
 import optparse
 import datetime
-from test_catalog.client.api import TCClient as tc_client
+from test_catalog.client.api import TCClient
 from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame
 from lxml import etree
@@ -19,12 +19,13 @@ from jenkinsapi.jenkins import Jenkins
 from jenkinsapi.custom_exceptions import *
 from doberman.common import pycookiecheat, utils
 
+tc_client = TCClient
 LOG = utils.get_logger('doberman.analysis')
 _tc_client = []
 _jenkins = []
 
 # Special cases: A hard-coded dictionary linking the files that may be missing
-# to a bug id on launchpad: 
+# to a bug id on launchpad:
 # TODO: Decide whether to keep this hard-coded or to use an external yaml, etc:
 special_cases = {'juju_status.yaml': '1372407',
                  'oil_nodes': '1372411',
@@ -181,7 +182,8 @@ def non_db_bug(pline, build, bug_id, existing_dict, status, err_msg):
     yaml_dict = add_to_yaml(pline, build, matching_bugs, 'FAILURE',
                             existing_dict=existing_dict)
     return yaml_dict
-    
+
+
 def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                         yaml_dict, xmls):
     """ Parses the artifacts files from a single pipeline into data and
@@ -192,7 +194,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                                         deploy_build)
 
     oil_df = DataFrame(columns=('node', 'vendor', 'service'))
-    
+
     # Read oil nodes file:
     oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
     oil_nodes_yml, yaml_dict = get_yaml(oil_node_location, pline,
@@ -349,9 +351,9 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
     if bug_unmatched and build_status == 'FAILURE':
         bug_id = 'unfiled-' + str(uuid.uuid4())
         matching_bugs[bug_id] = {'regexps': 'NO REGEX - UNFILED/UNMATCHED BUG',
-                              'vendors': vendors_list,
-                              'machines': machines_list,
-                              'units': units_list}
+                                 'vendors': vendors_list,
+                                 'machines': machines_list,
+                                 'units': units_list}
         LOG.info("Unfiled bug found!")
         hit_dict = {}
         if info:
@@ -468,7 +470,7 @@ def get_pipeline_from_deploy_build_number(jenkins, id_number):
         else:
             msg = "Pipeline ID \"%s\" is an unrecognised format" % pl
             LOG.error(msg)
-            raise Exception(msg)  
+            raise Exception(msg)
 
 
 def pipeline_check(pipeline_id):
@@ -585,11 +587,21 @@ def main():
     tempest_yaml_dict = {}
     pipeline_ids = []
     problem_pipelines = []
+
+    # If using build numbers instead of pipelines, get pipeline:
     if use_deploy:
         msg = "Looking up pipeline ids for the following jenkins "
         msg += "pipeline_deploy build numbers: %s"
         LOG.info(msg % ", ".join([str(i) for i in ids]))
-    for idn in ids:
+
+    if len(ids) > 25:
+        report_at = range(5, 100, 5)  # Notify every 5 percent complete
+    elif len(ids) > 10:
+        report_at = range(25, 100, 25)  # Notify every 25 percent complete
+    else:
+        report_at = [50]  # Notify at 50 percent complete
+
+    for pos, idn in enumerate(ids):
         if use_deploy:
             pipeline = get_pipeline_from_deploy_build_number(jenkins, idn)
         else:
@@ -600,7 +612,14 @@ def main():
             LOG.error(msg)
             raise Exception(msg)
         pipeline_ids.append(pipeline)
-    
+
+        # Notify user/log of progress
+        progress = [round((pc / 100.0) * len(ids)) for pc in report_at]
+        if pos in progress:
+            LOG.info("Pipeline lookup " + str(report_at[progress.index(pos)])
+                     + "% complete.")
+    LOG.info("All pipelines checked. Now polling jenkins and processing data.")
+
     for pipeline in pipeline_ids:
         try:
             # Now go through again and get pipeline data then process each:
@@ -637,15 +656,15 @@ def main():
             else:
                 LOG.error("%s is still running - skipping" % deploy_build)
         except:
-            if not 'deploy_build' in locals():
+            if 'deploy_build' not in locals():
                 deploy_build = "cannot acquire pipeline deploy build number."
                 deploy_yaml_dict = non_db_bug(pipeline, deploy_build,
                                               special_cases['pipeline_id'],
                                               deploy_yaml_dict, 'FAILURE',
                                               deploy_build)
-            else:     
-                print("Problem with " + pipeline + " - skipping (deploy_build: " +
-                      deploy_build + ")")
+            else:
+                print("Problem with " + pipeline + " - skipping (deploy_build:"
+                      + " " + deploy_build + ")")
                 problem_pipelines.append((pipeline, deploy_build))
 
     # Export to yaml:
@@ -661,13 +680,13 @@ def main():
             existing_content = pp_file.read()
             pp_file.seek(0, 0)  # Put at beginning of file
             pp_file.write("\n" + str(datetime.datetime.now())
-              + "\n--------------------------\n")
+                          + "\n--------------------------\n")
             for problem_pipeline in problem_pipelines:
                 pp_file.write("%s (deploy build: %s) \n" % problem_pipeline)
             pp_file.write(existing_content)
             errmsg = "There were some pipelines that could not be processed. "
             errmsg += "This information was written to problem_pipelines.yaml "
-            errmsg += "in " + reportdir + "\n\n" 
+            errmsg += "in " + reportdir + "\n\n"
             LOG.error(errmsg)
 
     # Clean up data folders (just leaving yaml files):
