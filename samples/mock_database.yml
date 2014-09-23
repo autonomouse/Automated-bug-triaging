@@ -161,7 +161,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "SSHTimeout: Connection to the .+ via SSH timed out.\nUser: .+, Password: .+\n"
+            - "SSHTimeout: Connection to the .+ via SSH timed out.+User: .+, Password: .+"
 
   "Triage_006":
     category: None
@@ -179,7 +179,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "TimeoutException: Request timed out\nDetails: Server .+ failed to reach ACTIVE status.+within the required time .+ Current status: SHUTOFF"
+            - "TimeoutException: Request timed out.+Details: Server .+ failed to reach ACTIVE status.+within the required time .+ Current status: SHUTOFF"
 
   "Triage_008":
     category: None
@@ -188,7 +188,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Request timed out\nDetails: Server .+ failed to reach ACTIVE status within the required time .+ Current status: BUILD"
+            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status within the required time .+ Current status: BUILD"
 
   "Triage_009":
     category: None
@@ -197,7 +197,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Request timed out\nDetails: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
+            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
 
   "Triage_010":
     category: None
@@ -206,7 +206,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Request timed out\nDetails: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
+            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
 
   "Triage_011":
     category: None
@@ -233,7 +233,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "An object with that identifier already exists\nDetails: {u'NeutronError': {u'message': u'No more IP addresses available on network.+', u'type': u'IpAddressGenerationFailure'"
+            - "An object with that identifier already exists.+Details: {u'NeutronError': {u'message': u'No more IP addresses available on network.+', u'type': u'IpAddressGenerationFailure'"
 
   "Triage_014":
     category: None
@@ -242,7 +242,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Object not found\nDetails: No ResellerAdmin role found"
+            - "Object not found.+Details: No ResellerAdmin role found"
 
   "Triage_015":
     category: None
@@ -269,7 +269,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "ServerFault: Got server fault\nDetails: Failed to attach interface"
+            - "ServerFault: Got server fault.+Details: Failed to attach interface"
 
   "Triage_018":
     category: None

@@ -262,7 +262,7 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
 
 
 def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
-                         oil_df, yaml_dict, xmls, verbose):
+                         oil_df, yaml_dict, xmls):
     """
     Parses the artifacts files from a single pipeline into data and
     metadata DataFrames
@@ -272,14 +272,13 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
 
     matching_bugs, build_status = \
         bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, oil_df,
-                 tts_path, xmls, verbose)
+                 tts_path, xmls)
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
 
 
-def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[],
-             verbose_on_match=False):
+def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
     """ Using information from the bugs database, opens target file and
         searches the text for each associated regexp. """
     # TODO: As it stands, files are only searched if there is an entry in the
@@ -317,7 +316,7 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[],
                             hit_dict = join_dicts(hit_dict, hit)
                         else:
                             info = "Target file: " + target_file
-                            info += ".              " + text
+                            info = ".              " + text
                     else:
                         # Get tempest results:
                         p = etree.XMLParser(huge_tree=True)
@@ -334,8 +333,6 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[],
                             hit = rematch(and_dict, target_file, pre_log)
                             if hit:
                                 hit_dict = join_dicts(hit_dict, hit)
-                                if verbose_on_match:
-                                    info += ".                     " + pre_log
                             else:
                                 info = "Target file: " + target_file
                                 info += ".              " + pre_log
@@ -344,8 +341,6 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[],
                                              'vendors': vendors_list,
                                              'machines': machines_list,
                                              'units': units_list}
-                    if info:
-                        matching_bugs[bug_id]['additional info'] = info
                     LOG.info("Bug found!")
                     LOG.info(hit_dict)
                     hit_dict = {}
@@ -510,9 +505,6 @@ def main():
     parser.add_option('-T', '--testcatalog', action='store', dest='tc_host',
                       default=None,
                       help='URL to test-catalog API server')
-    parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
-                      default=False,
-                      help='Full matching tempest xml log info in output yaml')
     parser.add_option('-x', '--xmls', action='store', dest='xmls',
                       default=None,
                       help='XUnit files to parse as XML, not as plain text')
@@ -562,11 +554,6 @@ def main():
         keep_data = opts.keep_data
     else:
         keep_data = cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
-
-    if opts.verbose:
-        verbose = opts.verbose
-    else:
-        verbose = cfg.get('DEFAULT', 'verbose').lower() in ['true', 'yes']
 
     if opts.xmls:
         xmls = opts.xmls
@@ -646,7 +633,7 @@ def main():
                     tempest_yaml_dict = \
                         process_tempest_data(pipeline, tempest_build, jenkins,
                                              reportdir, bugs, oil_df,
-                                             tempest_yaml_dict, xmls, verbose)
+                                             tempest_yaml_dict, xmls)
             else:
                 LOG.error("%s is still running - skipping" % deploy_build)
         except:
