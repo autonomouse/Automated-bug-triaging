@@ -10,6 +10,7 @@ import tarfile
 import shutil
 import uuid
 import optparse
+import datetime
 from test_catalog.client.api import TCClient as tc_client
 from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame
@@ -175,7 +176,7 @@ def non_db_bug(pline, build, bug_id, existing_dict, status, err_msg):
 
     """
     matching_bugs = {}
-    matching_bugs[bug_id] = {'regexp': err_msg, 'vendors': err_msg,
+    matching_bugs[bug_id] = {'regexps': err_msg, 'vendors': err_msg,
                              'machines': err_msg, 'units': err_msg}
     yaml_dict = add_to_yaml(pline, build, matching_bugs, 'FAILURE',
                             existing_dict=existing_dict)
@@ -219,7 +220,8 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
             oil_df.loc[row] = ['N/A', 'N/A', 'N/A']
         for unit in units:
             this_unit = units[unit]
-            machine = this_unit['public-address']
+            machine = this_unit['public-address'] if 'public-address'\
+                in this_unit else "N/A"
             nptags = oil_nodes[oil_nodes['node'] == machine]['tags']\
                 .apply(str)
             tags_list = nptags.tolist()
@@ -260,7 +262,7 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
 
 
 def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
-                         oil_df, yaml_dict, xmls):
+                         oil_df, yaml_dict, xmls, verbose):
     """
     Parses the artifacts files from a single pipeline into data and
     metadata DataFrames
@@ -270,13 +272,14 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
 
     matching_bugs, build_status = \
         bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, oil_df,
-                 tts_path, xmls)
+                 tts_path, xmls, verbose)
     yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
                             build_status, existing_dict=yaml_dict)
     return yaml_dict
 
 
-def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
+def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[],
+             verbose_on_match=False):
     """ Using information from the bugs database, opens target file and
         searches the text for each associated regexp. """
     # TODO: As it stands, files are only searched if there is an entry in the
@@ -331,26 +334,33 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
                             hit = rematch(and_dict, target_file, pre_log)
                             if hit:
                                 hit_dict = join_dicts(hit_dict, hit)
+                                if verbose_on_match:
+                                    info += ".                     " + pre_log
                             else:
                                 info = "Target file: " + target_file
                                 info += ".              " + pre_log
                 if and_dict == hit_dict:
-                    matching_bugs[bug_id] = {'regexp': hit_dict,
+                    matching_bugs[bug_id] = {'regexps': hit_dict,
                                              'vendors': vendors_list,
                                              'machines': machines_list,
                                              'units': units_list}
+                    if info:
+                        matching_bugs[bug_id]['additional info'] = info
+                    LOG.info("Bug found!")
+                    LOG.info(hit_dict)
                     hit_dict = {}
                     bug_unmatched = False
                     break
     if bug_unmatched and build_status == 'FAILURE':
-        bid = 'unfiled-' + str(uuid.uuid4())
-        matching_bugs[bid] = {'regexp': 'NO REGEX - UNFILED/UNMATCHED BUG',
+        bug_id = 'unfiled-' + str(uuid.uuid4())
+        matching_bugs[bug_id] = {'regexps': 'NO REGEX - UNFILED/UNMATCHED BUG',
                               'vendors': vendors_list,
                               'machines': machines_list,
                               'units': units_list}
-        if info:
-            matching_bugs[bid]['additional info'] = info
+        LOG.info("Unfiled bug found!")
         hit_dict = {}
+        if info:
+            matching_bugs[bug_id]['additional info'] = info
     return (matching_bugs, build_status)
 
 
@@ -486,7 +496,7 @@ def main():
                       default=None,
                       help='URL to Jenkins server')
     parser.add_option('-k', '--keep', action='store_true', dest='keep_data',
-                      default=None,
+                      default=False,
                       help='Do not delete extracted tarballs when finished')
     parser.add_option('-n', '--netloc', action='store', dest='netloc',
                       default=None,
@@ -500,6 +510,9 @@ def main():
     parser.add_option('-T', '--testcatalog', action='store', dest='tc_host',
                       default=None,
                       help='URL to test-catalog API server')
+    parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
+                      default=False,
+                      help='Full matching tempest xml log info in output yaml')
     parser.add_option('-x', '--xmls', action='store', dest='xmls',
                       default=None,
                       help='XUnit files to parse as XML, not as plain text')
@@ -549,6 +562,11 @@ def main():
         keep_data = opts.keep_data
     else:
         keep_data = cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
+
+    if opts.verbose:
+        verbose = opts.verbose
+    else:
+        verbose = cfg.get('DEFAULT', 'verbose').lower() in ['true', 'yes']
 
     if opts.xmls:
         xmls = opts.xmls
@@ -628,7 +646,7 @@ def main():
                     tempest_yaml_dict = \
                         process_tempest_data(pipeline, tempest_build, jenkins,
                                              reportdir, bugs, oil_df,
-                                             tempest_yaml_dict, xmls)
+                                             tempest_yaml_dict, xmls, verbose)
             else:
                 LOG.error("%s is still running - skipping" % deploy_build)
         except:
@@ -651,12 +669,18 @@ def main():
     # Write to file any pipelines (plus deploy build) that failed processing:
     if not problem_pipelines == []:
         file_path = os.path.join(reportdir, 'problem_pipelines.yaml')
-        with open(file_path, 'w') as pp_file:
+        open(file_path, 'a').close()  # Create file if doesn't exist yet
+        with open(file_path, 'r+') as pp_file:
+            existing_content = pp_file.read()
+            pp_file.seek(0, 0)  # Put at beginning of file
+            pp_file.write("\n" + str(datetime.datetime.now())
+              + "\n--------------------------\n")
             for problem_pipeline in problem_pipelines:
                 pp_file.write("%s (deploy build: %s) \n" % problem_pipeline)
+            pp_file.write(existing_content)
             errmsg = "There were some pipelines that could not be processed. "
             errmsg += "This information was written to problem_pipelines.yaml "
-            errmsg += "in " + reportdir
+            errmsg += "in " + reportdir + "\n\n" 
             LOG.error(errmsg)
 
     # Clean up data folders (just leaving yaml files):
