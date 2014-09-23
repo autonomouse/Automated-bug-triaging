@@ -120,7 +120,7 @@ bugs:
         "console.txt":
             regexp: 
             - "nova-vmware.*hook failed.*install"
-  "Triage_001":
+  "1372417":
     category: None
     description: "prodstack: Could not query juju status"
     pipeline_deploy:
@@ -128,7 +128,7 @@ bugs:
         "console.txt":
             regexp: 
             - "ERROR.*Could not query juju status"
-  "Triage_002":
+  "1372942":
     category: None
     description: error executing lxc - container failed to start
     pipeline_deploy:
@@ -136,7 +136,7 @@ bugs:
         "juju_status.yaml":
             regexp: 
             - "error executing .lxc-start.: The container failed to start.+To get more details, run the container in foreground mode.+Additional information can be obtained by setting the --logfile and --log-priority options"
-  "Triage_003":
+  "1372941":
     category: None
     description: 
     test_tempest_smoke:
@@ -145,7 +145,7 @@ bugs:
             regexp: 
             - "Server.+failed to build and is in ERROR status"
 
-  "Triage_004":
+  "1372946":
     category: None
     description: 
     test_tempest_smoke:
@@ -154,7 +154,7 @@ bugs:
             regexp: 
             - "assertFalse.+raise self.failureException.+AssertionError: True is not false"
 
-  "Triage_005":
+  "1372947":
     category: None
     description: 
     test_tempest_smoke:
@@ -163,7 +163,7 @@ bugs:
             regexp: 
             - "SSHTimeout: Connection to the .+ via SSH timed out.+User: .+, Password: .+"
 
-  "Triage_006":
+  "1372949":
     category: None
     description: 
     test_tempest_smoke:
@@ -172,7 +172,7 @@ bugs:
             regexp: 
             - "UnboundLocalError: local variable 'agent' referenced before assignment"
 
-  "Triage_007":
+  "1372954":
     category: None
     description: 
     test_tempest_smoke:
@@ -181,7 +181,7 @@ bugs:
             regexp: 
             - "TimeoutException: Request timed out.+Details: Server .+ failed to reach ACTIVE status.+within the required time .+ Current status: SHUTOFF"
 
-  "Triage_008":
+  "1372958":
     category: None
     description: 
     test_tempest_smoke:
@@ -190,7 +190,7 @@ bugs:
             regexp: 
             - "Request timed out.+Details: Server .+ failed to reach ACTIVE status within the required time .+ Current status: BUILD"
 
-  "Triage_009":
+  "1372960":
     category: None
     description: 
     test_tempest_smoke:
@@ -199,16 +199,7 @@ bugs:
             regexp: 
             - "Request timed out.+Details: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
 
-  "Triage_010":
-    category: None
-    description: 
-    test_tempest_smoke:
-      -
-        "tempest_xunit.xml":
-            regexp: 
-            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
-
-  "Triage_011":
+  "1372964":
     category: None
     description: 
     test_tempest_smoke:
@@ -217,7 +208,7 @@ bugs:
             regexp: 
             - "Unable to find network with name 'private'.+returned non-zero exit status 1"
 
-  "Triage_012":
+  "1318783":
     category: None
     description: 
     test_tempest_smoke:
@@ -226,16 +217,16 @@ bugs:
             regexp: 
             - "^No more IP addresses available on network.+"
 
-  "Triage_013":
+  "1372997":
     category: None
-    description: 
-    test_tempest_smoke:
+    description: oil_ci.deploy.oil_deployer - Deployment timed-out and failed (pipeline_deploy fail)
+    pipeline_deploy:
       -
-        "tempest_xunit.xml":
+        "console.txt":
             regexp: 
-            - "An object with that identifier already exists.+Details: {u'NeutronError': {u'message': u'No more IP addresses available on network.+', u'type': u'IpAddressGenerationFailure'"
+            - "oil_ci.deploy.oil_deployer. Deployment failed.+Deployment failed"
 
-  "Triage_014":
+  "1372970":
     category: None
     description: 
     test_tempest_smoke:
@@ -244,16 +235,43 @@ bugs:
             regexp: 
             - "Object not found.+Details: No ResellerAdmin role found"
 
-  "Triage_015":
+  "1319855":
     category: None
-    description: 
+    description: On pipeline deploy sometimes get hook failed: "shared-db-relation-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "shared-db-relation-changed"
+
+  "1358326":
+    category: None
+    description: prodstack: nova-vmware hooks failed: cloud-compute-relation-changed
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "cloud-compute-relation-changed"
+
+  "1373020":
+    category: None
+    description: oil_deployer Deployment failed - Name or service not known (pipeline_deploy fail)
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "oil_ci.deploy.oil_deployer: Deployment failed: [Errno -2] Name or service not known"
+
+  "1373023":
+    category: None
+    description: Enabled field must be a boolean (tempest fail)
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
             regexp: 
             - "'message': 'Enabled field must be a boolean"
 
-  "Triage_016":
+  "1373024":
     category: None
     description: 
     test_tempest_smoke:
@@ -262,7 +280,7 @@ bugs:
             regexp: 
             - "type object 'ServerRescueV3Test.+' has no attribute 'volumes_client'"
 
-  "Triage_017":
+  "1373027":
     category: None
     description: 
     test_tempest_smoke:
@@ -271,7 +289,7 @@ bugs:
             regexp: 
             - "ServerFault: Got server fault.+Details: Failed to attach interface"
 
-  "Triage_018":
+  "1373028":
     category: None
     description: 
     test_tempest_smoke:
@@ -282,16 +300,7 @@ bugs:
         "tempest_xunit.xml":
             regexp: "MismatchError: '204' != '200'"
 
-  "Triage_019":
-    category: None
-    description: 
-    test_tempest_smoke:
-      -
-        "test_tempest_smoke":
-            regexp: 
-            - "AssertionError: Timed out waiting for.+to become reachable"
-
-  "Triage_020":
+  "1373030":
     category: None
     description: 
     test_tempest_smoke:
@@ -309,7 +318,7 @@ bugs:
             regexp: 
             - "itemNotFound.+FloatingIpPoolNotFound: Floating ip pool not found"
 
-  "Triage_022":
+  "1372461":
     category: None
     description: 
     test_tempest_smoke:
@@ -318,33 +327,16 @@ bugs:
             regexp: 
             - "AssertionError. Timed out waiting for.+to become reachable"
 
-  "Triage_023":
+  "1373035":
     category: None
-    description: 
+    description: Volume failed to reach available status within the required time (tempest fail)
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
             regexp: 
             - "Volume volume.+ failed to reach available status within the required time"
 
-  "Triage_024":
-    category: None
-    description: 
-    test_tempest_smoke:
-      -
-        "tempest_xunit.xml":
-            regexp: 
-            - "itemNotFound.+FloatingIpPoolNotFound: Floating ip pool not found"
-      -
-        "tempest_xunit.xml":
-            regexp: 
-            - "AssertionError. Timed out waiting for.+to become reachable"
-      -
-        "tempest_xunit.xml":
-            regexp: 
-            - "Volume volume.+ failed to reach available status within the required time"
-
-  "Triage_025":
+  "1371792":
     category: None
     description: Bootstrap failure
     pipeline_deploy:
