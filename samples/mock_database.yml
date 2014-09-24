@@ -344,3 +344,30 @@ bugs:
         "console.txt":
             regexp: 
             - "ERROR bootstrap failed"
+
+  "1373394":
+    category: None
+    description: "juju.client cannot cleanup tmpdir (permission denied) so tempest_xunit.xml not generated (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp: 
+            - "oil_ci.juju.client: Could not cleanup tmpdir.+Permission denied"
+
+  "1373402":
+    category: None
+    description: "No handlers could be found for logger glanceclient.common.http (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp: 
+            - "No handlers could be found for logger .glanceclient.common.http"
+
+  "1373406":
+    category: None
+    description: "InternalServerError - Failed to upload image and deploy cloud (pipeline_prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp: 
+            - "Failed to prepare deployed cloud.+HTTPInternalServerError. 500 Internal Server Error"
