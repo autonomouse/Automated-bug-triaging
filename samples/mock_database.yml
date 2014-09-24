@@ -345,15 +345,6 @@ bugs:
             regexp: 
             - "ERROR bootstrap failed"
 
-  "1373394":
-    category: None
-    description: "juju.client cannot cleanup tmpdir (permission denied) so tempest_xunit.xml not generated (tempest fail)"
-    test_tempest_smoke:
-      -
-        "console.txt":
-            regexp: 
-            - "oil_ci.juju.client: Could not cleanup tmpdir.+Permission denied"
-
   "1373402":
     category: None
     description: "No handlers could be found for logger glanceclient.common.http (tempest fail)"
