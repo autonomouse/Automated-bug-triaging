@@ -237,7 +237,7 @@ bugs:
 
   "1319855":
     category: None
-    description: On pipeline deploy sometimes get hook failed: "shared-db-relation-changed"
+    description: On pipeline deploy sometimes get hook failed. "shared-db-relation-changed"
     pipeline_deploy:
       -
         "console.txt":
@@ -246,7 +246,7 @@ bugs:
 
   "1358326":
     category: None
-    description: prodstack: nova-vmware hooks failed: cloud-compute-relation-changed
+    description: prodstack. nova-vmware hooks failed. cloud-compute-relation-changed
     pipeline_deploy:
       -
         "console.txt":
@@ -344,51 +344,3 @@ bugs:
         "console.txt":
             regexp: 
             - "ERROR bootstrap failed"
-
-
-
-
-
-  "NeedsRegex_001":
-    category: None
-    description: "deployment failed: [Errno -2] Name or Service not known"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
-  "NeedsRegex_002":
-    category: None
-    description: "Pending Units"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
-
-  "NeedsRegex_003":
-    category: None
-    description: "Bootstrap timeout (30 minutes)"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
-
-  "NeedsRegex_004":
-    category: None
-    description: "deployment timeout, no errors"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
-
-  "NeedsRegex_005":
-    category: None
-    description: "deployment timeout, juju status missing."
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
