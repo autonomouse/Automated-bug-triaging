@@ -144,6 +144,10 @@ bugs:
         "tempest_xunit.xml":
             regexp: 
             - "Server.+failed to build and is in ERROR status"
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - Server.+failed to build and is in ERROR status.+Details.+failed to get to expected status.+In ERROR state
 
   "1372946":
     category: None
@@ -334,7 +338,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Volume volume.+ failed to reach available status within the required time"
+            - "Volume volume.+failed to reach available status within the required time"
 
   "1371792":
     category: None
@@ -362,3 +366,6 @@ bugs:
         "console.txt":
             regexp: 
             - "Failed to prepare deployed cloud.+HTTPInternalServerError. 500 Internal Server Error"
+
+
+

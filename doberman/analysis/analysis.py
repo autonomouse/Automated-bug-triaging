@@ -86,7 +86,8 @@ def get_pipelines(pipeline, api, remote=False):
     try:
         pl_tcat = TCCTestPipeline(client, pipeline)
     except Exception, e:
-        msg = "test-catalog error. Probably cookie-related (%s)" % e
+        msg = "test-catalog error. Does pipeline exist? Is there a cookie-"
+        msg += "related issue? (%s)" % e
         LOG.error(msg)
         raise Exception(msg)
     try:
@@ -158,7 +159,7 @@ def extract_and_delete_archive(outdir, artifact):
         LOG.error("Could not extract %s" % artifact.filename)
 
 
-def get_yaml(file_location, pline, build, yaml_dict):
+def get_yaml(file_location, pline, build, yaml_dict, jurl):
     try:
         with open(file_location, "r") as f:
             return (yaml.load(f), yaml_dict)
@@ -166,12 +167,13 @@ def get_yaml(file_location, pline, build, yaml_dict):
         file_name = file_location.split('/')[-1]
         LOG.error("%s: %s is not in artifacts folder (%s)"
                   % (pline, file_name, e[1]))
+        msg = file_name + ' MISSING'
         yaml_dict = non_db_bug(pline, build, special_cases[file_name],
-                               yaml_dict, 'FAILURE', file_name + ' MISSING')
+                               yaml_dict, 'FAILURE', msg, jurl)
         return (None, yaml_dict)
 
 
-def non_db_bug(pline, build, bug_id, existing_dict, status, err_msg):
+def non_db_bug(pline, build, bug_id, existing_dict, status, err_msg, jurl):
     """ Make non-database bugs for special cases, such as missing files that
         cannot be, or are not yet, listed in the bugs database.
 
@@ -179,12 +181,12 @@ def non_db_bug(pline, build, bug_id, existing_dict, status, err_msg):
     matching_bugs = {}
     matching_bugs[bug_id] = {'regexps': err_msg, 'vendors': err_msg,
                              'machines': err_msg, 'units': err_msg}
-    yaml_dict = add_to_yaml(pline, build, matching_bugs, 'FAILURE',
+    yaml_dict = add_to_yaml(pline, build, matching_bugs, 'FAILURE', None,
                             existing_dict=existing_dict)
     return yaml_dict
 
 
-def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
+def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs, jurl,
                         yaml_dict, xmls):
     """ Parses the artifacts files from a single pipeline into data and
         metadata DataFrames
@@ -198,7 +200,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     # Read oil nodes file:
     oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
     oil_nodes_yml, yaml_dict = get_yaml(oil_node_location, pline,
-                                        deploy_build, yaml_dict)
+                                        deploy_build, yaml_dict, jurl)
     if not oil_nodes_yml:
         return (oil_df, yaml_dict)
     else:
@@ -209,7 +211,7 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
     juju_status_location = os.path.join(pipeline_deploy_path,
                                         'juju_status.yaml')
     juju_status, yaml_dict = get_yaml(juju_status_location, pline,
-                                      deploy_build, yaml_dict)
+                                      deploy_build, yaml_dict, jurl)
     if not juju_status:
         return (oil_df, yaml_dict)
 
@@ -238,15 +240,15 @@ def process_deploy_data(pline, deploy_build, jenkins, reportdir, bugs,
                                .replace('hardware-', '')]
             row += 1
 
-    matching_bugs, build_status = bug_hunt('pipeline_deploy', jenkins,
-                                           deploy_build, bugs, oil_df,
-                                           pipeline_deploy_path, xmls)
+    matching_bugs, build_status, link2 = bug_hunt('pipeline_deploy', jenkins,
+                                                  deploy_build, bugs, oil_df,
+                                                  pipeline_deploy_path, xmls)
     yaml_dict = add_to_yaml(pline, deploy_build, matching_bugs, build_status,
-                            existing_dict=yaml_dict)
+                            jurl + link2, existing_dict=yaml_dict)
     return (oil_df, yaml_dict)
 
 
-def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
+def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs, jurl,
                          oil_df, yaml_dict, xmls):
     """ Parses the artifacts files from a single pipeline into data and
         metadata DataFrames.
@@ -254,16 +256,16 @@ def process_prepare_data(pline, prepare_build, jenkins, reportdir, bugs,
     """
     prepare_path = os.path.join(reportdir, 'pipeline_prepare',
                                 prepare_build)
-    matching_bugs, build_status = \
+    matching_bugs, build_status, link2 = \
         bug_hunt('pipeline_prepare', jenkins, prepare_build, bugs, oil_df,
                  prepare_path, xmls)
 
     yaml_dict = add_to_yaml(pline, prepare_build, matching_bugs, build_status,
-                            existing_dict=yaml_dict)
+                            jurl + link2, existing_dict=yaml_dict)
     return yaml_dict
 
 
-def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
+def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs, jurl,
                          oil_df, yaml_dict, xmls):
     """
     Parses the artifacts files from a single pipeline into data and
@@ -272,11 +274,11 @@ def process_tempest_data(pline, tempest_build, jenkins, reportdir, bugs,
     """
     tts_path = os.path.join(reportdir, 'test_tempest_smoke', tempest_build)
 
-    matching_bugs, build_status = \
+    matching_bugs, build_status, link2 = \
         bug_hunt('test_tempest_smoke', jenkins, tempest_build, bugs, oil_df,
                  tts_path, xmls)
-    yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs,
-                            build_status, existing_dict=yaml_dict)
+    yaml_dict = add_to_yaml(pline, tempest_build, matching_bugs, build_status,
+                            jurl + link2, existing_dict=yaml_dict)
     return yaml_dict
 
 
@@ -294,7 +296,7 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
     machines_list = oil_df['node'].tolist()
     vendors_list = oil_df['vendor'].tolist()
     bug_unmatched = True
-    info = ''
+    info = {}
     if not bugs:
         raise Exception("No bugs in database!")
     for bug_id in bugs.keys():
@@ -308,8 +310,13 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
                 for target_file in and_dict.keys():
                     target_location = os.path.join(path, target_file)
                     if not os.path.isfile(target_location):
-                        info = target_file + " not present"
+                        info['error'] = target_file + " not present"
                         break
+                    if target_file == 'console.txt':
+                        link2 = '/job/%s/%s/console' % (job, build)
+                    else:
+                        link2 = ('/job/%s/%s/artifact/artifacts/%s'
+                                 % (job, build, target_file))
                     if not (target_file in parse_as_xml):
                         with open(target_location, 'r') as grep_me:
                             text = grep_me.read()
@@ -317,8 +324,8 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
                         if hit:
                             hit_dict = join_dicts(hit_dict, hit)
                         else:
-                            info = "Target file: " + target_file
-                            info = ".              " + text
+                            info['target file'] = target_file
+                            info['text'] = text
                     else:
                         # Get tempest results:
                         p = etree.XMLParser(huge_tree=True)
@@ -336,13 +343,19 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
                             if hit:
                                 hit_dict = join_dicts(hit_dict, hit)
                             else:
-                                info = "Target file: " + target_file
-                                info += ".              " + pre_log
+                                info['target file'] = target_file
+                                info['text'] = pre_log
+                            info['xunit class'] = \
+                                fail.getparent().get('classname')
+                            info['xunit name'] = fail.getparent().get('name')
+
                 if and_dict == hit_dict:
                     matching_bugs[bug_id] = {'regexps': hit_dict,
                                              'vendors': vendors_list,
                                              'machines': machines_list,
                                              'units': units_list}
+                    if info:
+                        matching_bugs[bug_id]['additional info'] = info
                     LOG.info("Bug found!")
                     LOG.info(hit_dict)
                     hit_dict = {}
@@ -358,7 +371,7 @@ def bug_hunt(job, jenkins, build, bugs, oil_df, path, parse_as_xml=[]):
         hit_dict = {}
         if info:
             matching_bugs[bug_id]['additional info'] = info
-    return (matching_bugs, build_status)
+    return (matching_bugs, build_status, link2)
 
 
 def rematch(bugs, target_file, text):
@@ -383,7 +396,8 @@ def rematch(bugs, target_file, text):
                 return {target_file: {'regexp': regexps}}
 
 
-def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
+def add_to_yaml(pline, build, matching_bugs, build_status, link,
+                existing_dict=None):
     """
     Creates a yaml dict and populates with data in the right format and merges
     with existing yaml dict.
@@ -397,6 +411,9 @@ def add_to_yaml(pline, build, matching_bugs, build_status, existing_dict=None):
         pipeline_dict = {pline: {'status': build_status,
                                  'build': build,
                                  'bugs': matching_bugs}}
+        if link:
+            pipeline_dict[pline]['link to jenkins'] = link
+
     # Merge with existing dict:
     if existing_dict:
         if 'pipeline' in existing_dict:
@@ -640,19 +657,19 @@ def main():
                 # Process downloaded data:
                 oil_df, deploy_yaml_dict = \
                     process_deploy_data(pipeline, deploy_build, jenkins,
-                                        reportdir, bugs, deploy_yaml_dict,
-                                        xmls)
+                                        reportdir, bugs, jenkins_host,
+                                        deploy_yaml_dict, xmls)
                 if prepare_build:
                     prepare_yaml_dict = \
                         process_prepare_data(pipeline, prepare_build, jenkins,
-                                             reportdir, bugs, oil_df,
-                                             prepare_yaml_dict, xmls)
+                                             reportdir, bugs, jenkins_host,
+                                             oil_df, prepare_yaml_dict, xmls)
 
                 if tempest_build:
                     tempest_yaml_dict = \
                         process_tempest_data(pipeline, tempest_build, jenkins,
-                                             reportdir, bugs, oil_df,
-                                             tempest_yaml_dict, xmls)
+                                             reportdir, bugs, jenkins_host,
+                                             oil_df, tempest_yaml_dict, xmls)
             else:
                 LOG.error("%s is still running - skipping" % deploy_build)
         except:
@@ -661,7 +678,7 @@ def main():
                 deploy_yaml_dict = non_db_bug(pipeline, deploy_build,
                                               special_cases['pipeline_id'],
                                               deploy_yaml_dict, 'FAILURE',
-                                              deploy_build)
+                                              deploy_build, jenkins_host)
             else:
                 print("Problem with " + pipeline + " - skipping (deploy_build:"
                       + " " + deploy_build + ")")
