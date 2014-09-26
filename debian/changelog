@@ -1,3 +1,9 @@
+doberman (0.0.1-0ubuntu7) precise; urgency=medium
+
+  * fix up getbugs script
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Fri, 26 Sep 2014 13:26:46 -0500
+
 doberman (0.0.1-0ubuntu6) precise; urgency=medium
 
   * Much simpler mapping of machines/nodes
