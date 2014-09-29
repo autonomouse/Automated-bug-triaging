@@ -371,16 +371,16 @@ bugs:
   "1375220":
     category: None
     description: "swift-storage-relation-changed (tempest fail)"
-    pipeline_prepare:
+    test_tempest_smoke:
       -
         "console.txt":
             regexp: 
-            - "hook failed: .swift-storage-relation-changed"
+            - "hook failed.+swift-storage-relation-changed"
 
   "1375244":
     category: None
     description: "Deployment failed: oil_ci.deploy.oil_deployer reached deployment timeout (deploy fail)"
-    pipeline_prepare:
+    pipeline_deploy:
       -
         "console.txt":
             regexp: 
