@@ -611,8 +611,10 @@ def main():
         msg += "pipeline_deploy build numbers: %s"
         LOG.info(msg % ", ".join([str(i) for i in ids]))
 
-    if len(ids) > 25:
+    if len(ids) > 35:
         report_at = range(5, 100, 5)  # Notify every 5 percent complete
+    elif len(ids) > 25:
+        report_at = range(10, 100, 10)  # Notify every 10 percent complete
     elif len(ids) > 10:
         report_at = range(25, 100, 25)  # Notify every 25 percent complete
     else:
