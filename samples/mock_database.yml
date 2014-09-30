@@ -1,34 +1,387 @@
 bugs:
-  "bug1":
+  "mock_bug_1":
     category: None
-    description: "Mock bug for regex-ing multiple signatures."
+    description: "Dummy bug"
     pipeline_deploy:
       -
         "console.txt":
           regexp:
-            - "Started by user admin"
-        "run_config":
-          regexp:
-            - /var/lib/jenkins
-            - fixed_net_cidr
-      -
-        console.txt:
-          regexp:
-            - "other by user admin"
-  "bug2":
+            - "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+  "mock_bug_2":
     category: None
-    description:
-    test_tempest_smoke:
+    description: "Dummy bug"
+    pipeline_prepare:
       -
-        "tempest_xunit.xml":
-          regexp: "AssertionError: Timed out waiting for"
-
-  "bug3":
+        "console.txt":
+          regexp:
+            - "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+  "mock_bug_3":
     category: None
-    description:
+    description: "Dummy bug"
     test_tempest_smoke:
       -
         "console.txt":
-          regexp: "a"
+          regexp: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
         "tempest_xunit.xml":
-          regexp: "AssertionError: Timed out waiting for"
+          regexp: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+  "1358393":
+    category: None
+    description: "prodstack: nvp-transport-node hook failed config-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "nvp-transport-node.*hook failed:.*config-changed"
+  "1319855":
+    category: None
+    description: "On pipeline deploy sometimes get hook failed: \"shared-db-relation-changed\""
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - ''
+  "1335325":
+    category: None
+    description: "prodstack: error on deploying services Deployment failed: 'units'"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - ''
+  "1336339":
+    category: None
+    description: "prodstack: cinder-iscsi charm failure Command"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - ''
+  "1346338":
+    category: None
+    description: "juju bootstrap failed to init, unauthorized mongo access"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - ''
+  "1346340":
+    category: None
+    description: "deployer fails with no route to host"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "ERROR.*Deployment failed:.*No route to host"
+  "1352503":
+    category: None
+    description: "nova-cloud-controller fails to install with neutron-nsx"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "nova-cloud-controller.*hook failed.*install"    
+  "1352506":
+    category: None
+    description: "prodstack: unit: nova-compute/1,2,3 hook failed \"ceph-relation-changed\""
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "nova-compute.*hook failed.*ceph-relation-changed"
+  "1358326":
+    category: None
+    description: "prodstack: nova-vmware hooks failed: cloud-compute-relation-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "nova-vmware.*hook failed.*cloud-compute-relation-changed"
+  "1355265":
+    category: None
+    description: "hook failed: \"mon-relation-joined\""
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "ceph.*machine.*hook failed.*mon-relation-joined"
+  "1346597":
+    category: None
+    description: "mongo timeout? cannot get replica set configuration"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - ''
+  "1353529":
+    category: None
+    description: "nova-vmware: nova-compute-vmware package not found"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "nova-vmware.*hook failed.*install"
+  "1372417":
+    category: None
+    description: "prodstack: Could not query juju status"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "ERROR.*Could not query juju status"
+  "1372942":
+    category: None
+    description: error executing lxc - container failed to start
+    pipeline_deploy:
+      -
+        "juju_status.yaml":
+            regexp: 
+            - "error executing .lxc-start.: The container failed to start.+To get more details, run the container in foreground mode.+Additional information can be obtained by setting the --logfile and --log-priority options"
+  "1372941":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "Server.+failed to build and is in ERROR status"
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - Server.+failed to build and is in ERROR status.+Details.+failed to get to expected status.+In ERROR state
+
+  "1372946":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "assertFalse.+raise self.failureException.+AssertionError: True is not false"
+
+  "1372947":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "SSHTimeout: Connection to the .+ via SSH timed out.+User: .+, Password: .+"
+
+  "1372949":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "UnboundLocalError: local variable 'agent' referenced before assignment"
+
+  "1372954":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "TimeoutException: Request timed out.+Details: Server .+ failed to reach ACTIVE status.+within the required time .+ Current status: SHUTOFF"
+
+  "1372958":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status within the required time .+ Current status: BUILD"
+
+  "1372960":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
+
+  "1372964":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "Unable to find network with name 'private'.+returned non-zero exit status 1"
+
+  "1318783":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "^No more IP addresses available on network.+"
+
+  "1372997":
+    category: None
+    description: oil_ci.deploy.oil_deployer - Deployment timed-out and failed (pipeline_deploy fail)
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "oil_ci.deploy.oil_deployer. Deployment failed.+Deployment failed"
+
+  "1372970":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "Object not found.+Details: No ResellerAdmin role found"
+
+  "1319855":
+    category: None
+    description: On pipeline deploy sometimes get hook failed. "shared-db-relation-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "shared-db-relation-changed"
+
+  "1358326":
+    category: None
+    description: prodstack. nova-vmware hooks failed. cloud-compute-relation-changed
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "cloud-compute-relation-changed"
+
+  "1373020":
+    category: None
+    description: oil_deployer Deployment failed - Name or service not known (pipeline_deploy fail)
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "oil_ci.deploy.oil_deployer: Deployment failed: [Errno -2] Name or service not known"
+
+  "1373023":
+    category: None
+    description: Enabled field must be a boolean (tempest fail)
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "'message': 'Enabled field must be a boolean"
+
+  "1373024":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "type object 'ServerRescueV3Test.+' has no attribute 'volumes_client'"
+
+  "1373027":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "ServerFault: Got server fault.+Details: Failed to attach interface"
+
+  "1373028":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: "MismatchError: [^'204' != '200'].+"
+      -
+        "tempest_xunit.xml":
+            regexp: "MismatchError: '204' != '200'"
+
+  "1373030":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "itemNotFound.+Image not found"
+
+  "1372459":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "itemNotFound.+FloatingIpPoolNotFound: Floating ip pool not found"
+
+  "1372461":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "AssertionError. Timed out waiting for.+to become reachable"
+
+  "1373035":
+    category: None
+    description: Volume failed to reach available status within the required time (tempest fail)
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "Volume volume.+failed to reach available status within the required time"
+
+  "1371792":
+    category: None
+    description: Bootstrap failure
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "ERROR bootstrap failed"
+
+  "1373402":
+    category: None
+    description: "No handlers could be found for logger glanceclient.common.http (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp: 
+            - "No handlers could be found for logger .glanceclient.common.http"
+
+  "1373406":
+    category: None
+    description: "InternalServerError - Failed to upload image and deploy cloud (pipeline_prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp: 
+            - "Failed to prepare deployed cloud.+HTTPInternalServerError. 500 Internal Server Error"
+
+
+  "1375220":
+    category: None
+    description: "swift-storage-relation-changed (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp: 
+            - "hook failed.+swift-storage-relation-changed"
+
+  "1375244":
+    category: None
+    description: "Deployment failed: oil_ci.deploy.oil_deployer reached deployment timeout (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "deployer.import. Reached deployment timeout.+ exiting.+oil_ci.deploy.oil_deployer. Deployment failed"
