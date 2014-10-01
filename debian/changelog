@@ -1,3 +1,12 @@
+doberman (0.0.1-0ubuntu9) precise; urgency=medium
+
+  * Catch import module errors during unit test for pycookie
+  * Fix up deps version (python-crypto 2.6 or greater)
+  * Rename oil-stats.py to oil_stats.py so /usr/bin/oil-stats imports the
+    correct python module
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Wed, 01 Oct 2014 14:47:09 -0500
+
 doberman (0.0.1-0ubuntu8) precise; urgency=medium
 
   * Removed erroneous boolean value from output yaml for tempest
