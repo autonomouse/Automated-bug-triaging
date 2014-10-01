@@ -370,8 +370,8 @@ bugs:
 
   "1375220":
     category: None
-    description: "swift-storage-relation-changed (tempest fail)"
-    test_tempest_smoke:
+    description: "swift-storage-relation-changed (deploy fail)"
+    pipeline_deploy:
       -
         "console.txt":
             regexp: 
