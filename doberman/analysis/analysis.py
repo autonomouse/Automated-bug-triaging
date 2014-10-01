@@ -438,10 +438,8 @@ def export_to_yaml(yaml_dict, job, reportdir):
 
 
 def open_bug_database(database_uri, remote=False):
-    if len(database_uri):
-        if not database_uri.startswith("/"):
-            filename = os.path.join(os.getcwd(), database_uri)
-
+    if len(database_uri):        
+        filename = os.path.join(os.getcwd(), database_uri)
         LOG.info("Connecting to database file: %s" % (filename))
         with open(filename, "r") as mock_db_file:
             return yaml.load(mock_db_file)['bugs']
