@@ -264,7 +264,7 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "oil_ci.deploy.oil_deployer: Deployment failed: [Errno -2] Name or service not known"
+            - "oil_ci.deploy.oil_deployer: Deployment failed: .Errno -2. Name or service not known"
 
   "1373023":
     category: None
@@ -297,9 +297,6 @@ bugs:
     category: None
     description: 
     test_tempest_smoke:
-      -
-        "tempest_xunit.xml":
-            regexp: "MismatchError: [^'204' != '200'].+"
       -
         "tempest_xunit.xml":
             regexp: "MismatchError: '204' != '200'"
@@ -394,3 +391,12 @@ bugs:
         "juju_status.yaml":
             regexp: 
             - "agent-state-info. template container .juju-trusty-lxc-template. did not stop"
+
+  "1336316":
+    category: None
+    description: "prodstack: cinder-iscsi failing"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "cinder... machine... agent-state. error details. hook failed...config-changed"
