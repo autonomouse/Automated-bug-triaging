@@ -471,7 +471,7 @@ def get_pipeline_from_deploy_build_number(jenkins, id_number):
     try:
         cons = jenkins['pipeline_deploy'].get_build(deploy_bld_n).get_console()
     except:
-        msg = "Failed to fetch pipeline from deploy build: \"%s" % idn
+        msg = "Failed to fetch pipeline from deploy build: \"%s" % deploy_bld_n
         msg += "\" - if this is already a pipeline id, run without the"
         msg += " '-b' flag."
         raise Exception(msg)
