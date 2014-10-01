@@ -8,14 +8,17 @@ Build-Depends: debhelper (>= 8.0.0),
  python-all (>= 2.6.6-3~),
  python-bzrlib,
  python-crypto,
+ python-coverage,
  python-keyring,
+ python-lxml,
  python-nose,
  python-pandas,
  python-requests,
  python-setuptools,
  python-test-catalog,
  python-testtools,
- python-yaml
+ python-yaml,
+ test-catalog-common
 Standards-Version: 3.9.3
 XS-Python-Version: >= 2.6
 
@@ -25,10 +28,12 @@ Section: python
 Depends: jenkinsapi (>= 0.2.16),
  python-crypto,
  python-keyring,
+ python-lxml,
  python-pandas,
  python-requests,
  python-test-catalog,
  python-yaml,
+ test-catalog-common,
  ${misc:Depends},
  ${python:Depends}
 Provides: ${python:Provides}

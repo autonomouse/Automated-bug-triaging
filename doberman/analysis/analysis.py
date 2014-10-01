@@ -434,7 +434,7 @@ def export_to_yaml(yaml_dict, job, reportdir):
         os.makedirs(reportdir)
     with open(file_path, 'w') as outfile:
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
-        LOG.info(filename + " written to " + reportdir)
+        LOG.info(filename + " written to " + os.path.abspath(reportdir))
 
 
 def open_bug_database(database_uri, remote=False):

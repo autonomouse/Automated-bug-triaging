@@ -1,3 +1,23 @@
+doberman (0.0.1-0ubuntu8) precise; urgency=medium
+
+  * Removed erroneous boolean value from output yaml for tempest
+  * Changed output yaml format to include regexp under 'regexp' key
+    (to match input format and allow easy comparisons for multiple
+    matching regexps (ands).
+  * Added an option to keep extracted tarballs rather than always
+    deleting them.
+  * Added an additional info item in the output yaml containing 
+    text that was parsed but unmatched to enable easier triage.
+  * fixed duplication of regexp in yaml bug.
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Tue, 30 Sep 2014 10:28:04 -0500
+
+doberman (0.0.1-0ubuntu7) precise; urgency=medium
+
+  * fix up getbugs script
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Fri, 26 Sep 2014 13:26:46 -0500
+
 doberman (0.0.1-0ubuntu6) precise; urgency=medium
 
   * Much simpler mapping of machines/nodes

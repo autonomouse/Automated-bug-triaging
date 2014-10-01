@@ -385,3 +385,12 @@ bugs:
         "console.txt":
             regexp: 
             - "deployer.import. Reached deployment timeout.+ exiting.+oil_ci.deploy.oil_deployer. Deployment failed"
+
+  "1375876":
+    category: None
+    description: "prodstack: template container juju-trusty-lxc-template did not stop"
+    pipeline_deploy:
+      -
+        "juju_status.yaml":
+            regexp: 
+            - "agent-state-info. template container .juju-trusty-lxc-template. did not stop"
