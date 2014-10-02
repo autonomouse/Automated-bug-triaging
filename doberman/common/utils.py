@@ -106,14 +106,16 @@ def get_config(conf=None):
     return config
 
 
-def write_cookie_file():
+def write_cookie_file(url=None, cookie=None):
     log = get_logger('doberman.utils.write_cookie_file')
     cfg = get_config()
-    JENKINS_URL = cfg.get('DEFAULT', 'jenkins_url')
-    COOKIE_FILE = cfg.get('DEFAULT', 'cookie_file')
+    if not url:
+        url = cfg.get('DEFAULT', 'jenkins_url')
+    if not cookie:
+        cookie = cfg.get('DEFAULT', 'cookie_file')
     log.debug('Looking for a chome_cookie...')
-    cookies = pycookiecheat.chrome_cookies(JENKINS_URL)
-    log.info('Writing %s cookies to %s' % (JENKINS_URL, COOKIE_FILE))
-    with open(COOKIE_FILE, "w") as o:
+    cookies = pycookiecheat.chrome_cookies(url)
+    log.info('Writing %s cookies to %s' % (url, cookie))
+    with open(cookie, "w") as o:
         o.write(json.dumps(cookies))
         o.close()

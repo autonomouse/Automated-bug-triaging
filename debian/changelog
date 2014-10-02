@@ -1,3 +1,14 @@
+doberman (0.0.1-0ubuntu10) precise; urgency=medium
+
+  * fix database_uri handling when connecting to test-catalog instead of local
+    yaml
+  * Modify cookie behavior for test-catalog connection.  We always need to use 
+    a test-catalog auth token even when remote=False
+  * Update oil_cookie to support writing arbitrary cookie files
+  * Fix netloc override behavior: cli, conf, lookupbyhostname
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Thu, 02 Oct 2014 17:07:47 -0500
+
 doberman (0.0.1-0ubuntu9) precise; urgency=medium
 
   * Catch import module errors during unit test for pycookie
