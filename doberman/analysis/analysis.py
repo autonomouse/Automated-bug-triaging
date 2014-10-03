@@ -11,6 +11,7 @@ import shutil
 import uuid
 import optparse
 import datetime
+import json
 from test_catalog.client.api import TCClient
 from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame
@@ -32,39 +33,37 @@ special_cases = {'juju_status.yaml': '1372407',
                  'pipeline_id': '1372567'}
 
 
-def get_jenkins(url, remote=False):
+def get_jenkins(url, netloc, remote=False):
     if _jenkins and not url:
         return _jenkins[0]
 
-    jenkins = connect_to_jenkins(url, remote)
+    jenkins = connect_to_jenkins(url, netloc, remote)
     _jenkins.append(jenkins)
     return jenkins
 
 
-def get_tc_client(api, remote=False):
+def get_tc_client(api, cookie=None, remote=False):
     if _tc_client and not api:
         return _tc_client[0]
 
-    tc_client = connect_to_testcatalog(api, remote)
+    tc_client = connect_to_testcatalog(api, cookie=cookie, remote=remote)
     _tc_client.append(tc_client)
     return tc_client
 
 
-def connect_to_testcatalog(api, remote=False):
+def connect_to_testcatalog(api, cookie=None, remote=False):
     LOG.debug('Connecting to test-catalog @ %s remote=%s' % (api, remote))
-    if remote:
-        LOG.info("Fetching cookies for %s" % api)
-        cookies = pycookiecheat.chrome_cookies(api)
-        return tc_client(endpoint=api, cookies=cookies)
-    else:  # If no auth_file, then assume running on jenkins
-        return tc_client(endpoint=api)
+    if cookie is None:
+        LOG.info("Fetching test-catalog cookies for %s" % api)
+        cookie = pycookiecheat.chrome_cookies(api)
+    LOG.info("Fetching test-catalog using endpoint=%s" % (api))
+    return tc_client(endpoint=api, cookies=cookie)
 
 
-def connect_to_jenkins(url, remote=False):
+def connect_to_jenkins(url, netloc, remote=False):
     """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
 
     LOG.debug('Connecting to jenkins @ %s remote=%s' % (url, remote))
-    netloc = socket.gethostbyname(urlparse.urlsplit(url).netloc)
     cookies = None
 
     if remote:
@@ -76,13 +75,13 @@ def connect_to_jenkins(url, remote=False):
         LOG.exception('Failed to connect to Jenkins')
 
 
-def get_pipelines(pipeline, api, remote=False):
+def get_pipelines(pipeline, api, tc_auth, remote=False):
     """ Using test-catalog, return the build numbers for the jobs that are
         part of the given pipeline.
 
     """
     LOG.info('Fetching data on pipeline: %s' % (pipeline))
-    client = get_tc_client(api, remote)
+    client = get_tc_client(api, cookie=tc_auth, remote=remote)
     try:
         pl_tcat = TCCTestPipeline(client, pipeline)
     except Exception, e:
@@ -436,17 +435,17 @@ def export_to_yaml(yaml_dict, job, reportdir):
         outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
         LOG.info(filename + " written to " + os.path.abspath(reportdir))
 
-
-def open_bug_database(database_uri, remote=False):
-    if len(database_uri):
-        filename = os.path.join(os.getcwd(), database_uri)
+def open_bug_database(database_uri, api, tc_auth, remote=False):
+    if database_uri in [None, 'None', 'none', '']:
+        LOG.info("Connecting to test-catalog bug/regex database")
+        client = get_tc_client(api, cookie=tc_auth, remote=remote)
+        return client.get_bug_info(force_refresh=True)
+    elif len(database_uri):
+        if not database_uri.startswith("/"):
+            filename = os.path.join(os.getcwd(), database_uri)
         LOG.info("Connecting to database file: %s" % (filename))
         with open(filename, "r") as mock_db_file:
             return yaml.load(mock_db_file)['bugs']
-    elif database_uri in [None, 'None', 'none', '']:
-        LOG.info("Connecting to test-catalog bug/regex database")
-        client = get_tc_client(remote, database_uri)
-        return client.get_bug_info(force_refresh=True)
     else:
         LOG.error('Unknown database: %s' % (database_uri))
         raise Exception('Invalid Database configuration')
@@ -552,10 +551,20 @@ def main():
     else:
         jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
+    # cli wins, then config, then hostname lookup
+    netloc_cfg = cfg.get('DEFAULT', 'netloc')
+    if opts.netloc:
+        netloc = opts.netloc
+    elif netloc_cfg not in ['None', 'none', None]:
+        netloc = netloc_cfg
+    else:
+        netloc = socket.gethostbyname(urlparse.urlsplit(opts.host).netloc)
+
     if opts.run_remote:
         run_remote = opts.run_remote
     else:
-        run_remote = cfg.get('DEFAULT', 'run_remote')
+        run_remote = \
+            cfg.get('DEFAULT', 'run_remote').lower() in ['true', 'yes']
 
     if opts.report_dir:
         reportdir = opts.report_dir
@@ -592,10 +601,13 @@ def main():
         raise Exception("No pipeline IDs provided")
 
     # Establish a connection to jenkins:
-    jenkins = get_jenkins(jenkins_host, run_remote)
+    jenkins = get_jenkins(jenkins_host, netloc, run_remote)
 
     # Connect to bugs DB:
-    bugs = open_bug_database(database, run_remote)
+    tc_auth = json.load(open(cfg.get('DEFAULT', 'tc_auth')))
+    LOG.debug('tc_auth token=%s' % (tc_auth))
+
+    bugs = open_bug_database(database, tc_host, tc_auth, run_remote)
 
     deploy_yaml_dict = {}
     prepare_yaml_dict = {}
@@ -641,7 +653,7 @@ def main():
         try:
             # Now go through again and get pipeline data then process each:
             deploy_build, prepare_build, tempest_build = \
-                get_pipelines(pipeline, api=tc_host, remote=run_remote)
+                get_pipelines(pipeline, tc_host, tc_auth, remote=run_remote)
 
             # Pull console and artifacts from jenkins:
             still_running = get_triage_data(jenkins, deploy_build,
