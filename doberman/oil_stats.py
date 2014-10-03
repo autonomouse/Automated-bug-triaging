@@ -120,8 +120,9 @@ def triage_report(triage, start, end, jenkins):
 
 def main():
     parser = optparse.OptionParser()
-    parser.add_option('-c', '--cookie', action='store', dest='cookie',
-                      default=None, help='path to cookie file')
+    parser.add_option('-c', '--config', action='store', dest='configfile',
+                      default=None,
+                      help='specify path to configuration file')
     parser.add_option('-e', '--end', action='store', dest='end',
                       default='now',
                       help='ending date string.  Default: \'now()\'')
@@ -136,6 +137,9 @@ def main():
     parser.add_option('-n', '--netloc', action='store', dest='netloc',
                       default=None,
                       help='Specify an IP to rewrite requests')
+    parser.add_option('-r', '--remote', action='store_true', dest='run_remote',
+                      default=False,
+                      help='set if running analysis remotely')
     parser.add_option('-s', '--start', action='store', dest='start',
                       default='24 hours ago',
                       help='starting date string.  Default: \'24 hours ago\'')
@@ -147,20 +151,47 @@ def main():
                       help='Dump info on failed jobs for triage')
     (opts, args) = parser.parse_args()
 
+    # cli override of config values
+    if opts.configfile:
+        cfg = utils.get_config(opts.configfile)
+    else:
+        cfg = utils.get_config()
+
+    jenkins_host = None
+    if opts.host:
+        jenkins_host = opts.host
+    else:
+        jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
+
+    if jenkins_host is None:
+        print('Invalid Jenkins Host: %s' % (jenkins_host))
+        return 1
+
+    # cli wins, then config, then hostname lookup
+    netloc_cfg = cfg.get('DEFAULT', 'netloc')
+    if opts.netloc:
+        netloc = opts.netloc
+    elif netloc_cfg not in ['None', 'none', None]:
+        netloc = netloc_cfg
+    else:
+        netloc = socket.gethostbyname(urlparse.urlsplit(opts.host).netloc)
+
+    # indicate whether we're running remotely from OIL environment
+    if opts.run_remote:
+        run_remote = opts.run_remote
+    else:
+        run_remote = \
+            cfg.get('DEFAULT', 'run_remote').lower() in ['true', 'yes']
+
     # use supplied cookie file, or fallback on users chrome cookie
     cookies = None
-    if opts.cookie:
-        print("Loading cookie from file")
-        cookies = json.load(open(opts.cookie))
-    else:
-        print("Fetching cookies for %s" % (opts.host))
-        cookies = pycookiecheat.chrome_cookies(opts.host)
-
-    # lookup current ip of opts.host
-    if not opts.netloc:
-        netloc = socket.gethostbyname(urlparse.urlsplit(opts.host).netloc)
-    else:
-        netloc = opts.netloc
+    if run_remote is True:
+        try:
+            print("Trying to find cookie in Chrome cookies")
+            cookies = pycookiecheat.chrome_cookies(jenkins_host)
+        except Exception:
+            print("Couldn't find it")
+            pass
 
     # conver to datetime objs
     start = date_parse(opts.start)
@@ -171,7 +202,7 @@ def main():
 
     # connect to Jenkins
     print('Connecting to %s' % (opts.host))
-    j = Jenkins(baseurl=opts.host, cookies=cookies, netloc=netloc)
+    j = Jenkins(baseurl=jenkins_host, cookies=cookies, netloc=netloc)
 
     totals = {}
     triage = {}
