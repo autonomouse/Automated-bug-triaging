@@ -441,10 +441,8 @@ def open_bug_database(database_uri, api, tc_auth, remote=False):
         client = get_tc_client(api, cookie=tc_auth, remote=remote)
         return client.get_bug_info(force_refresh=True)
     elif len(database_uri):
-        if not database_uri.startswith("/"):
-            filename = os.path.join(os.getcwd(), database_uri)
-        LOG.info("Connecting to database file: %s" % (filename))
-        with open(filename, "r") as mock_db_file:
+        LOG.info("Connecting to database file: %s" % (database_uri))
+        with open(database_uri, "r") as mock_db_file:
             return yaml.load(mock_db_file)['bugs']
     else:
         LOG.error('Unknown database: %s' % (database_uri))
