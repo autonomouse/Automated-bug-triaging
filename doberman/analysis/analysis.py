@@ -33,9 +33,9 @@ job_names = ['pipeline_deploy', 'pipeline_prepare', 'test_tempest_smoke']
 
 class Common(object):
     """ Common methods
-            
+
     """
-    
+
     def add_to_yaml(self, matching_bugs, build_status, link, existing_dict):
         """
         Creates a yaml dict and populates with data in the right format and 
@@ -164,32 +164,34 @@ class CrudeAnalysis(Common):
 
         for pipeline_id in self.pipeline_ids:
             self.pipeline = pipeline_id
-            try:               
-                # Get pipeline data then process each:
-                deploy_build, prepare_build, tempest_build = \
-                    self.test_catalog.get_pipelines(pipeline_id)
-                                    
-                # Pull console and artifacts from jenkins:
-                jenkins = self.jenkins
-                bugs = self.test_catalog.bugs
-                deploy = Deploy(deploy_build, 'pipeline_deploy', jenkins,
-                                deploy_yaml_dict, self.cli, bugs, pipeline_id)
-                deploy_yaml_dict = deploy.yaml_dict
-                
-                if prepare_build and not deploy.still_running:
-                    prepare = Prepare(prepare_build, 'pipeline_prepare', 
-                                      jenkins, prepare_yaml_dict, self.cli, bugs,
-                                      pipeline_id, deploy)
-                    prepare_yaml_dict = prepare.yaml_dict
-                
-                if tempest_build and not deploy.still_running:
-                    tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                      jenkins, tempest_yaml_dict, self.cli, bugs,
-                                      pipeline_id, prepare)
-                    tempest_yaml_dict = tempest.yaml_dict
+            #try:               
+            # Get pipeline data then process each:
+            deploy_build, prepare_build, tempest_build = \
+                self.test_catalog.get_pipelines(pipeline_id)
+                                
+            # Pull console and artifacts from jenkins:
+            jenkins = self.jenkins
+            bugs = self.test_catalog.bugs
+            deploy = Deploy(deploy_build, 'pipeline_deploy', jenkins,
+                            deploy_yaml_dict, self.cli, bugs, pipeline_id)
+            deploy_yaml_dict = deploy.yaml_dict
             
-                if deploy.still_running:
-                    LOG.error("%s is still running - skipping" % deploy_build)
+            if prepare_build and not deploy.still_running:
+                prepare = Prepare(prepare_build, 'pipeline_prepare', 
+                                  jenkins, prepare_yaml_dict, self.cli, bugs,
+                                  pipeline_id, deploy)
+                prepare_yaml_dict = prepare.yaml_dict
+            
+            if tempest_build and not deploy.still_running:
+                tempest = Tempest(tempest_build, 'test_tempest_smoke',
+                                  jenkins, tempest_yaml_dict, self.cli, bugs,
+                                  pipeline_id, prepare)
+                tempest_yaml_dict = tempest.yaml_dict
+        
+            if deploy.still_running:
+                LOG.error("%s is still running - skipping" % deploy_build)
+            try:
+                pass
             except:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
@@ -410,7 +412,6 @@ class Jenkins(Common):
         url = self.cli.jenkins_host
         remote = self.cli.run_remote
         LOG.debug('Connecting to jenkins @ %s remote=%s' % (url, remote))
-        
 
         if remote:
             LOG.info("Fetching cookies for %s" % url)
@@ -614,8 +615,8 @@ class Build(Common):
         vendors_list = oil_df['vendor'].tolist()
         charms_list = oil_df['charm'].tolist()
         ports_list = oil_df['ports'].tolist()
-        os_list = oil_df['os'].tolist()
         states_list = oil_df['state'].tolist()
+        slaves_list = oil_df['slaves'].tolist()
         
         bug_unmatched = True
         info = {}
@@ -631,6 +632,13 @@ class Build(Common):
                     # Load up the file for each target_file in the DB for this bug:
                     for target_file in and_dict.keys():
                         target_location = os.path.join(path, target_file)
+                        try:
+                            for bssub in self.bsnode:
+                                if 'bootstrap_node' not in info:
+                                    info['bootstrap_node'] = {}
+                                info['bootstrap_node'][bssub] = self.bsnode[bssub]
+                        except:
+                            pass
                         if not os.path.isfile(target_location):
                             info['error'] = target_file + " not present"
                             break                        
@@ -667,7 +675,8 @@ class Build(Common):
                                     hit_dict = self.join_dicts(hit_dict, hit)
                                 else:
                                     info['target file'] = target_file
-                                    info['text'] = pre_log
+                                    if not self.cli.reduced_output_text:
+                                        info['text'] = pre_log
                                 info['xunit class'] = \
                                     fail.getparent().get('classname')
                                 info['xunit name'] = fail.getparent().get('name')
@@ -679,8 +688,8 @@ class Build(Common):
                                                  'units': units_list,
                                                  'charms': charms_list,
                                                  'ports': ports_list,
-                                                 'os': os_list,
-                                                 'states': states_list}
+                                                 'states': states_list,
+                                                 'slaves': slaves_list}
                         if info:
                             matching_bugs[bug_id]['additional info'] = info
                         LOG.info("Bug found!")
@@ -696,8 +705,8 @@ class Build(Common):
                                      'units': units_list,
                                      'charms': charms_list,
                                      'ports': ports_list,
-                                     'os': os_list,
-                                     'states': states_list}                                     
+                                     'states': states_list,
+                                     'slaves': slaves_list}                                     
             LOG.info("Unfiled bug found!")
             hit_dict = {}
             if info:
@@ -748,7 +757,7 @@ class Deploy(Build):
         pipeline_deploy_path = os.path.join(reportdir, self.jobname,
                                             deploy_build)
         self.oil_df = DataFrame(columns=('node', 'service', 'vendor', 'charm',
-                                         'ports', 'os', 'state'))
+                                         'ports', 'state', 'slaves'))
 
         # Read oil nodes file:
         oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
@@ -768,6 +777,14 @@ class Deploy(Build):
         if not juju_status:
             return
 
+        # Get info for bootstrap node (machine 0):
+        machine_info = juju_status['machines']['0']
+        m_name = machine_info['dns-name']
+        m_os = machine_info['series']
+        machine = m_os + " running " + m_name
+        state = machine_info['agent-state']
+        self.bsnode = {'machine': machine, 'state': state}
+
         row = 0
         for service in juju_status['services']:
             serv = juju_status['services'][service]
@@ -776,32 +793,48 @@ class Deploy(Build):
                 units = serv['units']
             else:
                 units = {}
-                self.oil_df.loc[row] = ['N/A', 'N/A', 'N/A', charm]
+                self.oil_df.loc[row] = ['N/A', 'N/A', 'N/A', charm, 'N/A',
+                                        'N/A', 'N/A']
+                
             for unit in units:
                 this_unit = units[unit]
                 ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
                     in this_unit else "N/A"
                 machine_no = this_unit['machine'].split('/')[0]
                 machine_info = juju_status['machines'][machine_no]
-                hardware = [x.split('hardware-')[1] for x in \
-                            machine_info['hardware'].split('tags=')\
-                            [1].split(',') if 'hardware-' in x]
-                if len(machine_info['containers'].keys()) > 1:
-                    import pdb; pdb.set_trace # TODO
+                if 'hardware' in machine_info:
+                    hardware = [hw.split('hardware-')[1] for hw in \
+                                machine_info['hardware'].split('tags=')\
+                                [1].split(',') if 'hardware-' in hw]
+                    slave = ", ".join([str(slv) for slv in machine_info['hardware']\
+                                .split('tags=')[1].split(',') if 'slave' in slv])
                 else:
-                    container_name = machine_info['containers'].keys()[0]# cont_no?
+                    hardware = ['Unknown']
+                    slave = 'Unknown'                            
+                if '/' in this_unit['machine']:
+                    container_name = this_unit['machine']
                     container = machine_info['containers'][container_name]
+                elif 'containers' in machine_info:
+                    if len(machine_info['containers'].keys()) == 1:
+                        container_name = machine_info['containers'].keys()[0]
+                        container = machine_info['containers'][container_name]
+                    else:
+                        container = []  # TODO: Need to find a way to identify which container is being used here
+                        import pdb; pdb.set_trace()
+                else:
+                    container = []
+                
                 m_name = machine_info['dns-name']
-                m_os = machine_info['series']
                 state = machine_info['agent-state'] + ". "
                 state += container['agent-state-info'] + ". " if 'agent-state-info' in container else ''
                 state += container['instance-id'] if 'instance-id' in container else ''
                 m_ip = " (" + container['dns-name'] + ")" \
                        if 'dns-name' in container else ""
-                machine = m_name + m_ip                    
+                machine = m_name + m_ip
                 self.oil_df.loc[row] = [machine, unit, ', '.join(hardware),
-                                        charm, ports, m_os, state]
-                row += 1                
+                                        charm, ports, state, slave]
+                row += 1
+            
         matching_bugs, build_status, link = self.bug_hunt(self.oil_df,
                                                           pipeline_deploy_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
