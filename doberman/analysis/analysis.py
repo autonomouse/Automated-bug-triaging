@@ -53,7 +53,10 @@ class Common(object):
                 pipeline_dict[self.pipeline]['build'] = self.build_number
             
             if link:
-                pipeline_dict[self.pipeline]['link to jenkins'] = link
+                pipeline_dict[self.pipeline]['link to jenkins'] = \
+                    self.cli.jenkins_host + link
+            pipeline_dict[self.pipeline]['link to test-catalog'] = \
+                self.cli.tc_host.replace('api', "pipeline/" + self.pipeline)
 
         # Merge with existing dict:
         if existing_dict:
@@ -820,7 +823,6 @@ class Deploy(Build):
                         container = machine_info['containers'][container_name]
                     else:
                         container = []  # TODO: Need to find a way to identify which container is being used here
-                        import pdb; pdb.set_trace()
                 else:
                     container = []
                 
