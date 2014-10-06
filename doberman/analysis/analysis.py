@@ -276,6 +276,8 @@ class CLI(Common):
         prsr.add_option('-k', '--keep', action='store_true', dest='keep_data',
                         default=False,
                         help='Do not delete extracted tarballs when finished')
+        prsr.add_option('-l', '--less', action='store_true', dest='less',
+                        default=False, help='Reduced text in output yaml.')
         prsr.add_option('-n', '--netloc', action='store', dest='netloc',
                         default=None,
                         help='Specify an IP to rewrite URLs')
@@ -317,6 +319,11 @@ class CLI(Common):
             self.jenkins_host = opts.jenkins_host
         else:
             self.jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
+
+        if opts.less:
+            self.reduced_output_text = True
+        else:
+            self.reduced_output_text = False
 
         # cli wins, then config, then hostname lookup
         netloc_cfg = cfg.get('DEFAULT', 'netloc')
@@ -503,7 +510,7 @@ class TestCatalog(Common):
     def open_bug_database(self):
         if self.cli.database in [None, 'None', 'none', '']:
             LOG.info("Connecting to test-catalog bug/regex database")
-            self.bugs = self.client.get_bug_info(force_refresh=True)            
+            self.b = self.client.get_bug_info(force_refresh=True)            
         elif len(self.cli.database):
             LOG.info("Connecting to database file: %s" % (self.cli.database))
             with open(self.cli.database, "r") as mock_db_file:
@@ -605,6 +612,11 @@ class Build(Common):
         units_list = oil_df['service'].tolist()
         machines_list = oil_df['node'].tolist()
         vendors_list = oil_df['vendor'].tolist()
+        charms_list = oil_df['charm'].tolist()
+        ports_list = oil_df['ports'].tolist()
+        os_list = oil_df['os'].tolist()
+        states_list = oil_df['state'].tolist()
+        
         bug_unmatched = True
         info = {}
         if not self.bugs:
@@ -635,7 +647,8 @@ class Build(Common):
                                 hit_dict = self.join_dicts(hit_dict, hit)
                             else:
                                 info['target file'] = target_file
-                                info['text'] = text
+                                if not self.cli.reduced_output_text:
+                                    info['text'] = text
                         else:
                             # Get tempest results:
                             p = etree.XMLParser(huge_tree=True)
@@ -663,7 +676,11 @@ class Build(Common):
                         matching_bugs[bug_id] = {'regexps': hit_dict,
                                                  'vendors': vendors_list,
                                                  'machines': machines_list,
-                                                 'units': units_list}
+                                                 'units': units_list,
+                                                 'charms': charms_list,
+                                                 'ports': ports_list,
+                                                 'os': os_list,
+                                                 'states': states_list}
                         if info:
                             matching_bugs[bug_id]['additional info'] = info
                         LOG.info("Bug found!")
@@ -676,7 +693,11 @@ class Build(Common):
             matching_bugs[bug_id] = {'regexps': 'NO REGEX - UNFILED/UNMATCHED BUG',
                                      'vendors': vendors_list,
                                      'machines': machines_list,
-                                     'units': units_list}
+                                     'units': units_list,
+                                     'charms': charms_list,
+                                     'ports': ports_list,
+                                     'os': os_list,
+                                     'states': states_list}                                     
             LOG.info("Unfiled bug found!")
             hit_dict = {}
             if info:
@@ -726,7 +747,8 @@ class Deploy(Build):
         pline = self.pipeline
         pipeline_deploy_path = os.path.join(reportdir, self.jobname,
                                             deploy_build)
-        self.oil_df = DataFrame(columns=('node', 'vendor', 'service'))
+        self.oil_df = DataFrame(columns=('node', 'service', 'vendor', 'charm',
+                                         'ports', 'os', 'state'))
 
         # Read oil nodes file:
         oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
@@ -748,28 +770,38 @@ class Deploy(Build):
 
         row = 0
         for service in juju_status['services']:
-            if 'units' in juju_status['services'][service]:
-                units = juju_status['services'][service]['units']
+            serv = juju_status['services'][service]
+            charm = serv['charm'] if 'charm' in serv else 'Unknown'
+            if 'units' in serv:
+                units = serv['units']
             else:
                 units = {}
-                self.oil_df.loc[row] = ['N/A', 'N/A', 'N/A']
+                self.oil_df.loc[row] = ['N/A', 'N/A', 'N/A', charm]
             for unit in units:
                 this_unit = units[unit]
-                machine = this_unit['public-address'] if 'public-address'\
+                ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
                     in this_unit else "N/A"
-                nptags = oil_nodes[oil_nodes['node'] == machine]['tags']\
-                    .apply(str)
-                tags_list = nptags.tolist()
-                if tags_list:
-                    tags = tags_list[0].replace("[", "").replace("]", "")\
-                        .split(', ')
-                    hardware = [tag.replace("'", "") for tag in tags if 'hardware'
-                                in tag]
+                machine_no = this_unit['machine'].split('/')[0]
+                machine_info = juju_status['machines'][machine_no]
+                hardware = [x.split('hardware-')[1] for x in \
+                            machine_info['hardware'].split('tags=')\
+                            [1].split(',') if 'hardware-' in x]
+                if len(machine_info['containers'].keys()) > 1:
+                    import pdb; pdb.set_trace # TODO
                 else:
-                    hardware = ['N/A']
-                self.oil_df.loc[row] = [machine, unit, ', '.join(hardware)
-                                   .replace('hardware-', '')]
-                row += 1
+                    container_name = machine_info['containers'].keys()[0]# cont_no?
+                    container = machine_info['containers'][container_name]
+                m_name = machine_info['dns-name']
+                m_os = machine_info['series']
+                state = machine_info['agent-state'] + ". "
+                state += container['agent-state-info'] + ". " if 'agent-state-info' in container else ''
+                state += container['instance-id'] if 'instance-id' in container else ''
+                m_ip = " (" + container['dns-name'] + ")" \
+                       if 'dns-name' in container else ""
+                machine = m_name + m_ip                    
+                self.oil_df.loc[row] = [machine, unit, ', '.join(hardware),
+                                        charm, ports, m_os, state]
+                row += 1                
         matching_bugs, build_status, link = self.bug_hunt(self.oil_df,
                                                           pipeline_deploy_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
