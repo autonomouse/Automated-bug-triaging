@@ -167,34 +167,32 @@ class CrudeAnalysis(Common):
 
         for pipeline_id in self.pipeline_ids:
             self.pipeline = pipeline_id
-            #try:               
-            # Get pipeline data then process each:
-            deploy_build, prepare_build, tempest_build = \
-                self.test_catalog.get_pipelines(pipeline_id)
-                                
-            # Pull console and artifacts from jenkins:
-            jenkins = self.jenkins
-            bugs = self.test_catalog.bugs
-            deploy = Deploy(deploy_build, 'pipeline_deploy', jenkins,
-                            deploy_yaml_dict, self.cli, bugs, pipeline_id)
-            deploy_yaml_dict = deploy.yaml_dict
+            try:               
+                # Get pipeline data then process each:
+                deploy_build, prepare_build, tempest_build = \
+                    self.test_catalog.get_pipelines(pipeline_id)
+                                    
+                # Pull console and artifacts from jenkins:
+                jenkins = self.jenkins
+                bugs = self.test_catalog.bugs
+                deploy = Deploy(deploy_build, 'pipeline_deploy', jenkins,
+                                deploy_yaml_dict, self.cli, bugs, pipeline_id)
+                deploy_yaml_dict = deploy.yaml_dict
+                
+                if prepare_build and not deploy.still_running:
+                    prepare = Prepare(prepare_build, 'pipeline_prepare', 
+                                      jenkins, prepare_yaml_dict, self.cli, bugs,
+                                      pipeline_id, deploy)
+                    prepare_yaml_dict = prepare.yaml_dict
+                
+                if tempest_build and not deploy.still_running:
+                    tempest = Tempest(tempest_build, 'test_tempest_smoke',
+                                      jenkins, tempest_yaml_dict, self.cli, bugs,
+                                      pipeline_id, prepare)
+                    tempest_yaml_dict = tempest.yaml_dict
             
-            if prepare_build and not deploy.still_running:
-                prepare = Prepare(prepare_build, 'pipeline_prepare', 
-                                  jenkins, prepare_yaml_dict, self.cli, bugs,
-                                  pipeline_id, deploy)
-                prepare_yaml_dict = prepare.yaml_dict
-            
-            if tempest_build and not deploy.still_running:
-                tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                  jenkins, tempest_yaml_dict, self.cli, bugs,
-                                  pipeline_id, prepare)
-                tempest_yaml_dict = tempest.yaml_dict
-        
-            if deploy.still_running:
-                LOG.error("%s is still running - skipping" % deploy_build)
-            try:
-                pass
+                if deploy.still_running:
+                    LOG.error("%s is still running - skipping" % deploy_build)
             except:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
@@ -809,8 +807,9 @@ class Deploy(Build):
                     hardware = [hw.split('hardware-')[1] for hw in \
                                 machine_info['hardware'].split('tags=')\
                                 [1].split(',') if 'hardware-' in hw]
-                    slave = ", ".join([str(slv) for slv in machine_info['hardware']\
-                                .split('tags=')[1].split(',') if 'slave' in slv])
+                    slave = ", ".join([str(slv) for slv in \
+                                machine_info['hardware'].split('tags=')[1]\
+                                .split(',') if 'slave' in slv])
                 else:
                     hardware = ['Unknown']
                     slave = 'Unknown'                            
@@ -822,14 +821,17 @@ class Deploy(Build):
                         container_name = machine_info['containers'].keys()[0]
                         container = machine_info['containers'][container_name]
                     else:
-                        container = []  # TODO: Need to find a way to identify which container is being used here
+                        container = []  # TODO: Need to find a way to identify
+                                        # which container is being used here
                 else:
                     container = []
                 
                 m_name = machine_info['dns-name']
                 state = machine_info['agent-state'] + ". "
-                state += container['agent-state-info'] + ". " if 'agent-state-info' in container else ''
-                state += container['instance-id'] if 'instance-id' in container else ''
+                state += container['agent-state-info'] + ". " \
+                    if 'agent-state-info' in container else ''
+                state += container['instance-id'] if 'instance-id' in \
+                    container else ''
                 m_ip = " (" + container['dns-name'] + ")" \
                        if 'dns-name' in container else ""
                 machine = m_name + m_ip
@@ -857,7 +859,6 @@ class Prepare(Build):
         # Process downloaded data:
         self.process_prepare_data()
 
-
     def process_prepare_data(self):
         """ Parses the artifacts files from a single pipeline into data and
             metadata DataFrames.
@@ -865,21 +866,23 @@ class Prepare(Build):
         """
         prepare_path = os.path.join(self.cli.reportdir, 'pipeline_prepare',
                                     self.build_number)
-        matching_bugs, build_status, link = self.bug_hunt(self.oil_df, prepare_path)
+        matching_bugs, build_status, link = self.bug_hunt(self.oil_df,
+                                                          prepare_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
                                           self.yaml_dict)
 
+
 class Tempest(Build):
-    """            
     """
-    
+    """
+
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline, prepare):
         super(Tempest, self).__init__(build_number, jobname, jenkins,
                                       yaml_dict, cli, bugs, pipeline)
         self.oil_df = prepare.oil_df
         self.yaml_dict = prepare.yaml_dict
-        
+
         # Process downloaded data:
         self.process_tempest_data()
 
@@ -891,7 +894,8 @@ class Tempest(Build):
         """
         tts_path = os.path.join(self.cli.reportdir, 'test_tempest_smoke',
                                 self.build_number)
-        matching_bugs, build_status, link = self.bug_hunt(self.oil_df, tts_path)
+        matching_bugs, build_status, link = \
+            self.bug_hunt(self.oil_df, tts_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
                                           self.yaml_dict)
 
