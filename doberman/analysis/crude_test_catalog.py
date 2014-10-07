@@ -1,27 +1,14 @@
 
 from crude_common import Common
 
-import sys
-import os
-import re
 import yaml
-import socket
-import urlparse
-import tarfile
-import shutil
-import uuid
-import optparse
-import datetime
-import json
 from test_catalog.client.api import TCClient
 from test_catalog.client.base import TCCTestPipeline
-from pandas import DataFrame
-from lxml import etree
-from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat, utils
 from jenkinsapi.custom_exceptions import *
 
 LOG = utils.get_logger('doberman.analysis')
+
 
 class TestCatalog(Common):
     """
