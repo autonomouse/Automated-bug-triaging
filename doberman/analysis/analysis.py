@@ -2,26 +2,17 @@
 
 import sys
 import os
-import re
 import yaml
 import socket
 import urlparse
-import tarfile
 import shutil
-import uuid
 import optparse
 import datetime
 import json
-from test_catalog.client.api import TCClient
-from test_catalog.client.base import TCCTestPipeline
-from pandas import DataFrame
-from lxml import etree
-from jenkinsapi.jenkins import Jenkins as JenkinsAPI
-from doberman.common import pycookiecheat, utils
+from doberman.common import utils
 from jenkinsapi.custom_exceptions import *
-
 from crude_common import Common
-from crude_jenkins import Jenkins, Build, Deploy, Prepare, Tempest
+from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
 from crude_test_catalog import TestCatalog
 
 LOG = utils.get_logger('doberman.analysis')
@@ -33,12 +24,13 @@ special_cases = {'juju_status.yaml': '1372407',
                  'oil_nodes': '1372411',
                  'pipeline_id': '1372567'}
 job_names = ['pipeline_deploy', 'pipeline_prepare', 'test_tempest_smoke']
-        
+
+
 class CrudeAnalysis(Common):
-    """ 
-            
     """
-    
+
+    """
+
     def __init__(self):
         self.cli = CLI()
         self.jenkins = Jenkins(self.cli)
@@ -46,7 +38,7 @@ class CrudeAnalysis(Common):
         self.build_pl_ids_and_check()
         self.pipeline_processor()
         self.remove_dirs()
-            
+
     def build_pl_ids_and_check(self):
 
         self.pipeline_ids = []
@@ -74,7 +66,8 @@ class CrudeAnalysis(Common):
             progress = [round((pc / 100.0) * len(self.ids))
                         for pc in self.report_at]
             if pos in progress:
-                LOG.info("Pipeline lookup " + str(self.report_at[progress.index(pos)]) + "% complete.") 
+                pc = str(self.report_at[progress.index(pos)])
+                LOG.info("Pipeline lookup {0}% complete.".format(pc))
         LOG.info("All pipelines checked. Now polling jenkins/ processing data")
 
     def calc_when_to_report(self):
@@ -95,9 +88,9 @@ class CrudeAnalysis(Common):
     def remove_dirs(self):
         """ Remove data folders used to store untarred artifacts (just leaving
             yaml files).
-            
+
         """
-        
+
         if not self.cli.keep_data:
             for folder in job_names:
                 kill_me = os.path.join(self.cli.reportdir, folder)
@@ -112,30 +105,30 @@ class CrudeAnalysis(Common):
 
         for pipeline_id in self.pipeline_ids:
             self.pipeline = pipeline_id
-            try:               
+            try:
                 # Get pipeline data then process each:
                 deploy_build, prepare_build, tempest_build = \
                     self.test_catalog.get_pipelines(pipeline_id)
-                                    
+
                 # Pull console and artifacts from jenkins:
                 jenkins = self.jenkins
                 bugs = self.test_catalog.bugs
                 deploy = Deploy(deploy_build, 'pipeline_deploy', jenkins,
                                 deploy_yaml_dict, self.cli, bugs, pipeline_id)
                 deploy_yaml_dict = deploy.yaml_dict
-                
+
                 if prepare_build and not deploy.still_running:
-                    prepare = Prepare(prepare_build, 'pipeline_prepare', 
-                                      jenkins, prepare_yaml_dict, self.cli, bugs,
-                                      pipeline_id, deploy)
+                    prepare = Prepare(prepare_build, 'pipeline_prepare',
+                                      jenkins, prepare_yaml_dict, self.cli,
+                                      bugs, pipeline_id, deploy)
                     prepare_yaml_dict = prepare.yaml_dict
-                
+
                 if tempest_build and not deploy.still_running:
                     tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                      jenkins, tempest_yaml_dict, self.cli, bugs,
-                                      pipeline_id, prepare)
+                                      jenkins, tempest_yaml_dict, self.cli,
+                                      bugs, pipeline_id, prepare)
                     tempest_yaml_dict = tempest.yaml_dict
-            
+
                 if deploy.still_running:
                     LOG.error("%s is still running - skipping" % deploy_build)
             except:
@@ -146,18 +139,20 @@ class CrudeAnalysis(Common):
                         self.non_db_bug(special_cases['pipeline_id'],
                                         deploy_yaml_dict, msg)
                 else:
-                    print("Problem with " + pipeline_id + " - skipping (deploy_build:"
-                          + " " + deploy_build + ")")
+                    print("Problem with " + pipeline_id + " - skipping "
+                          "(deploy_build:  " + deploy_build + ")")
                     problem_pipelines.append((pipeline_id, deploy_build))
 
         # Export to yaml:
-        self.export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', self.cli.reportdir)
-        self.export_to_yaml(prepare_yaml_dict, 'pipeline_prepare', self.cli.reportdir)
-        self.export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', self.cli.reportdir)
-        
-        # Write to file any pipelines (plus deploy build) that failed processing:
+        rdir = self.cli.reportdir
+        self.export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', rdir)
+        self.export_to_yaml(prepare_yaml_dict, 'pipeline_prepare', rdir)
+        self.export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', rdir)
+
+        # Write to file any pipelines (+ deploy build) that failed processing:
         if not problem_pipelines == []:
-            file_path = os.path.join(self.cli.reportdir, 'problem_pipelines.yaml')
+            file_path = os.path.join(self.cli.reportdir,
+                                     'problem_pipelines.yaml')
             open(file_path, 'a').close()  # Create file if doesn't exist yet
             with open(file_path, 'r+') as pp_file:
                 existing_content = pp_file.read()
@@ -165,13 +160,13 @@ class CrudeAnalysis(Common):
                 pp_file.write("\n" + str(datetime.datetime.now())
                               + "\n--------------------------\n")
                 for problem_pipeline in problem_pipelines:
-                    pp_file.write("%s (deploy build: %s) \n" % problem_pipeline)
+                    pp_file.write("%s (deploy build: %s)\n" % problem_pipeline)
                 pp_file.write(existing_content)
-                errmsg = "There were some pipelines that could not be processed. "
-                errmsg += "This information was written to problem_pipelines.yaml "
-                errmsg += "in " + self.cli.reportdir + "\n\n"
+                errmsg = "There were some pipelines that could not be "
+                errmsg += "processed. This information was written to problem"
+                errmsg += "_pipelines.yaml in " + self.cli.reportdir + "\n\n"
                 LOG.error(errmsg)
-    
+
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """
         filename = 'triage_' + job + '.yml'
@@ -191,21 +186,21 @@ class CLI(Common):
     Attributes:
         self.database:  A string representing the path to mock database or None
                         for a real DB...
-        self.use_deploy: 
-        self.jenkins_host: 
-        self.run_remote: 
-        self.reportdir: 
-        self.tc_host: 
-        self.keep_data: 
-        self.xmls: 
+        self.use_deploy:
+        self.jenkins_host:
+        self.run_remote:
+        self.reportdir:
+        self.tc_host:
+        self.keep_data:
+        self.xmls:
         self.ids:       A string or list of pipeline ids or deploy build
                         numbers...
-            
+
     """
-    
+
     def __init__(self):
-        self.cli()    
-        
+        self.cli()
+
     def cli(self):
         usage = "usage: %prog [options] pipeline_id1 pipeline_id2 ..."
         prsr = optparse.OptionParser(usage=usage)
@@ -232,7 +227,7 @@ class CLI(Common):
         prsr.add_option('-o', '--output', action='store', dest='report_dir',
                         default=None,
                         help='specific the report output directory')
-        prsr.add_option('-r', '--remote', action='store_true', 
+        prsr.add_option('-r', '--remote', action='store_true',
                         dest='run_remote', default=False,
                         help='set if running analysis remotely')
         prsr.add_option('-T', '--testcatalog', action='store', dest='tc_host',
@@ -288,7 +283,6 @@ class CLI(Common):
         else:
             self.run_remote = \
                 cfg.get('DEFAULT', 'run_remote').lower() in ['true', 'yes']
-
 
         if opts.report_dir:
             self.reportdir = opts.report_dir

@@ -1,32 +1,24 @@
 
 from crude_common import Common
 
-import sys
 import os
 import re
 import yaml
-import socket
-import urlparse
 import tarfile
-import shutil
 import uuid
-import optparse
-import datetime
-import json
-from test_catalog.client.api import TCClient
-from test_catalog.client.base import TCCTestPipeline
 from pandas import DataFrame
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat, utils
 from jenkinsapi.custom_exceptions import *
-        
+
 LOG = utils.get_logger('doberman.analysis')
 
+
 class Jenkins(Common):
-    """            
     """
-    
+    """
+
     def __init__(self, cli):
         self._jenkins = []
         self.cli = cli
@@ -39,7 +31,7 @@ class Jenkins(Common):
             msg = "Problem connecting to Jenkins (try refreshing cookies?)"
             LOG.error(msg)
             raise Exception(msg)
-        
+
     def connect_to_jenkins(self):
         """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
 
@@ -79,7 +71,7 @@ class Jenkins(Common):
                 raise Exception(msg)
 
     def pipeline_check(self, pipeline_id):
-        return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')] 
+        return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
 
     def get_triage_data(self, build_num, job, reportdir):
         """ Get the artifacts from jenkins via jenkinsapi object. """
@@ -106,7 +98,7 @@ class Jenkins(Common):
             artifact.save_to_dir(outdir)
             self.extract_and_delete_archive(outdir, artifact)
         return False  # Not still running
- 
+
     def extract_and_delete_archive(self, outdir, artifact):
         """ Extracts the contents of a tarball and places it into a new file
             of the samename without the .tar.gz suffix (N.B. this leaves
@@ -118,8 +110,8 @@ class Jenkins(Common):
             if 'tar.gz' in artifact.filename:
                 path_to_artifact = os.path.join(outdir, artifact.filename)
                 with tarfile.open(path_to_artifact, 'r:gz') as tar:
-                    tarlist = \
-                        [member for member in tar.getmembers() if member.isfile()]
+                    tarlist = [member for member in tar.getmembers()
+                               if member.isfile()]
                     for compressed_file in tarlist:
                         slug = compressed_file.name.replace('/', '_')
                         with open(os.path.join(outdir, slug), 'w') as new_file:
@@ -128,11 +120,12 @@ class Jenkins(Common):
                 os.remove(os.path.join(outdir, artifact.filename))
         except:
             LOG.error("Could not extract %s" % artifact.filename)
-            
+
+
 class Build(Common):
-    """            
     """
-    
+    """
+
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline):
         # Pull console and artifacts from jenkins:
@@ -145,29 +138,31 @@ class Build(Common):
         self.cli = cli
         self.bugs = bugs
         self.pipeline = pipeline
-        
+
     def get_yaml(self, file_location, yaml_dict):
         try:
             with open(file_location, "r") as f:
                 return (yaml.load(f), yaml_dict)
         except IOError, e:
-            file_name = file_location.split('/')[-1]
+            fname = file_location.split('/')[-1]
             LOG.error("%s: %s is not in artifacts folder (%s)"
-                      % (self.pipeline, file_name, e[1]))
-            msg = file_name + ' MISSING'
-            yaml_dict = self.non_db_bug(special_cases[file_name], yaml_dict, msg)
+                      % (self.pipeline, fname, e[1]))
+            msg = fname + ' MISSING'
+            yaml_dict = self.non_db_bug(special_cases[fname], yaml_dict, msg)
             return (None, yaml_dict)
 
     def bug_hunt(self, oil_df, path):
         """ Using information from the bugs database, opens target file and
             searches the text for each associated regexp. """
-        # TODO: As it stands, files are only searched if there is an entry in the
-        # DB. This shouldn't be a problem if there is always a dummy bug in the DB
-        # for the important files such as console and tempest_xunit.xml FOR EACH
-        # JOB TYPE (i.e. pipeline_deploy, pipeline_prepare and test_tempest_smoke).        
+        # TODO: As it stands, files are only searched if there is an entry in
+        # the DB. This shouldn't be a problem if there is always a dummy bug in
+        # the DB for the important files such as console and tempest_xunit.xml
+        # FOR EACHJOB TYPE (i.e. pipeline_deploy, pipeline_prepare and
+        # test_tempest_smoke).
         parse_as_xml = self.cli.xmls
-        build_status = [build_info for build_info in self.jenkins.jenkins_api[self.jobname]._poll()['builds']
-                        if build_info['number'] == int(self.build_number)][0]['result']
+        build_status = [build_info for build_info in self.jenkins.jenkins_api
+                        [self.jobname]._poll()['builds'] if build_info
+                        ['number'] == int(self.build_number)][0]['result']
         matching_bugs = {}
         units_list = oil_df['service'].tolist()
         machines_list = oil_df['node'].tolist()
@@ -176,36 +171,39 @@ class Build(Common):
         ports_list = oil_df['ports'].tolist()
         states_list = oil_df['state'].tolist()
         slaves_list = oil_df['slaves'].tolist()
-        
+
         bug_unmatched = True
         info = {}
         if not self.bugs:
             raise Exception("No bugs in database!")
         for bug_id in self.bugs.keys():
             if self.jobname in self.bugs[bug_id]:
-                # Any of the dicts in self.bugs[bug_id][self.jobname] can match (or):
+                # Any dict in self.bugs[bug_id][self.jobname] can match (or):
                 or_dict = self.bugs[bug_id][self.jobname]
                 for and_dict in or_dict:
                     # Within the dictionary all have to match (and):
                     hit_dict = {}
-                    # Load up the file for each target_file in the DB for this bug:
+                    # Load up file for each target_file in the DB for this bug:
                     for target_file in and_dict.keys():
                         target_location = os.path.join(path, target_file)
                         try:
                             for bssub in self.bsnode:
                                 if 'bootstrap_node' not in info:
                                     info['bootstrap_node'] = {}
-                                info['bootstrap_node'][bssub] = self.bsnode[bssub]
+                                info['bootstrap_node'][bssub] =\
+                                    self.bsnode[bssub]
                         except:
                             pass
                         if not os.path.isfile(target_location):
                             info['error'] = target_file + " not present"
-                            break                        
+                            break
                         if target_file == 'console.txt':
-                            link2 = '/job/%s/%s/console' % (self.jobname, self.build_number)
+                            link2 = '/job/%s/%s/console' % (self.jobname,
+                                                            self.build_number)
                         else:
                             link2 = ('/job/%s/%s/artifact/artifacts/%s'
-                                     % (self.jobname, self.build_number, target_file))
+                                     % (self.jobname, self.build_number,
+                                        target_file))
                         if not (target_file in parse_as_xml):
                             with open(target_location, 'r') as grep_me:
                                 text = grep_me.read()
@@ -219,17 +217,19 @@ class Build(Common):
                         else:
                             # Get tempest results:
                             p = etree.XMLParser(huge_tree=True)
-                            doc = etree.parse(target_location, parser=p).getroot()
+                            et = etree.parse(target_location, parser=p)
+                            doc = et.getroot()
                             errors_and_fails = doc.xpath('.//failure')
                             errors_and_fails += doc.xpath('.//error')
                             # TODO: There is not currently a way to do multiple
-                            # 'and' regexps within a single tempest file - you can
-                            # do console AND tempest or tempest OR tempest, but not
-                            # tempest AND tempest. Needs it please!
+                            # 'and' regexps within a single tempest file - you
+                            # can do console AND tempest or tempest OR tempest,
+                            # but not tempest AND tempest. Needs it please!
                             for num, fail in enumerate(errors_and_fails):
                                 pre_log = fail.get('message')\
                                     .split("begin captured logging")[0]
-                                hit = self.rematch(and_dict, target_file, pre_log)
+                                hit = self.rematch(and_dict, target_file,
+                                                   pre_log)
                                 if hit:
                                     hit_dict = self.join_dicts(hit_dict, hit)
                                 else:
@@ -238,7 +238,8 @@ class Build(Common):
                                         info['text'] = pre_log
                                 info['xunit class'] = \
                                     fail.getparent().get('classname')
-                                info['xunit name'] = fail.getparent().get('name')
+                                info['xunit name'] = \
+                                    fail.getparent().get('name')
 
                     if and_dict == hit_dict:
                         matching_bugs[bug_id] = {'regexps': hit_dict,
@@ -258,20 +259,20 @@ class Build(Common):
                         break
         if bug_unmatched and build_status == 'FAILURE':
             bug_id = 'unfiled-' + str(uuid.uuid4())
-            matching_bugs[bug_id] = {'regexps': 'NO REGEX - UNFILED/UNMATCHED BUG',
+            matching_bugs[bug_id] = {'regexps':
+                                     'NO REGEX - UNFILED/UNMATCHED BUG',
                                      'vendors': vendors_list,
                                      'machines': machines_list,
                                      'units': units_list,
                                      'charms': charms_list,
                                      'ports': ports_list,
                                      'states': states_list,
-                                     'slaves': slaves_list}                                     
+                                     'slaves': slaves_list}
             LOG.info("Unfiled bug found!")
             hit_dict = {}
             if info:
                 matching_bugs[bug_id]['additional info'] = info
         return (matching_bugs, build_status, link2)
-
 
     def rematch(self, bugs, target_file, text):
         """ Search files in bugs for multiple matching regexps. """
@@ -293,11 +294,12 @@ class Build(Common):
             if matches:
                 if len(set_re) == len(set(matches)):
                     return {target_file: {'regexp': regexps}}
-        
+
+
 class Deploy(Build):
-    """            
     """
-    
+    """
+
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline):
         super(Deploy, self).__init__(build_number, jobname, jenkins, yaml_dict,
@@ -312,7 +314,6 @@ class Deploy(Build):
         """
         reportdir = self.cli.reportdir
         deploy_build = self.build_number
-        pline = self.pipeline
         pipeline_deploy_path = os.path.join(reportdir, self.jobname,
                                             deploy_build)
         self.oil_df = DataFrame(columns=('node', 'service', 'vendor', 'charm',
@@ -354,7 +355,7 @@ class Deploy(Build):
                 units = {}
                 self.oil_df.loc[row] = ['N/A', 'N/A', 'N/A', charm, 'N/A',
                                         'N/A', 'N/A']
-                
+
             for unit in units:
                 this_unit = units[unit]
                 ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
@@ -362,15 +363,15 @@ class Deploy(Build):
                 machine_no = this_unit['machine'].split('/')[0]
                 machine_info = juju_status['machines'][machine_no]
                 if 'hardware' in machine_info:
-                    hardware = [hw.split('hardware-')[1] for hw in \
-                                machine_info['hardware'].split('tags=')\
+                    hardware = [hw.split('hardware-')[1] for hw in
+                                machine_info['hardware'].split('tags=')
                                 [1].split(',') if 'hardware-' in hw]
-                    slave = ", ".join([str(slv) for slv in \
-                                machine_info['hardware'].split('tags=')[1]\
-                                .split(',') if 'slave' in slv])
+                    slave = ", ".join([str(slv) for slv in
+                                       machine_info['hardware'].split('tags=')
+                                       [1].split(',') if 'slave' in slv])
                 else:
                     hardware = ['Unknown']
-                    slave = 'Unknown'                            
+                    slave = 'Unknown'
                 if '/' in this_unit['machine']:
                     container_name = this_unit['machine']
                     container = machine_info['containers'][container_name]
@@ -379,11 +380,12 @@ class Deploy(Build):
                         container_name = machine_info['containers'].keys()[0]
                         container = machine_info['containers'][container_name]
                     else:
-                        container = []  # TODO: Need to find a way to identify
-                                        # which container is being used here
+                        # TODO: Need to find a way to identify
+                        # which container is being used here:
+                        container = []
                 else:
                     container = []
-                
+
                 m_name = machine_info['dns-name']
                 state = machine_info['agent-state'] + ". "
                 state += container['agent-state-info'] + ". " \
@@ -396,24 +398,24 @@ class Deploy(Build):
                 self.oil_df.loc[row] = [machine, unit, ', '.join(hardware),
                                         charm, ports, state, slave]
                 row += 1
-            
+
         matching_bugs, build_status, link = self.bug_hunt(self.oil_df,
                                                           pipeline_deploy_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
                                           self.yaml_dict)
-    
+
 
 class Prepare(Build):
-    """            
     """
-    
+    """
+
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline, deploy):
         super(Prepare, self).__init__(build_number, jobname, jenkins,
                                       yaml_dict, cli, bugs, pipeline)
         self.oil_df = deploy.oil_df
         self.yaml_dict = deploy.yaml_dict
-        
+
         # Process downloaded data:
         self.process_prepare_data()
 

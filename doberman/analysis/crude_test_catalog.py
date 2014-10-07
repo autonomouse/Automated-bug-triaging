@@ -22,13 +22,13 @@ from doberman.common import pycookiecheat, utils
 from jenkinsapi.custom_exceptions import *
 
 LOG = utils.get_logger('doberman.analysis')
-            
+
 class TestCatalog(Common):
-    """            
     """
-    
+    """
+
     def __init__(self, cli):
-        
+
         self.cli = cli
         self.cookie = self.cli.tc_auth
         self.tc_client = TCClient
@@ -39,7 +39,7 @@ class TestCatalog(Common):
     def open_bug_database(self):
         if self.cli.database in [None, 'None', 'none', '']:
             LOG.info("Connecting to test-catalog bug/regex database")
-            self.b = self.client.get_bug_info(force_refresh=True)            
+            self.b = self.client.get_bug_info(force_refresh=True)
         elif len(self.cli.database):
             LOG.info("Connecting to database file: %s" % (self.cli.database))
             with open(self.cli.database, "r") as mock_db_file:
@@ -53,7 +53,7 @@ class TestCatalog(Common):
             self.client = self._tc_client[0]
         self.connect_to_testcatalog()
         self._tc_client.append(self.client)
-    
+
     def connect_to_testcatalog(self):
         LOG.debug('Connecting to test-catalog @ %s remote=%s'
                   % (self.cli.tc_host, self.cli.run_remote))
@@ -69,7 +69,7 @@ class TestCatalog(Common):
             part of the given pipeline.
 
         """
-        LOG.info('Fetching data on pipeline: %s' % (pipeline))        
+        LOG.info('Fetching data on pipeline: %s' % (pipeline))
         try:
             pl_tcat = TCCTestPipeline(self.client, pipeline)
         except Exception, e:
@@ -94,6 +94,6 @@ class TestCatalog(Common):
             tempest_build = None
 
         return (deploy_build, prepare_build, tempest_build)
-        
+
     def pipeline_check(self, pipeline_id):
-        return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')] 
+        return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]

@@ -52,8 +52,8 @@ def chrome_cookies(url):
         # eg if last is '\x0e' then ord('\x0e') == 14, so take off 14.
         # You'll need to change this function to use ord() for python2.
         def clean(x):
-            #return x[:-x[-1]].decode('utf8')
-            #python2 style
+            # return x[:-x[-1]].decode('utf8')
+            # python2 style
             return x[:-ord(x[-1])]
 
         cipher = AES.new(key, AES.MODE_CBC, IV=iv)

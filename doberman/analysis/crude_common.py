@@ -1,35 +1,19 @@
 
-
-import sys
-import os
-import re
 import yaml
-import socket
-import urlparse
-import tarfile
-import shutil
-import uuid
-import optparse
-import datetime
-import json
 from test_catalog.client.api import TCClient
 from test_catalog.client.base import TCCTestPipeline
-from pandas import DataFrame
-from lxml import etree
-from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat, utils
 from jenkinsapi.custom_exceptions import *
 
 LOG = utils.get_logger('doberman.analysis')
 
 class Common(object):
-    """ Common methods
-
+    """ Common methods  
     """
 
     def add_to_yaml(self, matching_bugs, build_status, link, existing_dict):
         """
-        Creates a yaml dict and populates with data in the right format and 
+        Creates a yaml dict and populates with data in the right format and
         merges with existing yaml dict.
 
         """
@@ -42,7 +26,7 @@ class Common(object):
                                              'bugs': matching_bugs}}
             if hasattr(self, 'build_number'):
                 pipeline_dict[self.pipeline]['build'] = self.build_number
-            
+
             if link:
                 pipeline_dict[self.pipeline]['link to jenkins'] = \
                     self.cli.jenkins_host + link
@@ -59,7 +43,7 @@ class Common(object):
         else:
             yaml_dict['pipeline'] = pipeline_dict
         return yaml_dict
-            
+
     def non_db_bug(self, bug_id, existing_dict, err_msg):
         """ Make non-database bugs for special cases, such as missing files that
             cannot be, or are not yet, listed in the bugs database.
