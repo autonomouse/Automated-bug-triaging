@@ -327,6 +327,11 @@ class CLI(Common):
         if not self.ids:
             raise Exception("No pipeline IDs provided")
 
-if __name__ == "__main__":
+
+def main():
     crude = CrudeAnalysis()
-    sys.exit(crude.message)
+    return crude.message
+
+
+if __name__ == "__main__":
+    sys.exit(main())

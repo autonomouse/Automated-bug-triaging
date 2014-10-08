@@ -1,3 +1,9 @@
+doberman (0.0.2-0ubuntu2) precise; urgency=medium
+
+  * Add doberman.analysis.analysis.main back to fix cli invocation
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Wed, 08 Oct 2014 15:34:33 -0500
+
 doberman (0.0.2-0ubuntu1) precise; urgency=medium
 
   * Bumped version
