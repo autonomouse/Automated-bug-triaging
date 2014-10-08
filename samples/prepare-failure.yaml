@@ -1,15 +1,57 @@
-pipline:
-    96c5c7b2-cfaa-46e5-852f-e9a5b5f96ffb:
-        jenkins_jobs:
-            pipeline_deploy:
-                status: PASSED
-                jenkins_job: 12379
-            pipeline_prepare:
-                status: FAILED
-                jenkins_job: 1271
-                bugs: 
-                    - 14288372:
-                        regex: "ERROR: failed to upload image to glance"
-                        vendors: sm15k
-                        machines: hayward-01.oil
-                        units: glance/0
+pipeline:
+  07665a06-b9c2-4dcb-98eb-2274c5989b12:
+    bugs:
+      '1373406':
+        additional info:
+          target file: console.txt
+          text: ''
+        machines:
+        - 10.245.45.102
+        - hayward-48.oil
+        - hayward-21.oil
+        - hayward-32.oil
+        - hayward-36.oil
+        - 10.245.45.96
+        - 10.245.45.95
+        - hayward-36.oil
+        - 10.245.45.87
+        - 10.245.45.99
+        - 10.245.45.90
+        - 10.245.45.100
+        - hayward-39.oil
+        regexps:
+          console.txt:
+            regexp: &id001
+            - Failed to prepare deployed cloud.+HTTPInternalServerError. 500 Internal
+              Server Error
+        units:
+        - N/A
+        - sm15k
+        - sm15k
+        - sm15k
+        - sm15k
+        - N/A
+        - N/A
+        - sm15k
+        - N/A
+        - N/A
+        - N/A
+        - N/A
+        - sm15k
+        vendors:
+        - rabbitmq-server/0
+        - nova-cloud-controller/0
+        - swift-storage/2
+        - swift-storage/1
+        - swift-storage/0
+        - swift-proxy/0
+        - heat/0
+        - nova-vmware/0
+        - mysql/0
+        - openstack-dashboard/0
+        - keystone/0
+        - glance/0
+        - cinder/0
+    build: '4674'
+    link to jenkins: http://oil-jenkins.canonical.com/job/pipeline_prepare/4674/console
+    status: FAILURE

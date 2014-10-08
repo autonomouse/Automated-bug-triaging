@@ -1,3 +1,11 @@
+doberman (0.0.2-0ubuntu1) precise; urgency=medium
+
+  * Bumped version
+  * Refactored crude-analysis
+  * Fixed return code from crude-analysys
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Wed, 08 Oct 2014 12:28:58 -0500
+
 doberman (0.0.1-0ubuntu11) precise; urgency=medium
 
   * update oil-stats cli interface to match with crude-analysis
