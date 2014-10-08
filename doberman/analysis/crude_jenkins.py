@@ -10,7 +10,7 @@ import special_cases
 from pandas import DataFrame
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
-from doberman.common import pycookiecheat, utils
+from doberman.common import pycookiecheat
 from jenkinsapi.custom_exceptions import *
 
 
@@ -139,9 +139,35 @@ class Build(Common):
         self.bugs = bugs
         self.pipeline = pipeline
 
+    def process_console_data(self, pipeline_path):
+
+        console_location = os.path.join(pipeline_path, 'console.txt')
+        cons_txt, self.yaml_dict = self.get_txt(console_location,
+                                                self.yaml_dict)
+        if not cons_txt:
+            return
+            # TODO: Should carry on regardless - file a special case bug
+            # and populate with mock data then continue
+        else:
+            try:
+                self.bsnode
+            except:
+                self.bsnode = {}
+            try:
+                self.bsnode['openstack release'] = \
+                    cons_txt.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
+            except:
+                self.bsnode['openstack release'] = 'Unknown'
+
+            try:
+                self.bsnode['jenkins'] = \
+                    cons_txt.split('\n')[1].split(' in workspace /var/lib/')[0]
+            except:
+                self.bsnode['jenkins'] = 'Unknown'
+
     def get_yaml(self, file_location, yaml_dict):
         return self.get_from_file(file_location, yaml_dict, ftype='yaml')
-        
+
     def get_txt(self, file_location, yaml_dict):
         return self.get_from_file(file_location, yaml_dict, ftype='text')
 
@@ -155,7 +181,7 @@ class Build(Common):
         except IOError, e:
             fname = file_location.split('/')[-1]
             self.cli.LOG.error("%s: %s is not in artifacts folder (%s)"
-                      % (self.pipeline, fname, e[1]))
+                               % (self.pipeline, fname, e[1]))
             msg = fname + ' MISSING'
             yaml_dict = self.non_db_bug(special_cases.bug_dict[fname],
                                         yaml_dict, msg)
@@ -171,8 +197,8 @@ class Build(Common):
                 self.df[arg] = oil_df[arg].tolist()
             except:
                 self.df[arg] = "No {0} data available".format(arg)
-        
-    def bug_hunt(self, oil_df, path):        
+
+    def bug_hunt(self, oil_df, path):
         """ Using information from the bugs database, opens target file and
             searches the text for each associated regexp. """
         # TODO: As it stands, files are only searched if there is an entry in
@@ -180,6 +206,7 @@ class Build(Common):
         # the DB for the important files such as console and tempest_xunit.xml
         # FOR EACHJOB TYPE (i.e. pipeline_deploy, pipeline_prepare and
         # test_tempest_smoke).
+
         parse_as_xml = self.cli.xmls
         build_status = [build_info for build_info in self.jenkins.jenkins_api
                         [self.jobname]._poll()['builds'] if build_info
@@ -224,6 +251,7 @@ class Build(Common):
                             hit = self.rematch(and_dict, target_file, text)
                             if hit:
                                 hit_dict = self.join_dicts(hit_dict, hit)
+                                self.message = 0
                             else:
                                 info['target file'] = target_file
                                 if not self.cli.reduced_output_text:
@@ -265,8 +293,6 @@ class Build(Common):
                                                  'ports': self.df['ports'],
                                                  'states': self.df['state'],
                                                  'slaves': self.df['slaves']}
-                        import pdb; pdb.set_trace() # info being overwritten for tempests...
-                                
                         if info:
                             matching_bugs[bug_id]['additional info'] = \
                                 info
@@ -290,6 +316,8 @@ class Build(Common):
             hit_dict = {}
             if info:
                 matching_bugs[bug_id]['additional info'] = info
+        else:
+            self.message = 0
         return (matching_bugs, build_status, link2)
 
     def rematch(self, bugs, target_file, text):
@@ -322,6 +350,8 @@ class Deploy(Build):
                  pipeline):
         super(Deploy, self).__init__(build_number, jobname, jenkins, yaml_dict,
                                      cli, bugs, pipeline)
+        self.message = 1
+
         # Process downloaded data:
         self.process_deploy_data()
 
@@ -339,31 +369,16 @@ class Deploy(Build):
                                          'ports', 'state', 'slaves'))
 
         # Read console:
-        console_location = os.path.join(pipeline_deploy_path, 'console.txt')
-        cons_txt, self.yaml_dict = self.get_txt(console_location,
-                                                      self.yaml_dict)
-        if not cons_txt:
-            return # TODO: Should carry on regardless - file a special case bug and populate with mock data then continue
-        else:
-            try:
-                self.bsnode['openstack release'] = \
-                    cons_txt.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
-            except:
-                self.bsnode['openstack release'] = 'Unknown'
-                
-            try:
-                self.bsnode['jenkins'] = \
-                    cons_txt.split('\n')[1].split(' in workspace /var/lib/')[0]
-            except:
-                self.bsnode['jenkins'] = 'Unknown'
-            
-        
+        self.process_console_data(pipeline_deploy_path)
+
         # Read oil nodes file:
         oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
         oil_nodes_yml, self.yaml_dict = self.get_yaml(oil_node_location,
                                                       self.yaml_dict)
         if not oil_nodes_yml:
-            return # TODO: Should carry on regardless - file a special case bug and populate with mock data then continue
+            return
+            # TODO: Should carry on regardless - file a special case bug and
+            # populate with mock data then continue
         else:
             oil_nodes = DataFrame(oil_nodes_yml['oil_nodes'])
             oil_nodes.rename(columns={'host': 'node'}, inplace=True)
@@ -374,7 +389,9 @@ class Deploy(Build):
         juju_status, self.yaml_dict = self.get_yaml(juju_status_location,
                                                     self.yaml_dict)
         if not juju_status:
-            return # TODO: Should carry on regardless - file a special case bug and populate with mock data then continue
+            return
+            # TODO: Should carry on regardless - file a special case bug and
+            # populate with mock data then continue
 
         # Get info for bootstrap node (machine 0):
         machine_info = juju_status['machines']['0']
@@ -384,6 +401,8 @@ class Deploy(Build):
         state = machine_info['agent-state']
         self.bsnode['machine'] = machine
         self.bsnode['state'] = state
+        # TODO: This only works for deploy - could this be fished out from
+        # deploy for prepare and tempest too?
 
         row = 0
         for service in juju_status['services']:
@@ -455,6 +474,7 @@ class Prepare(Build):
                                       yaml_dict, cli, bugs, pipeline)
         self.oil_df = deploy.oil_df
         self.yaml_dict = deploy.yaml_dict
+        self.message = deploy.message
 
         # Process downloaded data:
         self.process_prepare_data()
@@ -466,6 +486,10 @@ class Prepare(Build):
         """
         prepare_path = os.path.join(self.cli.reportdir, 'pipeline_prepare',
                                     self.build_number)
+
+        # Read console:
+        self.process_console_data(prepare_path)
+
         matching_bugs, build_status, link = self.bug_hunt(self.oil_df,
                                                           prepare_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
@@ -482,6 +506,7 @@ class Tempest(Build):
                                       yaml_dict, cli, bugs, pipeline)
         self.oil_df = prepare.oil_df
         self.yaml_dict = prepare.yaml_dict
+        self.message = prepare.message
 
         # Process downloaded data:
         self.process_tempest_data()
@@ -494,6 +519,10 @@ class Tempest(Build):
         """
         tts_path = os.path.join(self.cli.reportdir, 'test_tempest_smoke',
                                 self.build_number)
+
+        # Read console:
+        self.process_console_data(tts_path)
+
         matching_bugs, build_status, link = \
             self.bug_hunt(self.oil_df, tts_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,

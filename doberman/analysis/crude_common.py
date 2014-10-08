@@ -1,5 +1,4 @@
 
-from doberman.common import utils
 from jenkinsapi.custom_exceptions import *
 
 

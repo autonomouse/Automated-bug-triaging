@@ -4,7 +4,7 @@ from crude_common import Common
 import yaml
 from test_catalog.client.api import TCClient
 from test_catalog.client.base import TCCTestPipeline
-from doberman.common import pycookiecheat, utils
+from doberman.common import pycookiecheat
 from jenkinsapi.custom_exceptions import *
 
 
@@ -42,7 +42,7 @@ class TestCatalog(Common):
 
     def connect_to_testcatalog(self):
         self.cli.LOG.debug('Connecting to test-catalog @ %s remote=%s'
-                  % (self.cli.tc_host, self.cli.run_remote))
+                           % (self.cli.tc_host, self.cli.run_remote))
         if self.cookie is None:
             self.cli.LOG.info("Fetching test-catalog cookies for %s"
                               % self.cli.tc_host)

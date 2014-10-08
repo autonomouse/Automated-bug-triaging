@@ -92,6 +92,7 @@ class CrudeAnalysis(Common):
                     shutil.rmtree(kill_me)
 
     def pipeline_processor(self):
+        self.message = -1
         deploy_yaml_dict = {}
         prepare_yaml_dict = {}
         tempest_yaml_dict = {}
@@ -99,37 +100,33 @@ class CrudeAnalysis(Common):
 
         for pipeline_id in self.pipeline_ids:
             self.pipeline = pipeline_id
-            #try:
-            # Get pipeline data then process each:
-            deploy_build, prepare_build, tempest_build = \
-                self.test_catalog.get_pipelines(pipeline_id)
-
-            # Pull console and artifacts from jenkins:
-            deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
-                            deploy_yaml_dict, self.cli,
-                            self.test_catalog.bugs, pipeline_id)
-            deploy_yaml_dict = deploy.yaml_dict
-
-            if prepare_build and not deploy.still_running:
-                prepare = Prepare(prepare_build, 'pipeline_prepare',
-                                  self.jenkins, prepare_yaml_dict,
-                                  self.cli, self.test_catalog.bugs,
-                                  pipeline_id, deploy)
-                prepare_yaml_dict = prepare.yaml_dict
-
-            if tempest_build and not deploy.still_running:
-                tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                  self.jenkins, tempest_yaml_dict,
-                                  self.cli, self.test_catalog.bugs,
-                                  pipeline_id, prepare)
-                tempest_yaml_dict = tempest.yaml_dict
-
-            if deploy.still_running:
-                self.cli.LOG.error("%s is still running - skipping"
-                                   % deploy_build)
             try:
-                pass
-            except:
+                # Get pipeline data then process each:
+                deploy_build, prepare_build, tempest_build = \
+                    self.test_catalog.get_pipelines(pipeline_id)
+
+                # Pull console and artifacts from jenkins:
+                deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
+                                deploy_yaml_dict, self.cli,
+                                self.test_catalog.bugs, pipeline_id)
+                deploy_yaml_dict = deploy.yaml_dict
+
+                if prepare_build:
+                    prepare = Prepare(prepare_build, 'pipeline_prepare',
+                                      self.jenkins, prepare_yaml_dict,
+                                      self.cli, self.test_catalog.bugs,
+                                      pipeline_id, deploy)
+                    prepare_yaml_dict = prepare.yaml_dict
+
+                if tempest_build:
+                    tempest = Tempest(tempest_build, 'test_tempest_smoke',
+                                      self.jenkins, tempest_yaml_dict,
+                                      self.cli, self.test_catalog.bugs,
+                                      pipeline_id, prepare)
+                    tempest_yaml_dict = tempest.yaml_dict
+                    self.message = tempest.message
+                    # TODO: self.message only reports back on last bug found
+            except Exception, e:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
                     msg += " (may be cookie related?)"
@@ -140,6 +137,7 @@ class CrudeAnalysis(Common):
                     print("Problem with " + pipeline_id + " - skipping "
                           "(deploy_build:  " + deploy_build + ")")
                     problem_pipelines.append((pipeline_id, deploy_build))
+                self.cli.LOG.error(e)
 
         # Export to yaml:
         rdir = self.cli.reportdir
@@ -175,7 +173,8 @@ class CrudeAnalysis(Common):
             yaml_dict['pipeline'] = {}
         with open(file_path, 'w') as outfile:
             outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
-            self.cli.LOG.info(filename + " written to " + os.path.abspath(reportdir))
+            self.cli.LOG.info(filename + " written to "
+                              + os.path.abspath(reportdir))
 
 
 class CLI(Common):
@@ -329,5 +328,5 @@ class CLI(Common):
             raise Exception("No pipeline IDs provided")
 
 if __name__ == "__main__":
-    CrudeAnalysis()
-    sys.exit()
+    crude = CrudeAnalysis()
+    sys.exit(crude.message)
