@@ -1,3 +1,9 @@
+doberman (0.0.1-0ubuntu11) precise; urgency=medium
+
+  * update oil-stats cli interface to match with crude-analysis
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Wed, 08 Oct 2014 10:55:57 -0500
+
 doberman (0.0.1-0ubuntu10) precise; urgency=medium
 
   * fix database_uri handling when connecting to test-catalog instead of local
