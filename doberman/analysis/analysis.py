@@ -105,26 +105,28 @@ class CrudeAnalysis(Common):
                     self.test_catalog.get_pipelines(pipeline_id)
 
                 # Pull console and artifacts from jenkins:
-                jenkins = self.jenkins
-                bugs = self.test_catalog.bugs
-                deploy = Deploy(deploy_build, 'pipeline_deploy', jenkins,
-                                deploy_yaml_dict, self.cli, bugs, pipeline_id)
+                deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
+                                deploy_yaml_dict, self.cli,
+                                self.test_catalog.bugs, pipeline_id)
                 deploy_yaml_dict = deploy.yaml_dict
 
                 if prepare_build and not deploy.still_running:
                     prepare = Prepare(prepare_build, 'pipeline_prepare',
-                                      jenkins, prepare_yaml_dict, self.cli,
-                                      bugs, pipeline_id, deploy)
+                                      self.jenkins, prepare_yaml_dict,
+                                      self.cli, self.test_catalog.bugs,
+                                      pipeline_id, deploy)
                     prepare_yaml_dict = prepare.yaml_dict
 
                 if tempest_build and not deploy.still_running:
                     tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                      jenkins, tempest_yaml_dict, self.cli,
-                                      bugs, pipeline_id, prepare)
+                                      self.jenkins, tempest_yaml_dict,
+                                      self.cli, self.test_catalog.bugs,
+                                      pipeline_id, prepare)
                     tempest_yaml_dict = tempest.yaml_dict
 
                 if deploy.still_running:
-                    self.cli.LOG.error("%s is still running - skipping" % deploy_build)
+                    self.cli.LOG.error("%s is still running - skipping"
+                                       % deploy_build)
             except:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"

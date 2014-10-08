@@ -152,7 +152,18 @@ class Build(Common):
                                         yaml_dict, msg)
             return (None, yaml_dict)
 
-    def bug_hunt(self, oil_df, path):
+    def dictator(self, oil_df):
+        """ Converts the columns in the oil_df dataframe into a dict in self.df
+
+        """
+        self.df = {}
+        for arg in oil_df.keys():
+            try:
+                self.df[arg] = oil_df[arg].tolist()
+            except:
+                self.df[arg] = "No {0} data available".format(arg)
+        
+    def bug_hunt(self, oil_df, path):        
         """ Using information from the bugs database, opens target file and
             searches the text for each associated regexp. """
         # TODO: As it stands, files are only searched if there is an entry in
@@ -165,16 +176,8 @@ class Build(Common):
                         [self.jobname]._poll()['builds'] if build_info
                         ['number'] == int(self.build_number)][0]['result']
         matching_bugs = {}
-        units_list = oil_df['service'].tolist()
-        machines_list = oil_df['node'].tolist()
-        vendors_list = oil_df['vendor'].tolist()
-        charms_list = oil_df['charm'].tolist()
-        ports_list = oil_df['ports'].tolist()
-        states_list = oil_df['state'].tolist()
-        slaves_list = oil_df['slaves'].tolist()
-
+        self.dictator(oil_df)
         bug_unmatched = True
-        info = {}
         if not self.bugs:
             raise Exception("No bugs in database!")
         for bug_id in self.bugs.keys():
@@ -232,28 +235,30 @@ class Build(Common):
                                     .split("begin captured logging")[0]
                                 hit = self.rematch(and_dict, target_file,
                                                    pre_log)
-                                if hit:
-                                    hit_dict = self.join_dicts(hit_dict, hit)
-                                else:
-                                    info['target file'] = target_file
-                                    if not self.cli.reduced_output_text:
-                                        info['text'] = pre_log
+                                info['target file'] = target_file
                                 info['xunit class'] = \
                                     fail.getparent().get('classname')
                                 info['xunit name'] = \
                                     fail.getparent().get('name')
+                                if hit:
+                                    hit_dict = self.join_dicts(hit_dict, hit)
+                                    break
+                                else:
+                                    if not self.cli.reduced_output_text:
+                                        info['text'] = pre_log
 
                     if and_dict == hit_dict:
                         matching_bugs[bug_id] = {'regexps': hit_dict,
-                                                 'vendors': vendors_list,
-                                                 'machines': machines_list,
-                                                 'units': units_list,
-                                                 'charms': charms_list,
-                                                 'ports': ports_list,
-                                                 'states': states_list,
-                                                 'slaves': slaves_list}
+                                                 'vendors': self.df['vendor'],
+                                                 'machines': self.df['node'],
+                                                 'units': self.df['service'],
+                                                 'charms': self.df['charm'],
+                                                 'ports': self.df['ports'],
+                                                 'states': self.df['state'],
+                                                 'slaves': self.df['slaves']}
                         if info:
-                            matching_bugs[bug_id]['additional info'] = info
+                            matching_bugs[bug_id]['additional info'] = \
+                                info
                         self.cli.LOG.info("Bug found!")
                         self.cli.LOG.info(hit_dict)
                         hit_dict = {}
@@ -263,13 +268,13 @@ class Build(Common):
             bug_id = 'unfiled-' + str(uuid.uuid4())
             matching_bugs[bug_id] = {'regexps':
                                      'NO REGEX - UNFILED/UNMATCHED BUG',
-                                     'vendors': vendors_list,
-                                     'machines': machines_list,
-                                     'units': units_list,
-                                     'charms': charms_list,
-                                     'ports': ports_list,
-                                     'states': states_list,
-                                     'slaves': slaves_list}
+                                     'vendors': self.df['vendor'],
+                                     'machines': self.df['node'],
+                                     'units': self.df['service'],
+                                     'charms': self.df['charm'],
+                                     'ports': self.df['ports'],
+                                     'states': self.df['state'],
+                                     'slaves': self.df['slaves']}
             self.cli.LOG.info("Unfiled bug found!")
             hit_dict = {}
             if info:
