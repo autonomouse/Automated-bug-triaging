@@ -140,9 +140,18 @@ class Build(Common):
         self.pipeline = pipeline
 
     def get_yaml(self, file_location, yaml_dict):
+        return self.get_from_file(file_location, yaml_dict, ftype='yaml')
+        
+    def get_txt(self, file_location, yaml_dict):
+        return self.get_from_file(file_location, yaml_dict, ftype='text')
+
+    def get_from_file(self, file_location, yaml_dict, ftype='yaml'):
         try:
             with open(file_location, "r") as f:
-                return (yaml.load(f), yaml_dict)
+                if ftype == 'yaml':
+                    return (yaml.load(f), yaml_dict)
+                else:
+                    return (f.read(), yaml_dict)
         except IOError, e:
             fname = file_location.split('/')[-1]
             self.cli.LOG.error("%s: %s is not in artifacts folder (%s)"
@@ -256,6 +265,8 @@ class Build(Common):
                                                  'ports': self.df['ports'],
                                                  'states': self.df['state'],
                                                  'slaves': self.df['slaves']}
+                        import pdb; pdb.set_trace() # info being overwritten for tempests...
+                                
                         if info:
                             matching_bugs[bug_id]['additional info'] = \
                                 info
@@ -321,17 +332,38 @@ class Deploy(Build):
         """
         reportdir = self.cli.reportdir
         deploy_build = self.build_number
+        self.bsnode = {}
         pipeline_deploy_path = os.path.join(reportdir, self.jobname,
                                             deploy_build)
         self.oil_df = DataFrame(columns=('node', 'service', 'vendor', 'charm',
                                          'ports', 'state', 'slaves'))
 
+        # Read console:
+        console_location = os.path.join(pipeline_deploy_path, 'console.txt')
+        cons_txt, self.yaml_dict = self.get_txt(console_location,
+                                                      self.yaml_dict)
+        if not cons_txt:
+            return # TODO: Should carry on regardless - file a special case bug and populate with mock data then continue
+        else:
+            try:
+                self.bsnode['openstack release'] = \
+                    cons_txt.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
+            except:
+                self.bsnode['openstack release'] = 'Unknown'
+                
+            try:
+                self.bsnode['jenkins'] = \
+                    cons_txt.split('\n')[1].split(' in workspace /var/lib/')[0]
+            except:
+                self.bsnode['jenkins'] = 'Unknown'
+            
+        
         # Read oil nodes file:
         oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
         oil_nodes_yml, self.yaml_dict = self.get_yaml(oil_node_location,
                                                       self.yaml_dict)
         if not oil_nodes_yml:
-            return
+            return # TODO: Should carry on regardless - file a special case bug and populate with mock data then continue
         else:
             oil_nodes = DataFrame(oil_nodes_yml['oil_nodes'])
             oil_nodes.rename(columns={'host': 'node'}, inplace=True)
@@ -342,7 +374,7 @@ class Deploy(Build):
         juju_status, self.yaml_dict = self.get_yaml(juju_status_location,
                                                     self.yaml_dict)
         if not juju_status:
-            return
+            return # TODO: Should carry on regardless - file a special case bug and populate with mock data then continue
 
         # Get info for bootstrap node (machine 0):
         machine_info = juju_status['machines']['0']
@@ -350,7 +382,8 @@ class Deploy(Build):
         m_os = machine_info['series']
         machine = m_os + " running " + m_name
         state = machine_info['agent-state']
-        self.bsnode = {'machine': machine, 'state': state}
+        self.bsnode['machine'] = machine
+        self.bsnode['state'] = state
 
         row = 0
         for service in juju_status['services']:

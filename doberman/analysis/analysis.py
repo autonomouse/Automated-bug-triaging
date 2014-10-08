@@ -99,34 +99,36 @@ class CrudeAnalysis(Common):
 
         for pipeline_id in self.pipeline_ids:
             self.pipeline = pipeline_id
+            #try:
+            # Get pipeline data then process each:
+            deploy_build, prepare_build, tempest_build = \
+                self.test_catalog.get_pipelines(pipeline_id)
+
+            # Pull console and artifacts from jenkins:
+            deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
+                            deploy_yaml_dict, self.cli,
+                            self.test_catalog.bugs, pipeline_id)
+            deploy_yaml_dict = deploy.yaml_dict
+
+            if prepare_build and not deploy.still_running:
+                prepare = Prepare(prepare_build, 'pipeline_prepare',
+                                  self.jenkins, prepare_yaml_dict,
+                                  self.cli, self.test_catalog.bugs,
+                                  pipeline_id, deploy)
+                prepare_yaml_dict = prepare.yaml_dict
+
+            if tempest_build and not deploy.still_running:
+                tempest = Tempest(tempest_build, 'test_tempest_smoke',
+                                  self.jenkins, tempest_yaml_dict,
+                                  self.cli, self.test_catalog.bugs,
+                                  pipeline_id, prepare)
+                tempest_yaml_dict = tempest.yaml_dict
+
+            if deploy.still_running:
+                self.cli.LOG.error("%s is still running - skipping"
+                                   % deploy_build)
             try:
-                # Get pipeline data then process each:
-                deploy_build, prepare_build, tempest_build = \
-                    self.test_catalog.get_pipelines(pipeline_id)
-
-                # Pull console and artifacts from jenkins:
-                deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
-                                deploy_yaml_dict, self.cli,
-                                self.test_catalog.bugs, pipeline_id)
-                deploy_yaml_dict = deploy.yaml_dict
-
-                if prepare_build and not deploy.still_running:
-                    prepare = Prepare(prepare_build, 'pipeline_prepare',
-                                      self.jenkins, prepare_yaml_dict,
-                                      self.cli, self.test_catalog.bugs,
-                                      pipeline_id, deploy)
-                    prepare_yaml_dict = prepare.yaml_dict
-
-                if tempest_build and not deploy.still_running:
-                    tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                      self.jenkins, tempest_yaml_dict,
-                                      self.cli, self.test_catalog.bugs,
-                                      pipeline_id, prepare)
-                    tempest_yaml_dict = tempest.yaml_dict
-
-                if deploy.still_running:
-                    self.cli.LOG.error("%s is still running - skipping"
-                                       % deploy_build)
+                pass
             except:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
