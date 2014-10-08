@@ -2,8 +2,6 @@
 from doberman.common import utils
 from jenkinsapi.custom_exceptions import *
 
-LOG = utils.get_logger('doberman.analysis')
-
 
 class Common(object):
     """ Common methods

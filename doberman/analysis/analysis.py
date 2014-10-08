@@ -9,27 +9,20 @@ import shutil
 import optparse
 import datetime
 import json
+import special_cases
 from doberman.common import utils
 from jenkinsapi.custom_exceptions import *
 from crude_common import Common
 from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
 from crude_test_catalog import TestCatalog
 
-LOG = utils.get_logger('doberman.analysis')
-
-# Special cases: A hard-coded dictionary linking the files that may be missing
-# to a bug id on launchpad:
-# TODO: Decide whether to keep this hard-coded or to use an external yaml, etc:
-special_cases = {'juju_status.yaml': '1372407',
-                 'oil_nodes': '1372411',
-                 'pipeline_id': '1372567'}
-job_names = ['pipeline_deploy', 'pipeline_prepare', 'test_tempest_smoke']
-
 
 class CrudeAnalysis(Common):
     """
 
     """
+
+    job_names = ['pipeline_deploy', 'pipeline_prepare', 'test_tempest_smoke']
 
     def __init__(self):
         self.cli = CLI()
@@ -48,7 +41,7 @@ class CrudeAnalysis(Common):
         if self.cli.use_deploy:
             msg = "Looking up pipeline ids for the following jenkins "
             msg += "pipeline_deploy build numbers: %s"
-            LOG.info(msg % ", ".join([str(i) for i in self.cli.ids]))
+            self.cli.LOG.info(msg % ", ".join([str(i) for i in self.cli.ids]))
         self.calc_when_to_report()
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
@@ -58,7 +51,7 @@ class CrudeAnalysis(Common):
             # Quickly cycle through to check all pipelines are real:
             if not self.jenkins.pipeline_check(pipeline):
                 msg = "Pipeline ID \"%s\" is an unrecognised format" % pipeline
-                LOG.error(msg)
+                self.cli.LOG.error(msg)
                 raise Exception(msg)
             self.pipeline_ids.append(pipeline)
 
@@ -67,8 +60,9 @@ class CrudeAnalysis(Common):
                         for pc in self.report_at]
             if pos in progress:
                 pc = str(self.report_at[progress.index(pos)])
-                LOG.info("Pipeline lookup {0}% complete.".format(pc))
-        LOG.info("All pipelines checked. Now polling jenkins/ processing data")
+                self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pc))
+        self.cli.LOG.info("All pipelines checked. Now polling jenkins " +
+                          "and processing data")
 
     def calc_when_to_report(self):
         """ Determine at what percentage completion to notify user of progress
@@ -92,7 +86,7 @@ class CrudeAnalysis(Common):
         """
 
         if not self.cli.keep_data:
-            for folder in job_names:
+            for folder in self.job_names:
                 kill_me = os.path.join(self.cli.reportdir, folder)
                 if os.path.isdir(kill_me):
                     shutil.rmtree(kill_me)
@@ -130,13 +124,13 @@ class CrudeAnalysis(Common):
                     tempest_yaml_dict = tempest.yaml_dict
 
                 if deploy.still_running:
-                    LOG.error("%s is still running - skipping" % deploy_build)
+                    self.cli.LOG.error("%s is still running - skipping" % deploy_build)
             except:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
                     msg += " (may be cookie related?)"
                     deploy_yaml_dict = \
-                        self.non_db_bug(special_cases['pipeline_id'],
+                        self.non_db_bug(special_cases.bug_dict['pipeline_id'],
                                         deploy_yaml_dict, msg)
                 else:
                     print("Problem with " + pipeline_id + " - skipping "
@@ -165,7 +159,7 @@ class CrudeAnalysis(Common):
                 errmsg = "There were some pipelines that could not be "
                 errmsg += "processed. This information was written to problem"
                 errmsg += "_pipelines.yaml in " + self.cli.reportdir + "\n\n"
-                LOG.error(errmsg)
+                self.cli.LOG.error(errmsg)
 
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """
@@ -177,7 +171,7 @@ class CrudeAnalysis(Common):
             yaml_dict['pipeline'] = {}
         with open(file_path, 'w') as outfile:
             outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
-            LOG.info(filename + " written to " + os.path.abspath(reportdir))
+            self.cli.LOG.info(filename + " written to " + os.path.abspath(reportdir))
 
 
 class CLI(Common):
@@ -199,6 +193,7 @@ class CLI(Common):
     """
 
     def __init__(self):
+        self.LOG = utils.get_logger('doberman.analysis')
         self.cli()
 
     def cli(self):
@@ -245,12 +240,12 @@ class CLI(Common):
             cfg = utils.get_config()
 
         self.database = opts.database
-        LOG.info("database=%s" % self.database)
+        self.LOG.info("database=%s" % self.database)
         # database filepath might be set in config
         if self.database is None:
-            LOG.info('getting DB from config file')
+            self.LOG.info('getting DB from config file')
             self.database = cfg.get('DEFAULT', 'database_uri')
-            LOG.info('database=%s' % self.database)
+            self.LOG.info('database=%s' % self.database)
 
         if opts.use_deploy:
             self.use_deploy = opts.use_deploy
@@ -307,11 +302,11 @@ class CLI(Common):
         self.xmls = xmls.replace(' ', '').split(',')
 
         if self.jenkins_host in [None, 'None', 'none', '']:
-            LOG.error("Missing jenkins configuration")
+            self.LOG.error("Missing jenkins configuration")
             raise Exception("Missing jenkins configuration")
 
         if self.tc_host in [None, 'None', 'none', '']:
-            LOG.error("Missing test-catalog configuration")
+            self.LOG.error("Missing test-catalog configuration")
             raise Exception("Missing test-catalog configuration")
 
         # Cookie for test-catalog:
@@ -320,9 +315,9 @@ class CLI(Common):
             self.tc_auth = json.load(open(tc_auth))
         except:
             msg = "Cannot find cookie for test-catalog: %s" % tc_auth
-            LOG.error(msg)
+            self.LOG.error(msg)
             raise Exception(msg)
-        LOG.debug('tc_auth token=%s' % self.tc_auth)
+        self.LOG.debug('tc_auth token=%s' % self.tc_auth)
 
         # Get arguments:
         self.ids = set(args)

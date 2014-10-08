@@ -6,13 +6,12 @@ import re
 import yaml
 import tarfile
 import uuid
+import special_cases
 from pandas import DataFrame
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat, utils
 from jenkinsapi.custom_exceptions import *
-
-LOG = utils.get_logger('doberman.analysis')
 
 
 class Jenkins(Common):
@@ -23,13 +22,12 @@ class Jenkins(Common):
         self._jenkins = []
         self.cli = cli
         self.netloc = self.cli.netloc
-        self.cookie = None  # TODO: Set this somewhere!!!
         self.connect_to_jenkins()
         try:
             self._jenkins.append(self.jenkins_api)
         except:
             msg = "Problem connecting to Jenkins (try refreshing cookies?)"
-            LOG.error(msg)
+            self.cli.LOG.error(msg)
             raise Exception(msg)
 
     def connect_to_jenkins(self):
@@ -37,16 +35,17 @@ class Jenkins(Common):
 
         url = self.cli.jenkins_host
         remote = self.cli.run_remote
-        LOG.debug('Connecting to jenkins @ %s remote=%s' % (url, remote))
+        self.cli.LOG.debug('Connecting to jenkins @ {0} remote={1}'.format(url,
+                           remote))
 
         if remote:
-            LOG.info("Fetching cookies for %s" % url)
+            self.cli.LOG.info("Fetching cookies for %s" % url)
             self.cookie = pycookiecheat.chrome_cookies(url)
         try:
             self.jenkins_api = JenkinsAPI(baseurl=url, cookies=self.cookie,
                                           netloc=self.netloc)
         except JenkinsAPIException:
-            LOG.exception('Failed to connect to Jenkins')
+            self.cli.LOG.exception('Failed to connect to Jenkins')
 
     def get_pipeline_from_deploy_build(self, id_number):
         deploy_bld_n = int(id_number)
@@ -67,7 +66,7 @@ class Jenkins(Common):
                 return pl
             else:
                 msg = "Pipeline ID \"%s\" is an unrecognised format" % pl
-                LOG.error(msg)
+                self.cli.LOG.error(msg)
                 raise Exception(msg)
 
     def pipeline_check(self, pipeline_id):
@@ -78,7 +77,7 @@ class Jenkins(Common):
         jenkins_job = self.jenkins_api[job]
         build = jenkins_job.get_build(int(build_num))
         outdir = os.path.join(self.cli.reportdir, job, str(build_num))
-        LOG.info('Downloading debug data to: %s' % (outdir))
+        self.cli.LOG.info('Downloading debug data to: %s' % (outdir))
         # Check to make sure it is not still running!:
         if build._data['duration'] == 0:
             return True  # Still running
@@ -88,7 +87,8 @@ class Jenkins(Common):
             if not os.path.isdir(outdir):
                 raise
         with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
-            LOG.info('Saving console @ %s to %s' % (build.baseurl, outdir))
+            self.cli.LOG.info('Saving console @ {0} to {1}'.format(
+                              build.baseurl, outdir))
             console = build.get_console()
             cnsl.write(console)
             cnsl.write('\n')
@@ -119,7 +119,7 @@ class Jenkins(Common):
                             new_file.writelines(data)
                 os.remove(os.path.join(outdir, artifact.filename))
         except:
-            LOG.error("Could not extract %s" % artifact.filename)
+            self.cli.LOG.error("Could not extract %s" % artifact.filename)
 
 
 class Build(Common):
@@ -145,10 +145,11 @@ class Build(Common):
                 return (yaml.load(f), yaml_dict)
         except IOError, e:
             fname = file_location.split('/')[-1]
-            LOG.error("%s: %s is not in artifacts folder (%s)"
+            self.cli.LOG.error("%s: %s is not in artifacts folder (%s)"
                       % (self.pipeline, fname, e[1]))
             msg = fname + ' MISSING'
-            yaml_dict = self.non_db_bug(special_cases[fname], yaml_dict, msg)
+            yaml_dict = self.non_db_bug(special_cases.bug_dict[fname],
+                                        yaml_dict, msg)
             return (None, yaml_dict)
 
     def bug_hunt(self, oil_df, path):
@@ -177,6 +178,7 @@ class Build(Common):
         if not self.bugs:
             raise Exception("No bugs in database!")
         for bug_id in self.bugs.keys():
+            info = {}
             if self.jobname in self.bugs[bug_id]:
                 # Any dict in self.bugs[bug_id][self.jobname] can match (or):
                 or_dict = self.bugs[bug_id][self.jobname]
@@ -252,8 +254,8 @@ class Build(Common):
                                                  'slaves': slaves_list}
                         if info:
                             matching_bugs[bug_id]['additional info'] = info
-                        LOG.info("Bug found!")
-                        LOG.info(hit_dict)
+                        self.cli.LOG.info("Bug found!")
+                        self.cli.LOG.info(hit_dict)
                         hit_dict = {}
                         bug_unmatched = False
                         break
@@ -268,7 +270,7 @@ class Build(Common):
                                      'ports': ports_list,
                                      'states': states_list,
                                      'slaves': slaves_list}
-            LOG.info("Unfiled bug found!")
+            self.cli.LOG.info("Unfiled bug found!")
             hit_dict = {}
             if info:
                 matching_bugs[bug_id]['additional info'] = info
