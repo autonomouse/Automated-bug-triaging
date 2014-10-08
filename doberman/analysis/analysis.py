@@ -214,7 +214,7 @@ class CLI(Common):
         prsr.add_option('-k', '--keep', action='store_true', dest='keep_data',
                         default=False,
                         help='Do not delete extracted tarballs when finished')
-        prsr.add_option('-l', '--less', action='store_true', dest='less',
+        prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
                         default=False, help='Reduced text in output yaml.')
         prsr.add_option('-n', '--netloc', action='store', dest='netloc',
                         default=None,
@@ -258,10 +258,10 @@ class CLI(Common):
         else:
             self.jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
-        if opts.less:
-            self.reduced_output_text = True
-        else:
+        if opts.verbose:
             self.reduced_output_text = False
+        else:
+            self.reduced_output_text = True
 
         # cli wins, then config, then hostname lookup
         netloc_cfg = cfg.get('DEFAULT', 'netloc')
