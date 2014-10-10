@@ -33,7 +33,6 @@ class CrudeAnalysis(Common):
         self.remove_dirs()
 
     def build_pl_ids_and_check(self):
-
         self.pipeline_ids = []
         self.ids = self.cli.ids
 

@@ -187,10 +187,10 @@ class Build(Common):
             return (None, yaml_dict)
 
     def dictator(self, dictionary, dkey, dvalue):
-        """ Adds dvalue to list in a given dictionary (self.oil_df/oil_nodes). 
+        """ Adds dvalue to list in a given dictionary (self.oil_df/oil_nodes).
             Assumes that dictionary will be self.oil_df, self.oil_nodes, etc so
             nothing is returned.
-        
+
         """
 
         if dkey not in dictionary:
@@ -211,8 +211,6 @@ class Build(Common):
                         [self.jobname]._poll()['builds'] if build_info
                         ['number'] == int(self.build_number)][0]['result']
         matching_bugs = {}
-        #self.dictator(oil_df)
-        #import pdb; pdb.set_trace()
 
         bug_unmatched = True
         if not self.bugs:
