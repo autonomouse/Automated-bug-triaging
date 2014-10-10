@@ -102,10 +102,10 @@ class CrudeAnalysis(Common):
             try:
                 # Get pipeline data then process each:
                 build_numbers = self.test_catalog.get_pipelines(pipeline_id)
-                deploy_build = build_numbers[deploy_build]
-                prepare_build = build_numbers[prepare_build]
-                tempest_build = build_numbers[tempest_build]
-
+                deploy_build = build_numbers['pipeline_deploy']
+                prepare_build = build_numbers['pipeline_prepare']
+                tempest_build = build_numbers['test_tempest_smoke']
+            
                 # Pull console and artifacts from jenkins:
                 deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
                                 deploy_yaml_dict, self.cli,
