@@ -1,3 +1,10 @@
+doberman (0.0.2-0ubuntu3) precise; urgency=medium
+
+  * Remove python-pandas dep
+  * Dump exception trace during exit path
+
+ -- Ryan Harper <ryan.harper@canonical.com>  Fri, 10 Oct 2014 08:56:07 -0500
+
 doberman (0.0.2-0ubuntu2) precise; urgency=medium
 
   * Add doberman.analysis.analysis.main back to fix cli invocation

@@ -27,13 +27,12 @@ class CrudeAnalysis(Common):
     def __init__(self):
         self.cli = CLI()
         self.jenkins = Jenkins(self.cli)
-        self.test_catalog = TestCatalog(self.cli)
+        self.test_catalog = TestCatalog(self.cli, self.job_names)
         self.build_pl_ids_and_check()
         self.pipeline_processor()
         self.remove_dirs()
 
     def build_pl_ids_and_check(self):
-
         self.pipeline_ids = []
         self.ids = self.cli.ids
 
@@ -102,8 +101,10 @@ class CrudeAnalysis(Common):
             self.pipeline = pipeline_id
             try:
                 # Get pipeline data then process each:
-                deploy_build, prepare_build, tempest_build = \
-                    self.test_catalog.get_pipelines(pipeline_id)
+                build_numbers = self.test_catalog.get_pipelines(pipeline_id)
+                deploy_build = build_numbers['pipeline_deploy']
+                prepare_build = build_numbers['pipeline_prepare']
+                tempest_build = build_numbers['test_tempest_smoke']
 
                 # Pull console and artifacts from jenkins:
                 deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
@@ -137,7 +138,7 @@ class CrudeAnalysis(Common):
                     print("Problem with " + pipeline_id + " - skipping "
                           "(deploy_build:  " + deploy_build + ")")
                     problem_pipelines.append((pipeline_id, deploy_build))
-                self.cli.LOG.error(e)
+                self.cli.LOG.exception(e)
 
         # Export to yaml:
         rdir = self.cli.reportdir
@@ -273,8 +274,8 @@ class CLI(Common):
         elif netloc_cfg not in ['None', 'none', None]:
             self.netloc = netloc_cfg
         else:
-            self.netloc = \
-                socket.gethostbyname(urlparse.urlsplit(opts.host).netloc)
+            self.netloc = socket.gethostbyname(urlparse.urlsplit(
+                                               opts.jenkins_host).netloc)
 
         if opts.run_remote:
             self.run_remote = opts.run_remote
