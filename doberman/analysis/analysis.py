@@ -138,6 +138,7 @@ class CrudeAnalysis(Common):
                           "(deploy_build:  " + deploy_build + ")")
                     problem_pipelines.append((pipeline_id, deploy_build))
                 self.cli.LOG.error(e)
+                # TODO: Also provide the stack trace please :-)
 
         # Export to yaml:
         rdir = self.cli.reportdir

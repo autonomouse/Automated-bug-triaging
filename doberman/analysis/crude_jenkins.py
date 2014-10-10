@@ -7,7 +7,6 @@ import yaml
 import tarfile
 import uuid
 import special_cases
-from pandas import DataFrame
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat
@@ -187,18 +186,18 @@ class Build(Common):
                                         yaml_dict, msg)
             return (None, yaml_dict)
 
-    def dictator(self, oil_df):
-        """ Converts the columns in the oil_df dataframe into a dict in self.df
-
+    def dictator(self, dictionary, dkey, dvalue):
+        """ Adds dvalue to list in a given dictionary (self.oil_df/oil_nodes). 
+            Assumes that dictionary will be self.oil_df, self.oil_nodes, etc so
+            nothing is returned.
+        
         """
-        self.df = {}
-        for arg in oil_df.keys():
-            try:
-                self.df[arg] = oil_df[arg].tolist()
-            except:
-                self.df[arg] = "No {0} data available".format(arg)
 
-    def bug_hunt(self, oil_df, path):
+        if dkey not in dictionary:
+            dictionary[dkey] = []
+        dictionary[dkey].append(dvalue)
+
+    def bug_hunt(self, path):
         """ Using information from the bugs database, opens target file and
             searches the text for each associated regexp. """
         # TODO: As it stands, files are only searched if there is an entry in
@@ -212,7 +211,9 @@ class Build(Common):
                         [self.jobname]._poll()['builds'] if build_info
                         ['number'] == int(self.build_number)][0]['result']
         matching_bugs = {}
-        self.dictator(oil_df)
+        #self.dictator(oil_df)
+        #import pdb; pdb.set_trace()
+
         bug_unmatched = True
         if not self.bugs:
             raise Exception("No bugs in database!")
@@ -285,14 +286,15 @@ class Build(Common):
                                         info['text'] = pre_log
 
                     if and_dict == hit_dict:
-                        matching_bugs[bug_id] = {'regexps': hit_dict,
-                                                 'vendors': self.df['vendor'],
-                                                 'machines': self.df['node'],
-                                                 'units': self.df['service'],
-                                                 'charms': self.df['charm'],
-                                                 'ports': self.df['ports'],
-                                                 'states': self.df['state'],
-                                                 'slaves': self.df['slaves']}
+                        matching_bugs[bug_id] = \
+                            {'regexps': hit_dict,
+                             'vendors': self.oil_df['vendor'],
+                             'machines': self.oil_df['node'],
+                             'units': self.oil_df['service'],
+                             'charms': self.oil_df['charm'],
+                             'ports': self.oil_df['ports'],
+                             'states': self.oil_df['state'],
+                             'slaves': self.oil_df['slaves']}
                         if info:
                             matching_bugs[bug_id]['additional info'] = \
                                 info
@@ -305,13 +307,13 @@ class Build(Common):
             bug_id = 'unfiled-' + str(uuid.uuid4())
             matching_bugs[bug_id] = {'regexps':
                                      'NO REGEX - UNFILED/UNMATCHED BUG',
-                                     'vendors': self.df['vendor'],
-                                     'machines': self.df['node'],
-                                     'units': self.df['service'],
-                                     'charms': self.df['charm'],
-                                     'ports': self.df['ports'],
-                                     'states': self.df['state'],
-                                     'slaves': self.df['slaves']}
+                                     'vendors': self.oil_df['vendor'],
+                                     'machines': self.oil_df['node'],
+                                     'units': self.oil_df['service'],
+                                     'charms': self.oil_df['charm'],
+                                     'ports': self.oil_df['ports'],
+                                     'states': self.oil_df['state'],
+                                     'slaves': self.oil_df['slaves']}
             self.cli.LOG.info("Unfiled bug found!")
             hit_dict = {}
             if info:
@@ -357,7 +359,7 @@ class Deploy(Build):
 
     def process_deploy_data(self):
         """ Parses the artifacts files from a single pipeline into data and
-            metadata DataFrames
+            metadata
 
         """
         reportdir = self.cli.reportdir
@@ -365,8 +367,8 @@ class Deploy(Build):
         self.bsnode = {}
         pipeline_deploy_path = os.path.join(reportdir, self.jobname,
                                             deploy_build)
-        self.oil_df = DataFrame(columns=('node', 'service', 'vendor', 'charm',
-                                         'ports', 'state', 'slaves'))
+        self.oil_df = {}
+        self.oil_nodes = {}
 
         # Read console:
         self.process_console_data(pipeline_deploy_path)
@@ -375,13 +377,15 @@ class Deploy(Build):
         oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
         oil_nodes_yml, self.yaml_dict = self.get_yaml(oil_node_location,
                                                       self.yaml_dict)
+        # TODO: I don't think we're actually using this anymore... remove?:
         if not oil_nodes_yml:
             return
             # TODO: Should carry on regardless - file a special case bug and
             # populate with mock data then continue
         else:
-            oil_nodes = DataFrame(oil_nodes_yml['oil_nodes'])
-            oil_nodes.rename(columns={'host': 'node'}, inplace=True)
+            for key in oil_nodes_yml['oil_nodes'][0].keys():
+                [self.dictator(self.oil_nodes, key, node[key])
+                 for node in oil_nodes_yml['oil_nodes']]
 
         # Read juju status file:
         juju_status_location = os.path.join(pipeline_deploy_path,
@@ -412,8 +416,13 @@ class Deploy(Build):
                 units = serv['units']
             else:
                 units = {}
-                self.oil_df.loc[row] = ['N/A', 'N/A', 'N/A', charm, 'N/A',
-                                        'N/A', 'N/A']
+                self.dictator(self.oil_df, 'node', 'N/A')
+                self.dictator(self.oil_df, 'service', 'N/A')
+                self.dictator(self.oil_df, 'vendor', 'N/A')
+                self.dictator(self.oil_df, 'charm', charm)
+                self.dictator(self.oil_df, 'ports', 'N/A')
+                self.dictator(self.oil_df, 'state', 'N/A')
+                self.dictator(self.oil_df, 'slaves', 'N/A')
 
             for unit in units:
                 this_unit = units[unit]
@@ -454,12 +463,16 @@ class Deploy(Build):
                 m_ip = " (" + container['dns-name'] + ")" \
                        if 'dns-name' in container else ""
                 machine = m_name + m_ip
-                self.oil_df.loc[row] = [machine, unit, ', '.join(hardware),
-                                        charm, ports, state, slave]
+                self.dictator(self.oil_df, 'node', machine)
+                self.dictator(self.oil_df, 'service', unit)
+                self.dictator(self.oil_df, 'vendor', ', '.join(hardware))
+                self.dictator(self.oil_df, 'charm', charm)
+                self.dictator(self.oil_df, 'ports', ports)
+                self.dictator(self.oil_df, 'state', state)
+                self.dictator(self.oil_df, 'slaves', slave)
                 row += 1
 
-        matching_bugs, build_status, link = self.bug_hunt(self.oil_df,
-                                                          pipeline_deploy_path)
+        matching_bugs, build_status, link = self.bug_hunt(pipeline_deploy_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
                                           self.yaml_dict)
 
@@ -481,7 +494,7 @@ class Prepare(Build):
 
     def process_prepare_data(self):
         """ Parses the artifacts files from a single pipeline into data and
-            metadata DataFrames.
+            metadata.
 
         """
         prepare_path = os.path.join(self.cli.reportdir, 'pipeline_prepare',
@@ -490,8 +503,7 @@ class Prepare(Build):
         # Read console:
         self.process_console_data(prepare_path)
 
-        matching_bugs, build_status, link = self.bug_hunt(self.oil_df,
-                                                          prepare_path)
+        matching_bugs, build_status, link = self.bug_hunt(prepare_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
                                           self.yaml_dict)
 
@@ -514,7 +526,7 @@ class Tempest(Build):
     def process_tempest_data(self):
         """
         Parses the artifacts files from a single pipeline into data and
-        metadata DataFrames
+        metadata
 
         """
         tts_path = os.path.join(self.cli.reportdir, 'test_tempest_smoke',
@@ -524,6 +536,6 @@ class Tempest(Build):
         self.process_console_data(tts_path)
 
         matching_bugs, build_status, link = \
-            self.bug_hunt(self.oil_df, tts_path)
+            self.bug_hunt(tts_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
                                           self.yaml_dict)
