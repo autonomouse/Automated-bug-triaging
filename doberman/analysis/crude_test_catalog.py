@@ -12,9 +12,10 @@ class TestCatalog(Common):
     """
     """
 
-    def __init__(self, cli):
+    def __init__(self, cli, job_names):
 
         self.cli = cli
+        self.job_names = job_names
         self.cookie = self.cli.tc_auth
         self.tc_client = TCClient
         self._tc_client = []
@@ -65,23 +66,18 @@ class TestCatalog(Common):
             msg += "related issue? (%s)" % e
             self.cli.LOG.error(msg)
             raise Exception(msg)
-        try:
-            deploy_dict = pl_tcat.dict['parent']
-            deploy_build = deploy_dict['build_tag'].split("-")[-1]
-        except:
-            deploy_build = None
-        try:
-            prepare_dict = deploy_dict['children'][0]
-            prepare_build = prepare_dict['build_tag'].split("-")[-1]
-        except:
-            prepare_build = None
-        try:
-            tempest_dict = prepare_dict['children'][0]
-            tempest_build = tempest_dict['build_tag'].split("-")[-1]
-        except:
-            tempest_build = None
 
-        return (deploy_build, prepare_build, tempest_build)
+        build_numbers = {}
+        parent_dict = str(pl_tcat.dict['parent'])
+
+        for jname in self.job_names:
+            try:
+                text = parent_dict.split(jname)[1].split(',')[0]
+                build = text.replace('/', '').replace('-', '').replace("'", '')
+                build_numbers[jname] = build
+            except:
+                build_numbers[jname] = None
+        return build_numbers
 
     def pipeline_check(self, pipeline_id):
         return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
