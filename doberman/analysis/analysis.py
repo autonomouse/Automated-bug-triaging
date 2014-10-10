@@ -101,8 +101,10 @@ class CrudeAnalysis(Common):
             self.pipeline = pipeline_id
             try:
                 # Get pipeline data then process each:
-                deploy_build, prepare_build, tempest_build = \
-                    self.test_catalog.get_pipelines(pipeline_id)
+                build_numbers = self.test_catalog.get_pipelines(pipeline_id)
+                deploy_build = build_numbers[deploy_build]
+                prepare_build = build_numbers[prepare_build]
+                tempest_build = build_numbers[tempest_build]
 
                 # Pull console and artifacts from jenkins:
                 deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,

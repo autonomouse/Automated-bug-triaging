@@ -67,16 +67,16 @@ class TestCatalog(Common):
             self.cli.LOG.error(msg)
             raise Exception(msg)
 
-        build_numbers = []
+        build_numbers = {}
         parent_dict = str(pl_tcat.dict['parent'])
 
         for jname in self.job_names:
             try:
-                num = parent_dict.split(jname)[1].split(',')[0]
-                number = num.replace('/', '').replace('-', '').replace("'", '')
-                build_numbers.append(number)
+                text = parent_dict.split(jname)[1].split(',')[0]
+                build = text.replace('/', '').replace('-', '').replace("'", '')
+                build_numbers[jname] = build
             except:
-                build_numbers.append(None)
+                build_numbers[jname] = None
         return build_numbers
 
     def pipeline_check(self, pipeline_id):
