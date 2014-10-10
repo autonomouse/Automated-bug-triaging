@@ -27,7 +27,7 @@ class CrudeAnalysis(Common):
     def __init__(self):
         self.cli = CLI()
         self.jenkins = Jenkins(self.cli)
-        self.test_catalog = TestCatalog(self.cli)
+        self.test_catalog = TestCatalog(self.cli, self.job_names)
         self.build_pl_ids_and_check()
         self.pipeline_processor()
         self.remove_dirs()
@@ -273,8 +273,8 @@ class CLI(Common):
         elif netloc_cfg not in ['None', 'none', None]:
             self.netloc = netloc_cfg
         else:
-            self.netloc = \
-                socket.gethostbyname(urlparse.urlsplit(opts.host).netloc)
+            self.netloc = socket.gethostbyname(urlparse.urlsplit(
+                                               opts.jenkins_host).netloc)
 
         if opts.run_remote:
             self.run_remote = opts.run_remote
