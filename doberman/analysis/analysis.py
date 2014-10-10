@@ -137,7 +137,7 @@ class CrudeAnalysis(Common):
                 else:
                     print("Problem with " + pipeline_id + " - skipping "
                           "(deploy_build:  " + deploy_build + ")")
-                    problem_pipelines.append((pipeline_id, deploy_build))
+                    problem_pipelines.append((pipeline_id, deploy_build, e))
                 self.cli.LOG.exception(e)
 
         # Export to yaml:
@@ -157,7 +157,8 @@ class CrudeAnalysis(Common):
                 pp_file.write("\n" + str(datetime.datetime.now())
                               + "\n--------------------------\n")
                 for problem_pipeline in problem_pipelines:
-                    pp_file.write("%s (deploy build: %s)\n" % problem_pipeline)
+                    probs = "* %s (deploy build: %s):\n%s\n\n"
+                    pp_file.write(probs % problem_pipeline)
                 pp_file.write(existing_content)
                 errmsg = "There were some pipelines that could not be "
                 errmsg += "processed. This information was written to problem"

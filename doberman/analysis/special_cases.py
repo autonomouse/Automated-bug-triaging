@@ -3,4 +3,5 @@
     on launchpad """
 bug_dict = {'juju_status.yaml': '1372407',
             'oil_nodes': '1372411',
-            'pipeline_id': '1372567'}
+            'pipeline_id': '1372567',
+            'console.txt': '1379852'}

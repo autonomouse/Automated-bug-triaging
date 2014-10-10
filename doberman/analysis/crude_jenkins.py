@@ -212,6 +212,7 @@ class Build(Common):
                         [self.jobname]._poll()['builds'] if build_info
                         ['number'] == int(self.build_number)][0]['result']
         matching_bugs = {}
+        link2 = ''
 
         bug_unmatched = True
         if not self.bugs:
