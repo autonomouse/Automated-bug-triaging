@@ -22,12 +22,10 @@ class CrudeAnalysis(Common):
 
     """
 
-    job_names = ['pipeline_deploy', 'pipeline_prepare', 'test_tempest_smoke']
-
     def __init__(self):
         self.cli = CLI()
         self.jenkins = Jenkins(self.cli)
-        self.test_catalog = TestCatalog(self.cli, self.job_names)
+        self.test_catalog = TestCatalog(self.cli)
         self.build_pl_ids_and_check()
         self.pipeline_processor()
         self.remove_dirs()
@@ -85,7 +83,7 @@ class CrudeAnalysis(Common):
         """
 
         if not self.cli.keep_data:
-            for folder in self.job_names:
+            for folder in self.cli.job_names:
                 kill_me = os.path.join(self.cli.reportdir, folder)
                 if os.path.isdir(kill_me):
                     shutil.rmtree(kill_me)
@@ -212,7 +210,10 @@ class CLI(Common):
                         help='specify path to configuration file')
         prsr.add_option('-d', '--dburi', action='store', dest='database',
                         default=None,
-                        help='set URI to bug/regex db: /path/to/mock_db.yaml')
+                        help='set URI to bug/regex db: /path/to/mock_db.yaml')                        
+        prsr.add_option('-i', '--jobnames', action='store', dest='jobnames',
+                        default=None, help=('jenkins job names (must be in ' +
+                                            'quotes, seperated by spaces)'))
         prsr.add_option('-J', '--jenkins', action='store', dest='jenkins_host',
                         default=None,
                         help='URL to Jenkins server')
@@ -257,6 +258,12 @@ class CLI(Common):
         else:
             self.use_deploy = cfg.get('DEFAULT', 'use_deploy').lower() in \
                 ['true', 'yes']
+
+        if opts.jobnames:
+            job_names = opts.jobnames
+        else:
+            job_names = cfg.get('DEFAULT', 'job_names')
+        self.job_names = job_names.split(' ')
 
         if opts.jenkins_host:
             self.jenkins_host = opts.jenkins_host

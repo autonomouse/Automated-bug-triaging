@@ -12,10 +12,9 @@ class TestCatalog(Common):
     """
     """
 
-    def __init__(self, cli, job_names):
+    def __init__(self, cli):
 
         self.cli = cli
-        self.job_names = job_names
         self.cookie = self.cli.tc_auth
         self.tc_client = TCClient
         self._tc_client = []
@@ -71,7 +70,7 @@ class TestCatalog(Common):
         build_numbers = {}
         parent_dict = str(pl_tcat.dict['parent'])
 
-        for jname in self.job_names:
+        for jname in self.cli.job_names:
             try:
                 text = parent_dict.split(jname)[1].split(',')[0]
                 build = text.replace('/', '').replace('-', '').replace("'", '')
