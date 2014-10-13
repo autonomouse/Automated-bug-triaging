@@ -13,7 +13,6 @@ class TestCatalog(Common):
     """
 
     def __init__(self, cli):
-
         self.cli = cli
         self.cookie = self.cli.tc_auth
         self.tc_client = TCClient

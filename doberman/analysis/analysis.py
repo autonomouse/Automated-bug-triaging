@@ -138,6 +138,10 @@ class CrudeAnalysis(Common):
                     problem_pipelines.append((pipeline_id, deploy_build, e))
                 self.cli.LOG.exception(e)
 
+            pl_proc_msg = "CrudeAnalysis has finished processing pipline id: "
+            pl_proc_msg += "{0} and is returning a value of {1}."
+            self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
+
         # Export to yaml:
         rdir = self.cli.reportdir
         self.export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', rdir)
@@ -210,7 +214,7 @@ class CLI(Common):
                         help='specify path to configuration file')
         prsr.add_option('-d', '--dburi', action='store', dest='database',
                         default=None,
-                        help='set URI to bug/regex db: /path/to/mock_db.yaml')                        
+                        help='set URI to bug/regex db: /path/to/mock_db.yaml')
         prsr.add_option('-i', '--jobnames', action='store', dest='jobnames',
                         default=None, help=('jenkins job names (must be in ' +
                                             'quotes, seperated by spaces)'))

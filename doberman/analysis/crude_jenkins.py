@@ -144,26 +144,21 @@ class Build(Common):
         console_location = os.path.join(pipeline_path, 'console.txt')
         cons_txt, self.yaml_dict = self.get_txt(console_location,
                                                 self.yaml_dict)
-        if not cons_txt:
-            return
-            # TODO: Should carry on regardless - file a special case bug
-            # and populate with mock data then continue
-        else:
-            try:
-                self.bsnode
-            except:
-                self.bsnode = {}
-            try:
-                self.bsnode['openstack release'] = \
-                    cons_txt.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
-            except:
-                self.bsnode['openstack release'] = 'Unknown'
+        try:
+            self.bsnode
+        except:
+            self.bsnode = {}
+        try:
+            self.bsnode['openstack release'] = \
+                cons_txt.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
+        except:
+            self.bsnode['openstack release'] = 'Unknown'
 
-            try:
-                self.bsnode['jenkins'] = \
-                    cons_txt.split('\n')[1].split(' in workspace /var/lib/')[0]
-            except:
-                self.bsnode['jenkins'] = 'Unknown'
+        try:
+            self.bsnode['jenkins'] = \
+                cons_txt.split('\n')[1].split(' in workspace /var/lib/')[0]
+        except:
+            self.bsnode['jenkins'] = 'Unknown'
 
     def get_yaml(self, file_location, yaml_dict):
         return self.get_from_file(file_location, yaml_dict, ftype='yaml')
@@ -337,8 +332,6 @@ class Build(Common):
             set_re = set([regexps])
         if regexp not in ['None', None, '']:
             matches = re.compile(regexp, re.DOTALL).findall(text)
-            # TODO: This checks that they match, but not that they do so in the
-            # correct order yet:
             if matches:
                 if len(set_re) == len(set(matches)):
                     return {target_file: {'regexp': regexps}}
@@ -377,12 +370,7 @@ class Deploy(Build):
         oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
         oil_nodes_yml, self.yaml_dict = self.get_yaml(oil_node_location,
                                                       self.yaml_dict)
-        # TODO: I don't think we're actually using this anymore... remove?:
-        if not oil_nodes_yml:
-            return
-            # TODO: Should carry on regardless - file a special case bug and
-            # populate with mock data then continue
-        else:
+        if oil_nodes_yml:
             for key in oil_nodes_yml['oil_nodes'][0].keys():
                 [self.dictator(self.oil_nodes, key, node[key])
                  for node in oil_nodes_yml['oil_nodes']]
@@ -394,8 +382,6 @@ class Deploy(Build):
                                                     self.yaml_dict)
         if not juju_status:
             return
-            # TODO: Should carry on regardless - file a special case bug and
-            # populate with mock data then continue
 
         # Get info for bootstrap node (machine 0):
         machine_info = juju_status['machines']['0']
@@ -405,8 +391,6 @@ class Deploy(Build):
         state = machine_info['agent-state']
         self.bsnode['machine'] = machine
         self.bsnode['state'] = state
-        # TODO: This only works for deploy - could this be fished out from
-        # deploy for prepare and tempest too?
 
         row = 0
         for service in juju_status['services']:
@@ -429,17 +413,34 @@ class Deploy(Build):
                 ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
                     in this_unit else "N/A"
                 machine_no = this_unit['machine'].split('/')[0]
+                host_name = this_unit['public-address']
                 machine_info = juju_status['machines'][machine_no]
-                if 'hardware' in machine_info:
-                    hardware = [hw.split('hardware-')[1] for hw in
-                                machine_info['hardware'].split('tags=')
-                                [1].split(',') if 'hardware-' in hw]
-                    slave = ", ".join([str(slv) for slv in
-                                       machine_info['hardware'].split('tags=')
-                                       [1].split(',') if 'slave' in slv])
+                use_alternative_hw_lookup = False
+                if self.oil_nodes:
+                    try:
+                        node_idx = self.oil_nodes['host'].index(host_name)
+                        hardware = [hw.split('hardware-')[1] for hw in
+                                    self.oil_nodes['tags'][node_idx]
+                                    if 'hardware-' in hw]
+                        slave = ", ".join([str(slv) for slv in
+                                          self.oil_nodes['tags'][node_idx]
+                                          if 'slave-' in slv])
+                    except:
+                        use_alternative_hw_lookup = True
                 else:
-                    hardware = ['Unknown']
-                    slave = 'Unknown'
+                    use_alternative_hw_lookup = True
+                if use_alternative_hw_lookup:
+                    if 'hardware' in machine_info:
+                        hardware = [hw.split('hardware-')[1] for hw in
+                                    machine_info['hardware'].split('tags=')
+                                    [1].split(',') if 'hardware-' in hw]
+                        slave = ", ".join([str(slv) for slv in machine_info
+                                           ['hardware'].split('tags=')[1]
+                                           .split(',') if 'slave' in slv])
+                    else:
+                        hardware = ['Unknown']
+                        slave = 'Unknown'
+
                 if '/' in this_unit['machine']:
                     container_name = this_unit['machine']
                     container = machine_info['containers'][container_name]
@@ -471,6 +472,14 @@ class Deploy(Build):
                 self.dictator(self.oil_df, 'state', state)
                 self.dictator(self.oil_df, 'slaves', slave)
                 row += 1
+        else:  # Oh look, Python lets you put elses after for statements...
+            self.dictator(self.oil_df, 'node', 'N/A')
+            self.dictator(self.oil_df, 'service', 'N/A')
+            self.dictator(self.oil_df, 'vendor', 'N/A')
+            self.dictator(self.oil_df, 'charm', 'N/A')
+            self.dictator(self.oil_df, 'ports', 'N/A')
+            self.dictator(self.oil_df, 'state', 'N/A')
+            self.dictator(self.oil_df, 'slaves', 'N/A')
 
         matching_bugs, build_status, link = self.bug_hunt(pipeline_deploy_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
