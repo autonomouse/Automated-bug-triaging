@@ -109,6 +109,7 @@ class CrudeAnalysis(Common):
                                 deploy_yaml_dict, self.cli,
                                 self.test_catalog.bugs, pipeline_id)
                 deploy_yaml_dict = deploy.yaml_dict
+                self.message = deploy.message
 
                 if prepare_build:
                     prepare = Prepare(prepare_build, 'pipeline_prepare',
@@ -116,6 +117,7 @@ class CrudeAnalysis(Common):
                                       self.cli, self.test_catalog.bugs,
                                       pipeline_id, deploy)
                     prepare_yaml_dict = prepare.yaml_dict
+                    self.message = prepare.message
 
                 if tempest_build:
                     tempest = Tempest(tempest_build, 'test_tempest_smoke',

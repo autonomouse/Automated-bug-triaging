@@ -480,7 +480,6 @@ class Deploy(Build):
             self.dictator(self.oil_df, 'ports', 'N/A')
             self.dictator(self.oil_df, 'state', 'N/A')
             self.dictator(self.oil_df, 'slaves', 'N/A')
-
         matching_bugs, build_status, link = self.bug_hunt(pipeline_deploy_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
                                           self.yaml_dict)
