@@ -22,12 +22,10 @@ class CrudeAnalysis(Common):
 
     """
 
-    job_names = ['pipeline_deploy', 'pipeline_prepare', 'test_tempest_smoke']
-
     def __init__(self):
         self.cli = CLI()
         self.jenkins = Jenkins(self.cli)
-        self.test_catalog = TestCatalog(self.cli, self.job_names)
+        self.test_catalog = TestCatalog(self.cli)
         self.build_pl_ids_and_check()
         self.pipeline_processor()
         self.remove_dirs()
@@ -85,7 +83,7 @@ class CrudeAnalysis(Common):
         """
 
         if not self.cli.keep_data:
-            for folder in self.job_names:
+            for folder in self.cli.job_names:
                 kill_me = os.path.join(self.cli.reportdir, folder)
                 if os.path.isdir(kill_me):
                     shutil.rmtree(kill_me)
@@ -111,6 +109,7 @@ class CrudeAnalysis(Common):
                                 deploy_yaml_dict, self.cli,
                                 self.test_catalog.bugs, pipeline_id)
                 deploy_yaml_dict = deploy.yaml_dict
+                self.message = deploy.message
 
                 if prepare_build:
                     prepare = Prepare(prepare_build, 'pipeline_prepare',
@@ -118,6 +117,7 @@ class CrudeAnalysis(Common):
                                       self.cli, self.test_catalog.bugs,
                                       pipeline_id, deploy)
                     prepare_yaml_dict = prepare.yaml_dict
+                    self.message = prepare.message
 
                 if tempest_build:
                     tempest = Tempest(tempest_build, 'test_tempest_smoke',
@@ -137,8 +137,12 @@ class CrudeAnalysis(Common):
                 else:
                     print("Problem with " + pipeline_id + " - skipping "
                           "(deploy_build:  " + deploy_build + ")")
-                    problem_pipelines.append((pipeline_id, deploy_build))
+                    problem_pipelines.append((pipeline_id, deploy_build, e))
                 self.cli.LOG.exception(e)
+
+            pl_proc_msg = "CrudeAnalysis has finished processing pipline id: "
+            pl_proc_msg += "{0} and is returning a value of {1}."
+            self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
         # Export to yaml:
         rdir = self.cli.reportdir
@@ -157,7 +161,8 @@ class CrudeAnalysis(Common):
                 pp_file.write("\n" + str(datetime.datetime.now())
                               + "\n--------------------------\n")
                 for problem_pipeline in problem_pipelines:
-                    pp_file.write("%s (deploy build: %s)\n" % problem_pipeline)
+                    probs = "* %s (deploy build: %s):\n%s\n\n"
+                    pp_file.write(probs % problem_pipeline)
                 pp_file.write(existing_content)
                 errmsg = "There were some pipelines that could not be "
                 errmsg += "processed. This information was written to problem"
@@ -212,6 +217,9 @@ class CLI(Common):
         prsr.add_option('-d', '--dburi', action='store', dest='database',
                         default=None,
                         help='set URI to bug/regex db: /path/to/mock_db.yaml')
+        prsr.add_option('-i', '--jobnames', action='store', dest='jobnames',
+                        default=None, help=('jenkins job names (must be in ' +
+                                            'quotes, seperated by spaces)'))
         prsr.add_option('-J', '--jenkins', action='store', dest='jenkins_host',
                         default=None,
                         help='URL to Jenkins server')
@@ -256,6 +264,12 @@ class CLI(Common):
         else:
             self.use_deploy = cfg.get('DEFAULT', 'use_deploy').lower() in \
                 ['true', 'yes']
+
+        if opts.jobnames:
+            job_names = opts.jobnames
+        else:
+            job_names = cfg.get('DEFAULT', 'job_names')
+        self.job_names = job_names.split(' ')
 
         if opts.jenkins_host:
             self.jenkins_host = opts.jenkins_host
