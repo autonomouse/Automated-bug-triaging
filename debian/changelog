@@ -1,3 +1,17 @@
+doberman (0.0.3-0ubuntu1) precise; urgency=medium
+
+  * Now allows job names to be added to the conf file rather than being hard coded to enable use with pipeline_start.
+  * Fixed an edge-case bug where it hadn't provided a value for vendor.
+  * Fixed a bug where crude.message was returning -1 even if a bug was found if prepare or tempest weren't run.
+  * Added special case (no console.txt) .
+  * Added error message to problem_pipelines.
+  * Resolved a few problem pipelines, especially those listed in Greg's bug # 1377980. 
+  * Removed some done or irrelevant TODOs.
+  * Now continues after finding a special_case bug when possible.
+  * There is now an alternative may of getting the hardware vendors if the first fails.
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Tue, 14 Oct 2014 16:49:36 +0100
+
 doberman (0.0.2-0ubuntu3) precise; urgency=medium
 
   * Remove python-pandas dep
