@@ -203,9 +203,11 @@ class Build(Common):
         # test_tempest_smoke).
 
         parse_as_xml = self.cli.xmls
-        build_status = [build_info for build_info in self.jenkins.jenkins_api
-                        [self.jobname]._poll()['builds'] if build_info
-                        ['number'] == int(self.build_number)][0]['result']
+        build_details = [build_info for build_info in self.jenkins.jenkins_api
+                         [self.jobname]._poll()['builds'] if build_info
+                         ['number'] == int(self.build_number)][0]
+        build_status = (build_details['result'] if 'result' in build_details
+                        else 'Unknown')
         matching_bugs = {}
         link2 = ''
 
@@ -298,7 +300,8 @@ class Build(Common):
                         hit_dict = {}
                         bug_unmatched = False
                         break
-        if bug_unmatched and build_status == 'FAILURE':
+        if bug_unmatched and (build_status == 'FAILURE' or
+                              build_status == 'Unknown'):
             bug_id = 'unfiled-' + str(uuid.uuid4())
             matching_bugs[bug_id] = {'regexps':
                                      'NO REGEX - UNFILED/UNMATCHED BUG',
@@ -311,6 +314,7 @@ class Build(Common):
                                      'slaves': self.oil_df['slaves']}
             self.cli.LOG.info("Unfiled bug found!")
             hit_dict = {}
+            self.message = 1
             if info:
                 matching_bugs[bug_id]['additional info'] = info
         else:
