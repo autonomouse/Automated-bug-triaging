@@ -1,3 +1,11 @@
+doberman (0.0.3-0ubuntu2) UNRELEASED; urgency=medium
+
+  * Fixed a bug where it crashed on serverstack where no build_status was being returned from jenkins. 
+  * Fixed a bug...well, a typo really, where the bugs from the bug_database was being put into self.b rather than self.bugs. 
+  * Now it no longer returns a 0 for an unfiled bug.
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 16 Oct 2014 16:34:49 +0100
+
 doberman (0.0.3-0ubuntu1) precise; urgency=medium
 
   * Now allows job names to be added to the conf file rather than being hard coded to enable use with pipeline_start.
