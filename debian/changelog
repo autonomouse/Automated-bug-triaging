@@ -1,8 +1,16 @@
-doberman (0.0.3-0ubuntu2) UNRELEASED; urgency=medium
+doberman (0.0.4-0ubuntu2) trusty; urgency=medium
+
+  * Fixed bug lp:1382148 where crude was misinterpreting the bugs database due to there being an extra 'bugs' dictionary in there.
+  * Fixed bug lp:1382145 where crude fell over if 'public-address' was not provided
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Fri, 17 Oct 2014 11:13:55 +0100
+
+doberman (0.0.4-0ubuntu1) trusty; urgency=medium
 
   * Fixed a bug where it crashed on serverstack where no build_status was being returned from jenkins. 
   * Fixed a bug...well, a typo really, where the bugs from the bug_database was being put into self.b rather than self.bugs. 
   * Now it no longer returns a 0 for an unfiled bug.
+   
 
  -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 16 Oct 2014 16:34:49 +0100
 

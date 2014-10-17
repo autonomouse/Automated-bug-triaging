@@ -24,7 +24,7 @@ class TestCatalog(Common):
     def open_bug_database(self):
         if self.cli.database in [None, 'None', 'none', '']:
             self.cli.LOG.info("Connecting to test-catalog bug/regex database")
-            self.bugs = self.client.get_bug_info(force_refresh=True)
+            self.bugs = self.client.get_bug_info(force_refresh=True)['bugs']
         elif len(self.cli.database):
             self.cli.LOG.info("Connecting to database file: %s"
                               % (self.cli.database))
