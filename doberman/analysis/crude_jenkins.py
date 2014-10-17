@@ -417,7 +417,8 @@ class Deploy(Build):
                 ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
                     in this_unit else "N/A"
                 machine_no = this_unit['machine'].split('/')[0]
-                host_name = this_unit['public-address']
+                host_name = (this_unit['public-address'] if 'public-address' in
+                             this_unit else 'Unknown')
                 machine_info = juju_status['machines'][machine_no]
                 use_alternative_hw_lookup = False
                 if self.oil_nodes:
