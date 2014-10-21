@@ -218,12 +218,15 @@ def main():
 
         # end date is newer than we have builds, just use
         # the most recent build.
+        if end_idx is None and start_idx is None:
+            start_idx = builds.index(builds[-1])
+
         if end_idx is None:
             end_idx = builds.index(builds[-1])
 
         print("Start Job: %6s - %s" % (builds[start_idx]['number'],
               datetime.fromtimestamp(builds[start_idx]['timestamp'] / 1000)))
-        print("End   Job: %6s - %s" % (builds[end_idx]['number'],
+        print("End Job: %6s - %s" % (builds[end_idx]['number'],
               datetime.fromtimestamp(builds[end_idx]['timestamp'] / 1000)))
 
         # from idx to end
@@ -232,30 +235,62 @@ def main():
         print("Fetching %s build objects" % (nr_builds))
         build_objs = [b for b in builds if b['number'] in builds_to_check]
 
-        # TODO: handle the case where we don't have active, good or bad builds
-        active = filter(lambda x: is_running(x) is True, build_objs)
-        good = filter(lambda x: is_good(x), build_objs)
-        bad = filter(lambda x: is_good(x) is False and
-                     is_running(x) is False, build_objs)
-        nr_nab = nr_builds - len(active)
-        success_rate = float(len(good)) / float(nr_nab) * 100.0
+        if job == 'test_tempest_smoke':
+            tests = []
+            errors = []
+            failures = []
+            skip = []
+            print("Downloading tempest_xunit.xml for build numbers {0} - {1}"
+                      .format(start_idx, end_idx))
+            for b in [bld['number'] for bld in builds[start_idx:end_idx]]:
+                this_build = jenkins_job.get_build(b)
+                artifacts = [b for b in this_build.get_artifacts()
+                            if 'tempest_xunit.xml>' in str(b)]
+                artifact = artifacts[0] if artifacts else None
+                if artifact:
+                    with open(artifact.save_to_dir('/tmp')) as txxml:
+                        first_line = txxml.readline()
+                tests.append(int(first_line.split('tests="')[1].split('"')[0])
+                             if artifact else 0)
+                errors.append(int(first_line.split('errors="')[1].split('"')
+                              [0]) if artifact else 0)
+                failures.append(int(first_line.split('failures="')[1]
+                                .split('"')[0]) if artifact else 0)
+                skip.append(int(first_line.split('skip="')[1].split('"')[0]) if
+                            artifact else 0)
+
+            n_total = (sum(tests) - sum(skip))
+            n_good = n_total - (sum(errors) + sum(failures))
+            success_rate = (round((float(n_good)  / n_total) * 100, 2)
+                            if n_total else 0)
+            print("  Success Rate: %s good / %s (%s total - %s skip) = %2.2f%%"
+                  % (n_good, n_total, sum(tests), sum(skip), success_rate))
+            print('')
+        else:
+            # TODO: handle case where we don't have active, good or bad builds
+            active = filter(lambda x: is_running(x) is True, build_objs)
+            good = filter(lambda x: is_good(x), build_objs)
+            bad = filter(lambda x: is_good(x) is False and
+                         is_running(x) is False, build_objs)
+            nr_nab = nr_builds - len(active)
+            success_rate = (float(len(good))/float(nr_nab) * 100.0
+                            if nr_nab else 0)
+            # pipeline_deploy 11 active, 16/31 = 58.68% passing
+            # Total: 31 builds, 12 active, 2 failed, 17 pass.
+            # Success rate: 17 / (31 - 12) = 89%
+            print("  Totals: %s jobs, %s active, %s pass, %s fail  "
+                  % (nr_builds, len(active), len(good), len(bad),))
+            print("Success Rate: %s good / %s (%s total - %s active) = %2.2f%%"
+                  % (len(good), nr_nab, nr_builds, len(active), success_rate))
+            print('')
         totals[job] = {'total_builds': nr_nab, 'passing': len(good)}
         triage[job] = bad
-
-        # pipeline_deploy 11 active, 16/31 = 58.68% passing
-        # Total: 31 builds, 12 active, 2 failed, 17 pass.
-        # Success rate: 17 / (31 - 12) = 89%
-        print("  Totals: %s jobs, %s active, %s pass, %s fail"
-              % (nr_builds, len(active), len(good), len(bad),))
-        print("  Success Rate: %s good / %s (%s total - %s active) = %2.2f%%"
-              % (len(good), nr_nab, nr_builds, len(active), success_rate))
-        print('')
 
     # overall success
     if opts.summary:
         tt = totals['test_tempest_smoke']['total_builds']
         tp = totals['pipeline_deploy']['total_builds']
-        overall = float(tt) / float(tp) * 100.0
+        overall = (float(tt) / float(tp) * 100.0) if tp else 0
         print('')
         print("Overall Success Rate for [%s to %s] " % (start, end))
         print("  %s tempest builds out of %s total jobs = %2.2f%%"
