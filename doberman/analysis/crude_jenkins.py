@@ -237,7 +237,7 @@ class Build(Common):
                             info['error'] = target_file + " not present"
                             break
                         if target_file == 'console.txt':
-                            link2 = '/job/%s/%s/console' % (self.jobname,
+                            link2 = '/job/{0}/{1}/console'.format(self.jobname,
                                                             self.build_number)
                         else:
                             link2 = ('/job/%s/%s/artifact/artifacts/%s'
@@ -293,9 +293,9 @@ class Build(Common):
                              'states': self.oil_df['state'],
                              'slaves': self.oil_df['slaves']}
                         if info:
-                            matching_bugs[bug_id]['additional info'] = \
-                                info
-                        self.cli.LOG.info("Bug found!")
+                            matching_bugs[bug_id]['additional info'] = info
+                        self.cli.LOG.info("Bug found! ({0}, bug #{1})"
+                                          .format(self.jobname, bug_id))
                         self.cli.LOG.info(hit_dict)
                         hit_dict = {}
                         bug_unmatched = False

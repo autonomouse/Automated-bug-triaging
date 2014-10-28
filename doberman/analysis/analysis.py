@@ -90,12 +90,15 @@ class CrudeAnalysis(Common):
 
     def pipeline_processor(self):
         self.message = -1
-        deploy_yaml_dict = {}
-        prepare_yaml_dict = {}
-        tempest_yaml_dict = {}
+        deploy_yamldict = {}
+        prepare_yamldict = {}
+        tempest_yamldict = {}
         problem_pipelines = []
 
         for pipeline_id in self.pipeline_ids:
+            deploy_dict = {}
+            prepare_dict = {}
+            tempest_dict = {}
             self.pipeline = pipeline_id
             try:
                 # Get pipeline data then process each:
@@ -106,34 +109,34 @@ class CrudeAnalysis(Common):
 
                 # Pull console and artifacts from jenkins:
                 deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
-                                deploy_yaml_dict, self.cli,
+                                deploy_dict, self.cli,
                                 self.test_catalog.bugs, pipeline_id)
-                deploy_yaml_dict = deploy.yaml_dict
+                deploy_dict = deploy.yaml_dict
                 self.message = deploy.message
 
                 if prepare_build:
                     prepare = Prepare(prepare_build, 'pipeline_prepare',
-                                      self.jenkins, prepare_yaml_dict,
+                                      self.jenkins, prepare_dict,
                                       self.cli, self.test_catalog.bugs,
                                       pipeline_id, deploy)
-                    prepare_yaml_dict = prepare.yaml_dict
+                    prepare_dict = prepare.yaml_dict
                     self.message = prepare.message
 
                 if tempest_build:
                     tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                      self.jenkins, tempest_yaml_dict,
+                                      self.jenkins, tempest_dict,
                                       self.cli, self.test_catalog.bugs,
                                       pipeline_id, prepare)
-                    tempest_yaml_dict = tempest.yaml_dict
+                    tempest_dict = tempest.yaml_dict
                     self.message = tempest.message
                     # TODO: self.message only reports back on last bug found
             except Exception, e:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
                     msg += " (may be cookie related?)"
-                    deploy_yaml_dict = \
+                    deploy_dict = \
                         self.non_db_bug(special_cases.bug_dict['pipeline_id'],
-                                        deploy_yaml_dict, msg)
+                                        deploy_dict, msg)
                 else:
                     print("Problem with " + pipeline_id + " - skipping "
                           "(deploy_build:  " + deploy_build + ")")
@@ -144,11 +147,16 @@ class CrudeAnalysis(Common):
             pl_proc_msg += "{0} and is returning a value of {1}."
             self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
+            # Merge dictionaries (necessary for multiple pipelines):
+            deploy_yamldict = self.join_dicts(deploy_yamldict, deploy_dict)
+            prepare_yamldict = self.join_dicts(prepare_yamldict, prepare_dict)
+            tempest_yamldict = self.join_dicts(tempest_yamldict, tempest_dict)
+
         # Export to yaml:
         rdir = self.cli.reportdir
-        self.export_to_yaml(deploy_yaml_dict, 'pipeline_deploy', rdir)
-        self.export_to_yaml(prepare_yaml_dict, 'pipeline_prepare', rdir)
-        self.export_to_yaml(tempest_yaml_dict, 'test_tempest_smoke', rdir)
+        self.export_to_yaml(deploy_yamldict, 'pipeline_deploy', rdir)
+        self.export_to_yaml(prepare_yamldict, 'pipeline_prepare', rdir)
+        self.export_to_yaml(tempest_yamldict, 'test_tempest_smoke', rdir)
 
         # Write to file any pipelines (+ deploy build) that failed processing:
         if not problem_pipelines == []:
