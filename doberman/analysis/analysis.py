@@ -324,14 +324,7 @@ class CLI(Common):
             self.keep_data = \
                 cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
 
-        # cli wins, then config, then default of certificate verification
-        verify_cfg = cfg.get('DEFAULT', 'verify')
-        if opts.unverified:
-            self.verify = False
-        elif verify_cfg not in ['None', 'none', None]:
-            self.verify = verify_cfg
-        else:
-            self.verify = True
+        self.verify = False if opts.unverified else True
 
         if opts.xmls:
             xmls = opts.xmls
