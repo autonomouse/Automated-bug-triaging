@@ -15,6 +15,7 @@ class TestCatalog(Common):
     def __init__(self, cli):
         self.cli = cli
         self.cookie = self.cli.tc_auth
+        self.verify = self.cli.verify
         self.tc_client = TCClient
         self._tc_client = []
         self.bugs = None
@@ -50,7 +51,7 @@ class TestCatalog(Common):
         self.cli.LOG.info("Fetching test-catalog using endpoint=%s"
                           % self.cli.tc_host)
         self.client = self.tc_client(endpoint=self.cli.tc_host,
-                                     cookies=self.cookie)
+                                     cookies=self.cookie, verify=self.verify)
 
     def get_pipelines(self, pipeline):
         """ Using test-catalog, return the build numbers for the jobs that are

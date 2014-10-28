@@ -240,6 +240,9 @@ class CLI(Common):
         prsr.add_option('-T', '--testcatalog', action='store', dest='tc_host',
                         default=None,
                         help='URL to test-catalog API server')
+        prsr.add_option('-u', '--unverified', action='store_true',
+                        dest='unverified', default=False,
+                        help='set to allow unverified certificate requests')
         prsr.add_option('-x', '--xmls', action='store', dest='xmls',
                         default=None,
                         help='XUnit files to parse as XML, not as plain text')
@@ -312,6 +315,15 @@ class CLI(Common):
         else:
             self.keep_data = \
                 cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
+
+        # cli wins, then config, then default of certificate verification
+        verify_cfg = cfg.get('DEFAULT', 'verify')
+        if opts.unverified:
+            self.verify = False
+        elif verify_cfg not in ['None', 'none', None]:
+            self.verify = verify_cfg
+        else:
+            self.verify = True
 
         if opts.xmls:
             xmls = opts.xmls
