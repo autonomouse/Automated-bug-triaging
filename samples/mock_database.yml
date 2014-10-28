@@ -400,3 +400,33 @@ bugs:
         "console.txt":
             regexp: 
             - "cinder... machine... agent-state. error details. hook failed...config-changed"
+
+
+  "1386663":
+    category: None
+    description: "Prodstack: image-service-relation-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "error details. hook failed...image-service-relation-changed"
+
+
+  "1386672":
+    category: None
+    description: "Prodstack: identity service relation joined"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "hook failed...identity-service-relation-joined"
+
+
+  "1386679":
+    category: None
+    description: "Prodstack: storage backend relation joined"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "unit. cinder-vnx... machine.  agent-state. error details. hook failed...storage-backend-relation-joined"
