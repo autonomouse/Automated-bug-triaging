@@ -1,3 +1,21 @@
+doberman (0.0.5-0ubuntu1) trusty; urgency=medium
+
+  * Crude can now allow unverified certificate requests with the '-u' flag
+  * Fixed a bug in Crude where output yamls were overwriting each other when running multiple pipelines (would not have affected production)
+  * Added some bugs to mock database
+  * oil_stats now better represents the true tempest numbers and provides the option to keep the downloaded tempest data ('-k' flag). Can also specify download directory with '-o'.
+  * Fix for crude error seen on pipeline_start job 155 (no bug reported yet). 
+  * Added timestamps for when jenkins and crude ran in output yaml. 
+  * Added doberman version to crude logging (console). 
+  * Crude records pipelines processed if append the '-p' flag. 
+  * Added verbose and verify parameters to conf file, for allowing unverified certificate requests and putting full console text in additional info in output yaml, respectively (now need oil-ci-config charm to be updated). 
+  * Job name and build number added to 'bug found' message in logging (console). 
+  * Added a bug to mock db file.
+  * Fix for error seen on pipeline_start job 169 and similar jobs where uses a [] rather than a .get()
+  * Fixed problem with joining dictionaries, put in a failsafe in case something goes wrong with updating the ci-oil-charm after this upgrade, and added another [] -> .get() fix for 'agent-state'. 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 29 Oct 2014 16:15:24 +0000
+
 doberman (0.0.4-0ubuntu2) trusty; urgency=medium
 
   * Fixed bug lp:1382148 where crude was misinterpreting the bugs database due to there being an extra 'bugs' dictionary in there.
