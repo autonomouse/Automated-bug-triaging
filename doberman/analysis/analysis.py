@@ -149,9 +149,17 @@ class CrudeAnalysis(Common):
             self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
             # Merge dictionaries (necessary for multiple pipelines):
-            deploy_yamldict = self.join_dicts(deploy_yamldict, deploy_dict)
-            prepare_yamldict = self.join_dicts(prepare_yamldict, prepare_dict)
-            tempest_yamldict = self.join_dicts(tempest_yamldict, tempest_dict)
+            if not deploy_yamldict.get('pipeline'):
+                deploy_yamldict['pipeline'] = {}
+            deploy_yamldict['pipeline'] = self.join_dicts(deploy_yamldict['pipeline'], deploy_dict['pipeline'])
+            
+            if not prepare_yamldict.get('pipeline'):
+                prepare_yamldict['pipeline'] = {}
+            prepare_yamldict['pipeline'] = self.join_dicts(prepare_yamldict['pipeline'], prepare_dict['pipeline'])
+            
+            if not tempest_yamldict.get('pipeline'):
+                tempest_yamldict['pipeline'] = {}
+            tempest_yamldict['pipeline'] = self.join_dicts(tempest_yamldict['pipeline'], tempest_dict['pipeline'])
 
         # Export to yaml:
         rdir = self.cli.reportdir
@@ -227,7 +235,7 @@ class CLI(Common):
 
     def __init__(self):
         self.LOG = utils.get_logger('doberman.analysis')
-        self.LOG.info("Version {0}".format(__version__))
+        self.LOG.info("Doberman version {0}".format(__version__))
         self.cli()
 
     def cli(self):
