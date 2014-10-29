@@ -15,6 +15,7 @@ from jenkinsapi.custom_exceptions import *
 from crude_common import Common
 from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
 from crude_test_catalog import TestCatalog
+from doberman.__init__ import __version__
 
 
 class CrudeAnalysis(Common):
@@ -148,9 +149,15 @@ class CrudeAnalysis(Common):
             self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
             # Merge dictionaries (necessary for multiple pipelines):
-            deploy_yamldict = self.join_dicts(deploy_yamldict, deploy_dict)
-            prepare_yamldict = self.join_dicts(prepare_yamldict, prepare_dict)
-            tempest_yamldict = self.join_dicts(tempest_yamldict, tempest_dict)
+            deploy_yamldict['pipeline'] = \
+                self.join_dicts(deploy_yamldict.get('pipeline', {}),
+                                deploy_dict.get('pipeline', {}))
+            prepare_yamldict['pipeline'] = \
+                self.join_dicts(prepare_yamldict.get('pipeline', {}),
+                                prepare_dict.get('pipeline', {}))
+            tempest_yamldict['pipeline'] = \
+                self.join_dicts(tempest_yamldict.get('pipeline', {}),
+                                tempest_dict.get('pipeline', {}))
 
         # Export to yaml:
         rdir = self.cli.reportdir
@@ -176,6 +183,21 @@ class CrudeAnalysis(Common):
                 errmsg += "processed. This information was written to problem"
                 errmsg += "_pipelines.yaml in " + self.cli.reportdir + "\n\n"
                 self.cli.LOG.error(errmsg)
+
+        # Record which pipelines were processed in a yaml:
+        if self.cli.logpipelines:
+            file_path = os.path.join(self.cli.reportdir,
+                                     'pipelines_processed.yaml')
+            open(file_path, 'a').close()  # Create file if doesn't exist yet
+            with open(file_path, 'r+') as pp_file:
+                existing_content = pp_file.read()
+                pp_file.seek(0, 0)  # Put at beginning of file
+                pp_file.write("\n" + str(datetime.datetime.now())
+                              + "\n--------------------------\n")
+                pp_file.write(" ".join(self.pipeline_ids))
+                pp_file.write("\n" + existing_content)
+                info_msg = "All processed pipelines recorded to {0}"
+                self.cli.LOG.info(info_msg.format(file_path))
 
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """
@@ -211,6 +233,7 @@ class CLI(Common):
 
     def __init__(self):
         self.LOG = utils.get_logger('doberman.analysis')
+        self.LOG.info("Doberman version {0}".format(__version__))
         self.cli()
 
     def cli(self):
@@ -242,6 +265,9 @@ class CLI(Common):
         prsr.add_option('-o', '--output', action='store', dest='report_dir',
                         default=None,
                         help='specific the report output directory')
+        prsr.add_option('-p', '--logpipelines', action='store_true',
+                        dest='logpipelines', default=False,
+                        help='Record which pipelines were processed in a yaml')
         prsr.add_option('-r', '--remote', action='store_true',
                         dest='run_remote', default=False,
                         help='set if running analysis remotely')
@@ -287,10 +313,14 @@ class CLI(Common):
         else:
             self.jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
+        # cli wins, then config, otherwise default to True
         if opts.verbose:
             self.reduced_output_text = False
         else:
-            self.reduced_output_text = True
+            try:
+                self.reduced_output_text = cfg.get('DEFAULT', 'verbose')
+            except:
+                self.reduced_output_text = True
 
         # cli wins, then config, then hostname lookup
         netloc_cfg = cfg.get('DEFAULT', 'netloc')
@@ -324,7 +354,16 @@ class CLI(Common):
             self.keep_data = \
                 cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
 
-        self.verify = False if opts.unverified else True
+        self.logpipelines = True if opts.logpipelines else False
+
+        # cli wins, then config, otherwise default to True
+        if opts.unverified:
+            self.verify = False
+        else:
+            try:
+                self.verify = cfg.get('DEFAULT', 'verify')
+            except:
+                self.verify = True
 
         if opts.xmls:
             xmls = opts.xmls

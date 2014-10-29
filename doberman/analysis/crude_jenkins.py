@@ -160,6 +160,12 @@ class Build(Common):
         except:
             self.bsnode['jenkins'] = 'Unknown'
 
+        try:
+            self.bsnode['timestamp'] = \
+                cons_txt.split('timestamp')[1].split('|')[1].lstrip().rstrip()
+        except:
+            self.bsnode['timestamp'] = 'Unknown'
+
     def get_yaml(self, file_location, yaml_dict):
         return self.get_from_file(file_location, yaml_dict, ftype='yaml')
 
@@ -237,8 +243,8 @@ class Build(Common):
                             info['error'] = target_file + " not present"
                             break
                         if target_file == 'console.txt':
-                            link2 = '/job/{0}/{1}/console'.format(self.jobname,
-                                                            self.build_number)
+                            link2 = ('/job/{0}/{1}/console'
+                                     .format(self.jobname, self.build_number))
                         else:
                             link2 = ('/job/%s/%s/artifact/artifacts/%s'
                                      % (self.jobname, self.build_number,
@@ -312,7 +318,7 @@ class Build(Common):
                                      'ports': self.oil_df['ports'],
                                      'states': self.oil_df['state'],
                                      'slaves': self.oil_df['slaves']}
-            self.cli.LOG.info("Unfiled bug found!")
+            self.cli.LOG.info("Unfiled bug found! ({0})".format(self.jobname))
             hit_dict = {}
             self.message = 1
             if info:
@@ -389,10 +395,10 @@ class Deploy(Build):
 
         # Get info for bootstrap node (machine 0):
         machine_info = juju_status['machines']['0']
-        m_name = machine_info['dns-name']
-        m_os = machine_info['series']
+        m_name = machine_info.get('dns-name', 'Unknown')
+        m_os = machine_info.get('series', 'Unknown')
         machine = m_os + " running " + m_name
-        state = machine_info['agent-state']
+        state = machine_info.get('agent-state', 'Unknown')
         self.bsnode['machine'] = machine
         self.bsnode['state'] = state
 
@@ -460,15 +466,16 @@ class Deploy(Build):
                 else:
                     container = []
 
-                m_name = machine_info['dns-name']
-                state = machine_info['agent-state'] + ". "
+                m_name = machine_info.get('dns-name', "")
+                state = machine_info.get('agent-state', '')
                 state += container['agent-state-info'] + ". " \
                     if 'agent-state-info' in container else ''
                 state += container['instance-id'] if 'instance-id' in \
                     container else ''
                 m_ip = " (" + container['dns-name'] + ")" \
                        if 'dns-name' in container else ""
-                machine = m_name + m_ip
+                machine_id = m_name + m_ip
+                machine = machine_id if machine_id else "Unknown"
                 self.dictator(self.oil_df, 'node', machine)
                 self.dictator(self.oil_df, 'service', unit)
                 self.dictator(self.oil_df, 'vendor', ', '.join(hardware))
