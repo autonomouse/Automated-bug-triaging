@@ -149,17 +149,15 @@ class CrudeAnalysis(Common):
             self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
             # Merge dictionaries (necessary for multiple pipelines):
-            if not deploy_yamldict.get('pipeline'):
-                deploy_yamldict['pipeline'] = {}
-            deploy_yamldict['pipeline'] = self.join_dicts(deploy_yamldict['pipeline'], deploy_dict['pipeline'])
-            
-            if not prepare_yamldict.get('pipeline'):
-                prepare_yamldict['pipeline'] = {}
-            prepare_yamldict['pipeline'] = self.join_dicts(prepare_yamldict['pipeline'], prepare_dict['pipeline'])
-            
-            if not tempest_yamldict.get('pipeline'):
-                tempest_yamldict['pipeline'] = {}
-            tempest_yamldict['pipeline'] = self.join_dicts(tempest_yamldict['pipeline'], tempest_dict['pipeline'])
+            deploy_yamldict['pipeline'] = \
+                self.join_dicts(deploy_yamldict.get('pipeline', {}),
+                                deploy_dict.get('pipeline', {}))
+            prepare_yamldict['pipeline'] = \
+                self.join_dicts(prepare_yamldict.get('pipeline', {}),
+                                prepare_dict.get('pipeline', {}))
+            tempest_yamldict['pipeline'] = \
+                self.join_dicts(tempest_yamldict.get('pipeline', {}),
+                                tempest_dict.get('pipeline', {}))
 
         # Export to yaml:
         rdir = self.cli.reportdir
@@ -315,14 +313,14 @@ class CLI(Common):
         else:
             self.jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
-        # cli wins, then config, then default to True
-        verbose_cfg = cfg.get('DEFAULT', 'verbose')
+        # cli wins, then config, otherwise default to True
         if opts.verbose:
             self.reduced_output_text = False
-        elif verbose_cfg not in ['None', 'none', None]:
-            self.reduced_output_text = verbose_cfg
         else:
-            self.reduced_output_text = True
+            try:
+                self.reduced_output_text = cfg.get('DEFAULT', 'verbose')
+            except:
+                self.reduced_output_text = True
 
         # cli wins, then config, then hostname lookup
         netloc_cfg = cfg.get('DEFAULT', 'netloc')
@@ -358,14 +356,14 @@ class CLI(Common):
 
         self.logpipelines = True if opts.logpipelines else False
 
-        # cli wins, then config, then default to True
-        verify_cfg = cfg.get('DEFAULT', 'verify')
+        # cli wins, then config, otherwise default to True
         if opts.unverified:
             self.verify = False
-        elif verify_cfg not in ['None', 'none', None]:
-            self.verify = verify_cfg
         else:
-            self.verify = True
+            try:
+                self.verify = cfg.get('DEFAULT', 'verify')
+            except:
+                self.verify = True
 
         if opts.xmls:
             xmls = opts.xmls
