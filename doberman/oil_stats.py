@@ -8,13 +8,13 @@ import socket
 import urlparse
 import bisect
 import time
-
+import shutil
+import parsedatetime as pdt
+from dateutil.parser import parse
 from jenkinsapi.jenkins import Jenkins
 from doberman.common import pycookiecheat, utils
-
 from datetime import datetime
-from dateutil.parser import parse
-import parsedatetime as pdt
+from lxml import etree
 
 LOG = utils.get_logger('doberman.oil_stats')
 _config = utils.get_config()
@@ -133,9 +133,14 @@ def main():
                       default='pipeline_deploy,pipeline_prepare' +
                               ',test_tempest_smoke',
                       help='Comma delimited list of Jenkins jobs to check.')
+    parser.add_option('-k', '--keep', action='store_true', dest='keep_data',
+                      default=False, help='Keep downloaded data')
     parser.add_option('-n', '--netloc', action='store', dest='netloc',
                       default=None,
                       help='Specify an IP to rewrite requests')
+    parser.add_option('-o', '--outputdir', action='store', dest='download_dir',
+                      default='./downloaded_data',
+                      help='Folder into which to download data')
     parser.add_option('-r', '--remote', action='store_true', dest='run_remote',
                       default=False,
                       help='set if running analysis remotely')
@@ -192,12 +197,15 @@ def main():
             print("Couldn't find it")
             pass
 
-    # conver to datetime objs
+    # convert to datetime objs
     start = date_parse(opts.start)
     if opts.end == "now":
         end = datetime.utcnow()
     else:
         end = date_parse(opts.end)
+
+    keep_data = opts.keep_data
+    download_dir = os.path.abspath(opts.download_dir)
 
     # connect to Jenkins
     print('Connecting to %s' % (opts.host))
@@ -218,12 +226,15 @@ def main():
 
         # end date is newer than we have builds, just use
         # the most recent build.
+        if end_idx is None and start_idx is None:
+            start_idx = builds.index(builds[-1])
+
         if end_idx is None:
             end_idx = builds.index(builds[-1])
 
         print("Start Job: %6s - %s" % (builds[start_idx]['number'],
               datetime.fromtimestamp(builds[start_idx]['timestamp'] / 1000)))
-        print("End   Job: %6s - %s" % (builds[end_idx]['number'],
+        print("End Job: %6s - %s" % (builds[end_idx]['number'],
               datetime.fromtimestamp(builds[end_idx]['timestamp'] / 1000)))
 
         # from idx to end
@@ -232,30 +243,78 @@ def main():
         print("Fetching %s build objects" % (nr_builds))
         build_objs = [b for b in builds if b['number'] in builds_to_check]
 
-        # TODO: handle the case where we don't have active, good or bad builds
-        active = filter(lambda x: is_running(x) is True, build_objs)
-        good = filter(lambda x: is_good(x), build_objs)
-        bad = filter(lambda x: is_good(x) is False and
-                     is_running(x) is False, build_objs)
-        nr_nab = nr_builds - len(active)
-        success_rate = float(len(good)) / float(nr_nab) * 100.0
+        if job == 'test_tempest_smoke':
+            tests = []
+            errors = []
+            failures = []
+            skip = []
+            print("Downloading tempest_xunit.xml for builds {0} - {1} to '{2}'"
+                  .format(start_idx, end_idx, download_dir))
+            for build in [bld['number'] for bld in builds[start_idx:end_idx]]:
+                this_build = jenkins_job.get_build(build)
+                artifacts = [b for b in this_build.get_artifacts()
+                             if 'tempest_xunit.xml>' in str(b)]
+                artifact = artifacts[0] if artifacts else None
+                if artifact:
+                    artifact_name = str(artifact).split('/')[-1].strip('>')
+                    try:
+                        os.makedirs(download_dir)
+                        print("Created download directory at {0}"
+                              .format(download_dir))
+                    except OSError:
+                        if not os.path.isdir(download_dir):
+                            raise
+                    xml_file = os.path.join(download_dir, artifact_name)
+                    with open(artifact.save_to_dir(download_dir)):
+                        parser = etree.XMLParser(huge_tree=True)
+                        try:
+                            doc = etree.parse(xml_file, parser).getroot()
+                            tests.append(int(doc.attrib.get('tests', 0)))
+                            errors.append(int(doc.attrib.get('errors', 0)))
+                            failures.append(int(doc.attrib.get('failures', 0)))
+                            skip.append(int(doc.attrib.get('skip', 0)))
+                        except Exception, e:
+                            print("'{0}' for build {1}".format(e, build))
+                            print("Consider a re-run to avoid incorrect stats")
+                            continue
+                        artifact_rename = ("{0}_{1}.{2}".format(
+                                           artifact_name.split('.')[0],
+                                           str(build),
+                                           artifact_name.split('.')[-1]))
+                        os.rename(xml_file, xml_file.replace(artifact_name,
+                                                             artifact_rename))
+            n_total = (sum(tests) - sum(skip))
+            n_good = n_total - (sum(errors) + sum(failures))
+            success_rate = (round((float(n_good) / n_total) * 100, 2)
+                            if n_total else 0)
+            print("  Success Rate: %s good / %s (%s total - %s skip) = %2.2f%%"
+                  % (n_good, n_total, sum(tests), sum(skip), success_rate))
+            print('')
+        else:
+            # TODO: handle case where we don't have active, good or bad builds
+            active = filter(lambda x: is_running(x) is True, build_objs)
+            good = filter(lambda x: is_good(x), build_objs)
+            bad = filter(lambda x: is_good(x) is False and
+                         is_running(x) is False, build_objs)
+            nr_nab = nr_builds - len(active)
+            success_rate = (float(len(good)) / float(nr_nab) * 100.0
+                            if nr_nab else 0)
+            # pipeline_deploy 11 active, 16/31 = 58.68% passing
+            # Total: 31 builds, 12 active, 2 failed, 17 pass.
+            # Success rate: 17 / (31 - 12) = 89%
+            print("  Totals: %s jobs, %s active, %s pass, %s fail  "
+                  % (nr_builds, len(active), len(good), len(bad),))
+            print("Success Rate: %s good / %s (%s total - %s active) = %2.2f%%"
+                  % (len(good), nr_nab, nr_builds, len(active), success_rate))
+            print('')
         totals[job] = {'total_builds': nr_nab, 'passing': len(good)}
         triage[job] = bad
-
-        # pipeline_deploy 11 active, 16/31 = 58.68% passing
-        # Total: 31 builds, 12 active, 2 failed, 17 pass.
-        # Success rate: 17 / (31 - 12) = 89%
-        print("  Totals: %s jobs, %s active, %s pass, %s fail"
-              % (nr_builds, len(active), len(good), len(bad),))
-        print("  Success Rate: %s good / %s (%s total - %s active) = %2.2f%%"
-              % (len(good), nr_nab, nr_builds, len(active), success_rate))
-        print('')
 
     # overall success
     if opts.summary:
         tt = totals['test_tempest_smoke']['total_builds']
         tp = totals['pipeline_deploy']['total_builds']
-        overall = float(tt) / float(tp) * 100.0
+        overall = (float(tt) / float(tp) * 100.0) if tp else 0
         print('')
         print("Overall Success Rate for [%s to %s] " % (start, end))
         print("  %s tempest builds out of %s total jobs = %2.2f%%"
@@ -266,7 +325,10 @@ def main():
         print('Running triage_report')
         triage_report(triage, start, end, j)
 
+    if os.path.isdir(download_dir) and not keep_data:
+        shutil.rmtree(download_dir)
+        print("Removed '{0}'".format(download_dir))
+
 
 if __name__ == '__main__':
-
     sys.exit(main())
