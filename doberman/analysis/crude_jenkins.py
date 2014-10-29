@@ -395,10 +395,10 @@ class Deploy(Build):
 
         # Get info for bootstrap node (machine 0):
         machine_info = juju_status['machines']['0']
-        m_name = machine_info['dns-name']
-        m_os = machine_info['series']
+        m_name = machine_info.get('dns-name', 'Unknown')
+        m_os = machine_info.get('series', 'Unknown')
         machine = m_os + " running " + m_name
-        state = machine_info['agent-state']
+        state = machine_info.get('agent-state', 'Unknown')
         self.bsnode['machine'] = machine
         self.bsnode['state'] = state
 
