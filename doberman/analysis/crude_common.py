@@ -1,4 +1,4 @@
-
+import datetime
 from jenkinsapi.custom_exceptions import *
 
 
@@ -27,6 +27,10 @@ class Common(object):
                     self.cli.jenkins_host + link
             pipeline_dict[self.pipeline]['link to test-catalog'] = \
                 self.cli.tc_host.replace('api', "pipeline/" + self.pipeline)
+            pipeline_dict[self.pipeline]['Crude-Analysis timestamp'] = \
+                datetime.datetime.utcnow().strftime('%Y-%B-%d %H:%M:%S.%f')
+            pipeline_dict[self.pipeline]['Jenkins timestamp'] = \
+                self.bsnode['timestamp']
 
         # Merge with existing dict:
         if existing_dict:

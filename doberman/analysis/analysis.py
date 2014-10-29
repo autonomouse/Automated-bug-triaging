@@ -15,6 +15,7 @@ from jenkinsapi.custom_exceptions import *
 from crude_common import Common
 from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
 from crude_test_catalog import TestCatalog
+from doberman.__init__ import __version__
 
 
 class CrudeAnalysis(Common):
@@ -177,6 +178,21 @@ class CrudeAnalysis(Common):
                 errmsg += "_pipelines.yaml in " + self.cli.reportdir + "\n\n"
                 self.cli.LOG.error(errmsg)
 
+        # Record which pipelines were processed in a yaml:
+        if self.cli.logpipelines:
+            file_path = os.path.join(self.cli.reportdir,
+                                     'pipelines_processed.yaml')
+            open(file_path, 'a').close()  # Create file if doesn't exist yet
+            with open(file_path, 'r+') as pp_file:
+                existing_content = pp_file.read()
+                pp_file.seek(0, 0)  # Put at beginning of file
+                pp_file.write("\n" + str(datetime.datetime.now())
+                              + "\n--------------------------\n")
+                pp_file.write(" ".join(self.pipeline_ids))
+                pp_file.write("\n" + existing_content)
+                info_msg = "All processed pipelines recorded to {0}"
+                self.cli.LOG.info(info_msg.format(file_path))
+
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """
         filename = 'triage_' + job + '.yml'
@@ -211,6 +227,7 @@ class CLI(Common):
 
     def __init__(self):
         self.LOG = utils.get_logger('doberman.analysis')
+        self.LOG.info("Version {0}".format(__version__))
         self.cli()
 
     def cli(self):
@@ -242,6 +259,9 @@ class CLI(Common):
         prsr.add_option('-o', '--output', action='store', dest='report_dir',
                         default=None,
                         help='specific the report output directory')
+        prsr.add_option('-p', '--logpipelines', action='store_true',
+                        dest='logpipelines', default=False,
+                        help='Record which pipelines were processed in a yaml')
         prsr.add_option('-r', '--remote', action='store_true',
                         dest='run_remote', default=False,
                         help='set if running analysis remotely')
@@ -287,8 +307,12 @@ class CLI(Common):
         else:
             self.jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
+        # cli wins, then config, then default to True
+        verbose_cfg = cfg.get('DEFAULT', 'verbose')
         if opts.verbose:
             self.reduced_output_text = False
+        elif verbose_cfg not in ['None', 'none', None]:
+            self.reduced_output_text = verbose_cfg
         else:
             self.reduced_output_text = True
 
@@ -324,7 +348,16 @@ class CLI(Common):
             self.keep_data = \
                 cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
 
-        self.verify = False if opts.unverified else True
+        self.logpipelines = True if opts.logpipelines else False
+
+        # cli wins, then config, then default to True
+        verify_cfg = cfg.get('DEFAULT', 'verify')
+        if opts.unverified:
+            self.verify = False
+        elif verify_cfg not in ['None', 'none', None]:
+            self.verify = verify_cfg
+        else:
+            self.verify = True
 
         if opts.xmls:
             xmls = opts.xmls
