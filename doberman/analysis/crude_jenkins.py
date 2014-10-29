@@ -466,7 +466,7 @@ class Deploy(Build):
                 else:
                     container = []
 
-                m_name = machine_info.get('dns-name', "")                
+                m_name = machine_info.get('dns-name', "")
                 state = machine_info.get('agent-state', '')
                 state += container['agent-state-info'] + ". " \
                     if 'agent-state-info' in container else ''
