@@ -29,8 +29,11 @@ class Common(object):
                 self.cli.tc_host.replace('api', "pipeline/" + self.pipeline)
             pipeline_dict[self.pipeline]['Crude-Analysis timestamp'] = \
                 datetime.datetime.utcnow().strftime('%Y-%B-%d %H:%M:%S.%f')
-            pipeline_dict[self.pipeline]['Jenkins timestamp'] = \
-                self.bsnode['timestamp']
+            try:
+                pipeline_dict[self.pipeline]['Jenkins timestamp'] = \
+                    self.bsnode['timestamp']
+            except:
+                pass
 
         # Merge with existing dict:
         if existing_dict:
@@ -52,8 +55,17 @@ class Common(object):
         matching_bugs = {}
         matching_bugs[bug_id] = {'regexps': err_msg, 'vendors': err_msg,
                                  'machines': err_msg, 'units': err_msg}
-        yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE', None,
+        try:
+            self.cli.LOG.info("Special case bug found! '{0}' ({1}, bug #{2})"
+                          .format(err_msg, self.jobname, bug_id))
+            link2 = ('/job/{0}/{1}/'.format(self.jobname, self.build_number))
+            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE', link2,
                                      existing_dict)
+        except:
+            self.cli.LOG.info("Special case bug found! '{0}' (bug #{1})"
+                              .format(err_msg, bug_id))
+            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE', None,
+                                     existing_dict)        
         return yaml_dict
 
     def join_dicts(self, old_dict, new_dict):

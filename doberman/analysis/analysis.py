@@ -318,7 +318,9 @@ class CLI(Common):
             self.reduced_output_text = False
         else:
             try:
-                self.reduced_output_text = cfg.get('DEFAULT', 'verbose')
+                vrbs = cfg.get('DEFAULT', 'verbose').lower() in ['true', 'yes']
+                reduced = False if vrbs else True
+                self.reduced_output_text = reduced
             except:
                 self.reduced_output_text = True
 
@@ -361,7 +363,8 @@ class CLI(Common):
             self.verify = False
         else:
             try:
-                self.verify = cfg.get('DEFAULT', 'verify')
+                vrfy = cfg.get('DEFAULT', 'verify').lower() in ['true', 'yes']
+                self.verify = vrfy
             except:
                 self.verify = True
 
