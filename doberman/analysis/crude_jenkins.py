@@ -53,9 +53,13 @@ class Jenkins(Common):
             deploy = self.jenkins_api['pipeline_deploy']
             cons = deploy.get_build(deploy_bld_n).get_console()
         except:
-            msg = "Failed to fetch pipeline from deploy build: \"%s\" - if "
-            msg += "this is already a pipeline id, run without the '-b' flag."
-            raise Exception(msg % deploy_bld_n)
+            if self.cli.use_deploy:
+                msg = "'{0}' is an unrecognised pipeline_deploy build number"
+            else:
+                msg = "Failed to fetch pipeline from deploy build: \"{0}\" - "
+                msg += "if this is already a pipeline id, run without the '-b'"
+                msg += " flag."
+            raise Exception(msg.format(deploy_bld_n))
         pl_plus_fluff = cons.split('pipeline_id')[1].split('|\n')[0]
         pl = pl_plus_fluff.replace('|', '').strip()
         if self.pipeline_check(pl):
