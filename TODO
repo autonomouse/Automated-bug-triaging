@@ -1,6 +1,43 @@
-oil-stats
+refinery
 ---------
-    - put that thing I was thinking about here
 
-oil-cookie
-----------
+    - Provide a method that takes in a dictionary and uses Gregs script (or a version of) to
+    - Download all output yamls from a and put in a single (well, 3 single) yaml
+    - climate_change_common should be in refinery, methinks...
+    - METRICS!!! Number of unfiled bugs detected by crude, number of jobs jenkins performed, ratio of reoccurring bugs to one offs, stuff like that...
+    - Take an unfiled bug and compare it against another unfiled bug - if 99% overlap, it's the same bug. Maybe look for "error" +/- 10 lines either side and do it with that? (after blanking out the build number, pipeline id, date, etc)
+    - TODO:
+    - 1a) provide percentages of failures that are auto-triaged successfully
+    - 1b) determine if crude is working properly, or if any obvious problems are flagged up (e.g. too many unfiled bugs, not enough, errors (-1's returned), whatever)
+    - 2a) collate number of machines affected by each bug
+    - 2b) produce a list of 'known associates' - bugs that are frequently found together in the same failure to help with triage and identifying the root cause of failure.
+    - 3) Rearrange into a format that Larry will find helpful for semi-automatic bug-filing on launchpad
+    - Make a new class in a new file for each interger above... (and inform Larry of 3)
+    - Write tests for anything non-internet dependent, maybe even first (TDD style?)
+    - METRICS!!! Number of unfiled bugs detected by crude, number of jobs jenkins performed, ratio of reoccurring bugs to one offs, stuff like that...
+
+    - Provide a method that takes in a dictionary and uses Gregs script (or a version of) to climate_change_common should be in refinery, methinks...
+    
+crude
+-----
+
+    - abstract out test-catalog and jenkins commands so can drop in a folder scanning replacement at a later date, etc...,
+
+database
+-----
+
+    - add a juju_debug.log bug so it gets scanned too    
+
+climate change
+--------------
+
+    - Using the refinery method based on Greg's script, have a web-form to upload bugs
+    - (climate_change_common should be in refinery, methinks...)
+    - show me only unfiled bugs
+    - show me charts of percentage of operating system, openstack version, name/type of machines run on, etc that this bug affects
+    - display the refinery metrics
+
+consolidation (all doberman files)
+----------------------------------
+
+    - qdaemon, oil-stats and crude all use functions such as get_pipelines_from_date_range and find_build_newer_than, etc - rharper suggests normalizing these into the jenkinsapi package. or oil_ci.common (this will accompany the 'abstract out test-catalog and jenkins commands' todo for crude (above) - Also, build = jenkins_job.get_build(int(build_num))

@@ -2,14 +2,16 @@
 
 import sys
 import os
-import yaml
 import socket
 import urlparse
 import shutil
 import optparse
-import datetime
 import json
 import special_cases
+import pytz
+import parsedatetime as pdt
+from dateutil.parser import parse
+from datetime import datetime
 from doberman.common import utils
 from jenkinsapi.custom_exceptions import *
 from crude_common import Common
@@ -29,17 +31,23 @@ class CrudeAnalysis(Common):
         self.test_catalog = TestCatalog(self.cli)
         self.build_pl_ids_and_check()
         self.pipeline_processor()
-        self.remove_dirs()
+        self.remove_dirs(self.cli.job_names)
 
     def build_pl_ids_and_check(self):
         self.pipeline_ids = []
         self.ids = self.cli.ids
 
-        # If using build numbers instead of pipelines, get pipeline:
         if self.cli.use_deploy:
+            # If using build numbers instead of pipelines, get pipeline:
             msg = "Looking up pipeline ids for the following jenkins "
             msg += "pipeline_deploy build numbers: %s"
             self.cli.LOG.info(msg % ", ".join([str(i) for i in self.cli.ids]))
+        elif self.cli.use_date_range:
+            # If using a date range instead of pipelines, get pipeline:
+            msg = "Getting pipeline ids for between {0} and {1} (this locale)"
+            self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
+                                         self.cli.end.strftime('%c')))
+            self.ids = self.jenkins.get_pipelines_from_date_range()
         self.calc_when_to_report()
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
@@ -77,14 +85,14 @@ class CrudeAnalysis(Common):
         else:
             self.report_at = [50]  # Notify at 50 percent
 
-    def remove_dirs(self):
+    def remove_dirs(self, folders_to_remove):
         """ Remove data folders used to store untarred artifacts (just leaving
             yaml files).
 
         """
 
         if not self.cli.keep_data:
-            for folder in self.cli.job_names:
+            for folder in folders_to_remove:
                 kill_me = os.path.join(self.cli.reportdir, folder)
                 if os.path.isdir(kill_me):
                     shutil.rmtree(kill_me)
@@ -173,7 +181,7 @@ class CrudeAnalysis(Common):
             with open(file_path, 'r+') as pp_file:
                 existing_content = pp_file.read()
                 pp_file.seek(0, 0)  # Put at beginning of file
-                pp_file.write("\n" + str(datetime.datetime.now())
+                pp_file.write("\n" + str(datetime.now())
                               + "\n--------------------------\n")
                 for problem_pipeline in problem_pipelines:
                     probs = "* %s (deploy build: %s):\n%s\n\n"
@@ -192,7 +200,7 @@ class CrudeAnalysis(Common):
             with open(file_path, 'r+') as pp_file:
                 existing_content = pp_file.read()
                 pp_file.seek(0, 0)  # Put at beginning of file
-                pp_file.write("\n" + str(datetime.datetime.now())
+                pp_file.write("\n" + str(datetime.now())
                               + "\n--------------------------\n")
                 pp_file.write(" ".join(self.pipeline_ids))
                 pp_file.write("\n" + existing_content)
@@ -202,15 +210,9 @@ class CrudeAnalysis(Common):
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """
         filename = 'triage_' + job + '.yml'
-        file_path = os.path.join(reportdir, filename)
-        if not os.path.isdir(reportdir):
-            os.makedirs(reportdir)
         if not yaml_dict:
             yaml_dict['pipeline'] = {}
-        with open(file_path, 'w') as outfile:
-            outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
-            self.cli.LOG.info(filename + " written to "
-                              + os.path.abspath(reportdir))
+        self.write_output_yaml(reportdir, filename, yaml_dict)
 
 
 class CLI(Common):
@@ -248,6 +250,8 @@ class CLI(Common):
         prsr.add_option('-d', '--dburi', action='store', dest='database',
                         default=None,
                         help='set URI to bug/regex db: /path/to/mock_db.yaml')
+        prsr.add_option('-e', '--end', action='store', dest='end',
+                        default=None, help='ending date string. Default = now')
         prsr.add_option('-i', '--jobnames', action='store', dest='jobnames',
                         default=None, help=('jenkins job names (must be in ' +
                                             'quotes, seperated by spaces)'))
@@ -271,6 +275,9 @@ class CLI(Common):
         prsr.add_option('-r', '--remote', action='store_true',
                         dest='run_remote', default=False,
                         help='set if running analysis remotely')
+        prsr.add_option('-s', '--start', action='store', dest='start',
+                        default=None,
+                        help='starting date string. Default: \'24 hours ago\'')
         prsr.add_option('-T', '--testcatalog', action='store', dest='tc_host',
                         default=None,
                         help='URL to test-catalog API server')
@@ -287,6 +294,10 @@ class CLI(Common):
             cfg = utils.get_config(opts.configfile)
         else:
             cfg = utils.get_config()
+
+        self.external_jenkins_url = cfg.get('DEFAULT', 'external_jenkins_url')
+        self.match_threshold = cfg.get('DEFAULT', 'match_threshold')
+        self.crude_job = cfg.get('DEFAULT', 'crude_job')
 
         self.database = opts.database
         self.LOG.info("database=%s" % self.database)
@@ -392,10 +403,56 @@ class CLI(Common):
             raise Exception(msg)
         self.LOG.debug('tc_auth token=%s' % self.tc_auth)
 
+        # Start and end datetimes:
+        if opts.start or opts.end:
+            if self.use_deploy:
+                err_msg = "Cannot use deploy build numbers AND a date range. "
+                err_msg += "Aborting."
+                self.LOG.error(err_msg)
+                raise Exception(err_msg)
+            else:
+                self.use_date_range = True
+                if not opts.start:
+                    self.start = self.date_parse('24 hours ago')
+                    self.LOG.info("Defaulting to a start date of 24 hours ago")
+                else:
+                    self.start = self.date_parse(opts.start)
+                    stmsg = "Using a start date of {0}"
+                    self.LOG.info(stmsg.format(self.start.strftime('%c')))
+                if not opts.end:
+                    self.end = datetime.utcnow()
+                    self.LOG.info("Defaulting to an end date of 'now'")
+                else:
+                    self.end = self.date_parse(opts.end)
+                    stmsg = "Using an end date of {0}"
+                    self.LOG.info(stmsg.format(self.end.strftime('%c')))
+        else:
+            self.use_date_range = False
+
         # Get arguments:
         self.ids = set(args)
         if not self.ids:
-            raise Exception("No pipeline IDs provided")
+            if not self.use_date_range:
+                raise Exception("No pipeline IDs provided")
+
+    def date_parse(self, string):
+        """Use two different strtotime functions to return a datetime
+        object when possible.
+        """
+        try:
+            return pytz.utc.localize(parse(string))
+        except:
+            pass
+
+        try:
+            val = pdt.Calendar(pdt.Constants(usePyICU=False)).parse(string)
+            if val[1] > 0:  # only do strict matching
+                return pytz.utc.localize(datetime(*val[0][:6]))
+        except:
+            pass
+
+        raise ValueError('Date format {0} not understood, try 2014-02-12'
+                         .format(string))
 
 
 def main():

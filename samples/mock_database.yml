@@ -1,29 +1,4 @@
 bugs:
-  "mock_bug_1":
-    category: None
-    description: "Dummy bug"
-    pipeline_deploy:
-      -
-        "console.txt":
-          regexp:
-            - "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
-  "mock_bug_2":
-    category: None
-    description: "Dummy bug"
-    pipeline_prepare:
-      -
-        "console.txt":
-          regexp:
-            - "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
-  "mock_bug_3":
-    category: None
-    description: "Dummy bug"
-    test_tempest_smoke:
-      -
-        "console.txt":
-          regexp: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
-        "tempest_xunit.xml":
-          regexp: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
   "1358393":
     category: None
     description: "prodstack: nvp-transport-node hook failed config-changed"
@@ -401,6 +376,54 @@ bugs:
             regexp: 
             - "cinder... machine... agent-state. error details. hook failed...config-changed"
 
+
+  "1328950":
+    category: None
+    description: "[Prodstack] Prepare often fails on upload glance image"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "oil_ci.prepare.oil_prepper. Failed to prepare deployed cloud"
+
+
+  "1328950":
+    category: None
+    description: "[Prodstack] Prepare often fails on upload glance image"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp: 
+            - "Failed to prepare deployed cloud.+CommunicationError. Error communicating with .+ timed out"
+
+  "1387670":
+    category: None
+    description: "Prodstack: Failed to prepare deployed cloud"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp: 
+            - "Failed to prepare deployed cloud.+ConnectionFailed. Connection to neutron failed. Maximum attempts reached"
+
+  "1387688":
+    category: None
+    description: "
+Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp: 
+            - "oil_ci.prepare.oil_prepper. Failed to prepare deployed cloud.+NeutronClientException. Request Failed. internal server error while processing your request"
+
+  "1387698":
+    category: None
+    description: "Prodstack: oil_ci can not setup ssh connection"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp: 
+            - "oil_ci.ssh. Could not setup ssh connection to"
+
   "1386663":
     category: None
     description: "Prodstack: image-service-relation-changed"
@@ -409,6 +432,10 @@ bugs:
         "console.txt":
             regexp: 
             - "error details. hook failed...image-service-relation-changed"
+      -
+        "juju_status.yaml":
+            regexp: 
+            - "hook failed...image-service-relation-changed. for glance.image-service"
 
   "1386672":
     category: None
@@ -418,6 +445,10 @@ bugs:
         "console.txt":
             regexp: 
             - "hook failed...identity-service-relation-joined"
+      -
+        "juju_status.yaml":
+            regexp: 
+            - "hook failed...identity-service-relation-joined. for keystone.identity-service"
 
   "1386679":
     category: None
@@ -427,11 +458,42 @@ bugs:
         "console.txt":
             regexp: 
             - "unit. cinder-vnx... machine.  agent-state. error details. hook failed...storage-backend-relation-joined"
-  "1328950":
+      -
+        "juju_status.yaml":
+            regexp: 
+            - "hook failed...storage.backend.relation.joined.+for cinder-vnx.storage.backend"
+
+  "1389318":
     category: None
-    description: "[Prodstack] Prepare often fails on upload glance image"
+    description: "Prodstack: stable juno did not match any file(s) known to git (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "error. pathspec .stable.juno. did not match any file.s. known to git.+subprocess.CalledProcessError. Command '.'git', 'checkout', 'stable/juno'.' returned non-zero exit status 1"
+
+  "1389330":
+    category: None
+    description: "Prodstack: cassandra, error details hook failed config-changed (deploy fail)"
     pipeline_deploy:
       -
         "console.txt":
-            regexp: 
-            - "oil_ci.prepare.oil_prepper. Failed to prepare deployed cloud"
+            regexp:
+            - "unit. cassandra... machine.+ agent-state. error details. hook failed...config-changed"
+
+  "1389332":
+    category: None
+    description: "Prodstack: Invalid config charm cinder (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "deployer.deploy. Invalid config charm cinder remove-missing=True"
+  "1386857":
+    category: None
+    description: "prepare failing to create networks with valid subnet"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "NeutronError......message.....Invalid input for operation..Gateway is not valid on subnet......type......InvalidInput"

@@ -1,3 +1,18 @@
+doberman (1.0.1-0ubuntu1) trusty; urgency=medium
+
+  * Fixed a return message error with unfiled bugs.
+  * Bug_hunt now works with a glob so multiple files can be checked (only reports the last one though - shouldn't be a problem as long as it finds *something*).
+  * Second superfluous timestamp removed from output yaml.
+  * Spaces added between 'started' and 'juju-machine' in 'states' in output yaml.
+  * Moved get_yaml, etc to common (so refinery can use it, later).
+  * Link to jenkins no longer uses internal IP, now uses need external jenkins URL.
+  * Link to jenkins should now point to the right place.
+  * Fixed overall success rate in oil stats.
+  * Now works on a date range, so you can just ask it to give you the last 24 hours.
+  * Updated mock bugs dictionary. 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 06 Nov 2014 17:50:18 +0000
+
 doberman (1.0.0-0ubuntu1) trusty; urgency=medium
 
   * Fixed bug for verbosity in conf file. 
