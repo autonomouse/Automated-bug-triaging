@@ -250,8 +250,8 @@ class CLI(Common):
         prsr.add_option('-d', '--dburi', action='store', dest='database',
                         default=None,
                         help='set URI to bug/regex db: /path/to/mock_db.yaml')
-        prsr.add_option('-e', '--end', action='store', dest='end', default=
-                        None, help='ending date string. Default: \'now()\'')
+        prsr.add_option('-e', '--end', action='store', dest='end',
+                        default=None, help='ending date string. Default = now')
         prsr.add_option('-i', '--jobnames', action='store', dest='jobnames',
                         default=None, help=('jenkins job names (must be in ' +
                                             'quotes, seperated by spaces)'))

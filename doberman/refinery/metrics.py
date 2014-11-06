@@ -71,7 +71,6 @@ class Refinery(CrudeAnalysis):
                                {'pipelines': self.bug_rank})
         self.plot(self.bug_rank, self.cli.reportdir, 'charts.pdf')
 
-
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
         """ Download a particular artifact from jenkins. """
@@ -169,8 +168,8 @@ class Refinery(CrudeAnalysis):
                             # and merge by always picking the latter timestamp,
                             # and the rest of this (until the 'end of would be
                             # else block' below) should be in an else.
-                            
-                            plop = output[pipeline_id] # This is Ryan's fault!!
+
+                            plop = output[pipeline_id]  # This is Ryan's fault!
                             bug_output = plop['bugs'][bug]
                             bug_output['pipeline_id'] = pipeline_id
                             j_ts = plop.get('Jenkins timestamp')
@@ -219,8 +218,8 @@ class Refinery(CrudeAnalysis):
         for bug_no in unique_unfiled_bugs:
             bug_prevalence[bug_no] = len(unique_unfiled_bugs[bug_no]
                                          ['duplicates'])
-            pipelines_affected_by_bug[bug_no] = unique_unfiled_bugs[bug_no]\
-                ['duplicates']
+            pipelines_affected_by_bug[bug_no] = \
+                unique_unfiled_bugs[bug_no]['duplicates']
 
         for pipeline in unified_bugs_dict:
             for bug_no in unified_bugs_dict[pipeline]:
