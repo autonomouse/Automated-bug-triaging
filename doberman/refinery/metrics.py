@@ -31,38 +31,50 @@ class Refinery(CrudeAnalysis):
         """ Overwriting CrudeAnalysis' __init__ method """
 
         self.debug = False
-        match_threshold = 0.965
         self.message = -1
         self.cli = CLI()
-        # TODO: Allow a date range to be entered in the place of a pipeline id
-        # (or build number) - this shoulod be done for both refinery and
-        # crudeanalysis.
 
+        # Download and analyse the crude output yamls:
+        self.analyse_crude_output()
+
+        # Tidy Up:
+        if not self.debug:
+            self.remove_dirs(self.all_build_numbers)
+
+    def analyse_crude_output(self):
+        """ Get and analyse the crude output yamls.
+        """
         # Get crude output:
-        crude_job = 'pipeline_start'
         marker = 'triage'
         self.jenkins = Jenkins(self.cli)
         if not self.debug:
             self.test_catalog = TestCatalog(self.cli)
             self.build_pl_ids_and_check()
             output_folder = self.cli.reportdir
-            self.download_triage_files(crude_job, marker, output_folder)
+            self.download_triage_files(self.cli.crude_job, marker,
+                                       output_folder)
         else:
             self.cli.LOG.info("*** Debugging mode is on. ***")
-        self.unify_downloaded_triage_files(crude_job, marker)
+        self.unified_bugs_dict = self.unify_downloaded_triage_files(
+            self.cli.crude_job, marker)
 
         # Analyse the downloaded crude output yamls:
-        self.analyse_crude_output(self.unified_bugs_dict, match_threshold)
+        self.group_similar_unfiled_bugs(self.unified_bugs_dict)
+        self.pipelines_affected_by_bug = self.calculate_bug_prevalence(
+            self.grouped_bugs, self.unified_bugs_dict)
 
-        # Tidy Up:
-        if not self.debug:
-            self.remove_dirs(self.all_build_numbers)
+        self.write_output_yaml(self.cli.reportdir,
+                               'auto-triaged_unfiled_bugs.yml',
+                               {'pipelines': self.grouped_bugs})
+        self.write_output_yaml(self.cli.reportdir,
+                               'bug_ranking.yml',
+                               {'pipelines': self.bug_rank})
+        self.plot(self.bug_rank, self.cli.reportdir, 'charts.pdf')
+
 
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
-        """
-
-        """
+        """ Download a particular artifact from jenkins. """
 
         if not self.debug:
             jenkins_job = self.jenkins.jenkins_api[job]
@@ -93,8 +105,6 @@ class Refinery(CrudeAnalysis):
                 for artifact in build.get_artifacts():
                     artifact_found = False
                     if marker in str(artifact):
-                        # artifact_name = \
-                        #    str(artifact).split('/')[-1].strip('>')
                         artifact_found = True
                         artifact.save_to_dir(outdir)
                         # TODO: Would these ever need renaming?
@@ -155,106 +165,48 @@ class Refinery(CrudeAnalysis):
 
                         # Add bug to bug_dict.
                         for bug in output[pipeline_id].get('bugs'):
-                            if bug_dict[pipeline_id].get(bug):
-                                # TODO:
-                                print('TODO: merge')
-                                # import pdb; pdb.set_trace()
-                                # merge by always picking the latter timestamp
-                            else:
-                                bug_dict[pipeline_id][bug] = \
-                                    output[pipeline_id]['bugs'][bug]
-                                bug_dict[pipeline_id][bug]['pipeline_id']\
-                                    = pipeline_id
-                                j_ts = (output[pipeline_id]
-                                        .get('Jenkins timestamp'))
-                                bug_dict[pipeline_id][bug]\
-                                    ['Jenkins timestamp'] = j_ts
-                                bug_dict[pipeline_id][bug]['build'] = output\
-                                    [pipeline_id].get('build')
+                            # TODO: Add an "if bug_dict[pipeline_id].get(bug)"
+                            # and merge by always picking the latter timestamp,
+                            # and the rest of this (until the 'end of would be
+                            # else block' below) should be in an else.
+                            
+                            plop = output[pipeline_id] # This is Ryan's fault!!
+                            bug_output = plop['bugs'][bug]
+                            bug_output['pipeline_id'] = pipeline_id
+                            j_ts = plop.get('Jenkins timestamp')
+                            bug_output['Jenkins timestamp'] = j_ts
+                            build = plop.get('build')
+                            bug_output['build'] = build
+                            status = plop['status']
+                            bug_output['status'] = status
+                            crude_ts = plop.get('Crude-Analysis timestamp')
+                            bug_output['Crude-Analysis timestamp'] = crude_ts
+                            link_to_jkns = plop.get('link to jenkins')
+                            bug_output['link to jenkins'] = link_to_jkns
+                            link_to_tcat = plop.get('link to test-catalog')
+                            bug_output['link to test-catalog'] = link_to_tcat
+                            bug_output['job'] = job
+                            try:
+                                if 'unfiled' in bug:
+                                    op_dir = os.path.join(self.cli.reportdir,
+                                                          build_num)
+                                    rename = "{0}_console.txt".format(job)
+                                    params = (job, pipeline_id, build,
+                                              'console.txt', op_dir, rename)
+                                    self.download_specific_file(*params)
+                                    path = os.path.join(op_dir, rename)
+                                    with open(path, 'r') as f:
+                                        bug_output['console'] = f.read()
 
-                                # Get supporting metadata, too:
-                                bug_dict[pipeline_id][bug]['status'] = \
-                                    output[pipeline_id]['status']
-                                crude_ts = output[pipeline_id].get(
-                                    'Crude-Analysis timestamp')
-                                bug_dict[pipeline_id][bug]\
-                                    ['Crude-Analysis timestamp'] = crude_ts
-                                lk = output[pipeline_id].get('link to jenkins')
-                                bug_dict[pipeline_id][bug]['link to jenkins'] \
-                                    = lk
-                                tc = output[pipeline_id].get('link to jenkins')
-                                bug_dict[pipeline_id][bug]\
-                                    ['link to test-catalog'] = tc
-                                bug_dict[pipeline_id][bug]['job'] = job
-
-                                try:
-                                    if 'unfiled' in bug:
-                                        output_folder = \
-                                            os.path.join(self.cli.reportdir,
-                                                         build_num)
-                                        rename = "{0}_console.txt".format(job)
-                                        params = (job, pipeline_id,
-                                                  output[pipeline_id]['build'],
-                                                  'console.txt', output_folder,
-                                                  rename)
-                                        self.download_specific_file(*params)
-                                        with open(os.path.join(output_folder,
-                                                  rename), 'r') as f:
-                                            bug_dict[pipeline_id][bug]\
-                                                ['console'] = f.read()
-
-                                except Exception, e:
-                                    err = "Problem fetching console data for "
-                                    err += "pl {0} (bug {1}). {2}"
-                                    err = err.format(pipeline_id, bug, e)
-                                    self.cli.LOG.info(err)
-                                    bug_dict[pipeline_id][bug]['console'] \
-                                        = None
-        self.unified_bugs_dict = bug_dict
-
-    def analyse_crude_output(self, unified_bugs_dict, match_threshold):
-        """
-        Analyse the downloaded crude output yamls.
-        """
-        self.group_similar_unfiled_bugs(unified_bugs_dict, match_threshold)
-        self.calculate_bug_prevalence(self.grouped_bugs, unified_bugs_dict)
-
-        self.write_output_yaml(self.cli.reportdir,
-                               'auto-triaged_unfiled_bugs.yml',
-                               {'pipelines': self.grouped_bugs})
-        self.write_output_yaml(self.cli.reportdir,
-                               'bug_ranking.yml',
-                               {'pipelines': self.bug_rank})
-        self.plot(self.bug_rank, self.cli.reportdir, 'charts.pdf')
-        # import pdb; pdb.set_trace()
-
-        # TODO:
-        # 1a) provide percentages of failures that are auto-triaged
-        # successfully
-        # 1b) determine if crude is working properly, or if any obvious
-        # problems are flagged up (e.g. too many unfiled bugs, not enough,
-        # errors (-1's returned), whatever)
-        # 2a) collate number of machines affected by each bug
-        # 2b) produce a list of 'known associates' - bugs that are frequently
-        # found together in the same failure to help with triage and
-        # identifying the root cause of failure.
-        # 3) Rearrange into a format that Larry will find helpful for
-        # semi-automatic bug-filing on launchpad
-        # Make a new class in a new file for each interger above... (and inform
-        # Larry of 3)
-        # Write tests for anything non-internet dependent, maybe even first
-        # (TDD style?)
-        # METRICS!!! Number of unfiled bugs detected by crude, number of jobs
-        # jenkins performed, ratio of reoccurring bugs to one offs, stuff like
-        # that...
-
-        # Provide a method that takes in a dictionary and uses Gregs script (or
-        # a version of) to climate_change_common should be in refinery,
-        # methinks...
-        # Take an unfiled bug and compare it against another unfiled bug - if
-        # 99% overlap, it's the same bug. Maybe look for "error" +/- 10 lines
-        # either side and do it with that? (after blanking out the build
-        # number, pipeline id, date, etc)
+                            except Exception, e:
+                                err = "Problem fetching console data for "
+                                err += "pl {0} (bug {1}). {2}"
+                                err = err.format(pipeline_id, bug, e)
+                                self.cli.LOG.info(err)
+                                bug_output['console'] = None
+                            bug_dict[pipeline_id][bug] = bug_output
+                            # TODO: end of would be else block
+        return bug_dict
 
     def calculate_bug_prevalence(self, unique_unfiled_bugs, unified_bugs_dict):
         """
@@ -286,7 +238,7 @@ class Refinery(CrudeAnalysis):
         bug_rank.reverse()
         self.bug_rank = bug_rank
 
-        self.pipelines_affected_by_bug = pipelines_affected_by_bug
+        return pipelines_affected_by_bug
 
     def normalise_bug_details(self, bugs, bug_id):
         """
@@ -320,7 +272,7 @@ class Refinery(CrudeAnalysis):
         else:
             return bug_feedback
 
-    def group_similar_unfiled_bugs(self, unified_bugs_dict, match_threshold):
+    def group_similar_unfiled_bugs(self, unified_bugs_dict):
         """
 
         """
@@ -350,7 +302,7 @@ class Refinery(CrudeAnalysis):
                         all_scores.append(score)
                     except:
                         score = -1
-                    if score > match_threshold:
+                    if score > self.cli.match_threshold:
                         if unf_bug_b not in duplicates:
                             try:
                                 unaccounted_bugs.remove(unf_bug_a)

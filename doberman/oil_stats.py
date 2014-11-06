@@ -314,7 +314,6 @@ def main():
     # overall success
     if opts.summary:
         tt = totals['test_tempest_smoke']['total_builds']
-        # tp = totals['pipeline_prepare']['total_builds']
         td = totals['pipeline_deploy']['total_builds']
         overall = (float(tt) / float(td) * 100.0) if td else 0
         print('')

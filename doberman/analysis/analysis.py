@@ -295,12 +295,9 @@ class CLI(Common):
         else:
             cfg = utils.get_config()
 
-        # Overridden by config file only:
-        try:
-            self.external_jenkins_url = \
-                cfg.get('DEFAULT', 'external_jenkins_url')
-        except:
-            self.external_jenkins_url = "http://oil-jenkins.canonical.com"
+        self.external_jenkins_url = cfg.get('DEFAULT', 'external_jenkins_url')
+        self.match_threshold = cfg.get('DEFAULT', 'match_threshold')
+        self.crude_job = cfg.get('DEFAULT', 'crude_job')
 
         self.database = opts.database
         self.LOG.info("database=%s" % self.database)

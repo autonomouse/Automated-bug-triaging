@@ -61,7 +61,8 @@ class Jenkins(Common):
                 msg = "Failed to fetch pipeline from deploy build: \"{0}\" - "
                 msg += "if this is already a pipeline id, run without the '-b'"
                 msg += " flag."
-            raise Exception(msg.format(deploy_bld_n))
+            self.cli.LOG.exception(msg.format(deploy_bld_n))
+            return
         pl_plus_fluff = cons.split('pipeline_id')[1].split('|\n')[0]
         pl = pl_plus_fluff.replace('|', '').strip()
         if self.pipeline_check(pl):
@@ -332,7 +333,7 @@ class Build(Common):
                              'ports': self.oil_df['ports'],
                              'states': self.oil_df['state'],
                              'slaves': self.oil_df['slaves'],
-                             'link to jenkins': jlink}
+                             'link to jenkins': jlink,}
                         if info:
                             matching_bugs[bug_id]['additional info'] = info
                         self.cli.LOG.info("Bug found! ({0}, bug #{1})"
@@ -355,7 +356,7 @@ class Build(Common):
                                      'ports': self.oil_df['ports'],
                                      'states': self.oil_df['state'],
                                      'slaves': self.oil_df['slaves'],
-                                     'link to jenkins': jlink}
+                                     'link to jenkins': jlink,}
             self.cli.LOG.info("Unfiled bug found! ({0})".format(self.jobname))
             hit_dict = {}
             self.message = 1
