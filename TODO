@@ -1,6 +1,24 @@
-oil-stats
+refinery
 ---------
-    - put that thing I was thinking about here
+    - Provide a method that takes in a dictionary and uses Gregs script (or a version of) to
+    - Download all output yamls from a and put in a single (well, 3 single) yaml
+    - climate_change_common should be in refinery, methinks...
+    - METRICS!!! Number of unfiled bugs detected by crude, number of jobs jenkins performed, ratio of reoccurring bugs to one offs, stuff like that...
+    - Take an unfiled bug and compare it against another unfiled bug - if 99% overlap, it's the same bug. Maybe look for "error" +/- 10 lines either side and do it with that? (after blanking out the build number, pipeline id, date, etc)
 
-oil-cookie
-----------
+crude
+-----
+    - abstract out test-catalog and jenkins commands so can drop in a folder scanning replacement at a later date, etc...,
+
+database
+-----
+    - add a juju_debug.log bug so it gets scanned too
+
+climate change
+--------------
+    - Using the refinery method based on Greg's script, have a web-form to upload bugs
+    - (climate_change_common should be in refinery, methinks...)
+    - show me only unfiled bugs
+    - show me charts of percentage of operating system, openstack version, name/type of machines run on, etc that this bug affects
+    - display the refinery metrics
+

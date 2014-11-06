@@ -1,4 +1,7 @@
+import os
+import yaml
 import datetime
+import special_cases
 from jenkinsapi.custom_exceptions import *
 
 
@@ -6,7 +9,7 @@ class Common(object):
     """ Common methods
     """
 
-    def add_to_yaml(self, matching_bugs, build_status, link, existing_dict):
+    def add_to_yaml(self, matching_bugs, build_status, existing_dict):
         """
         Creates a yaml dict and populates with data in the right format and
         merges with existing yaml dict.
@@ -22,9 +25,6 @@ class Common(object):
             if hasattr(self, 'build_number'):
                 pipeline_dict[self.pipeline]['build'] = self.build_number
 
-            if link:
-                pipeline_dict[self.pipeline]['link to jenkins'] = \
-                    self.cli.jenkins_host + link
             pipeline_dict[self.pipeline]['link to test-catalog'] = \
                 self.cli.tc_host.replace('api', "pipeline/" + self.pipeline)
             pipeline_dict[self.pipeline]['Crude-Analysis timestamp'] = \
@@ -52,20 +52,24 @@ class Common(object):
             that cannot be, or are not yet, listed in the bugs database.
 
         """
+        jlink = '{0}/job/{1}/{2}/console'.format(self.cli.external_jenkins_url,
+                                                 self.jobname,
+                                                 self.build_number)
         matching_bugs = {}
         matching_bugs[bug_id] = {'regexps': err_msg, 'vendors': err_msg,
-                                 'machines': err_msg, 'units': err_msg}
+                                 'machines': err_msg, 'units': err_msg,
+                                 'link to jenkins': jlink}
         try:
             self.cli.LOG.info("Special case bug found! '{0}' ({1}, bug #{2})"
-                          .format(err_msg, self.jobname, bug_id))
-            link2 = ('/job/{0}/{1}/'.format(self.jobname, self.build_number))
-            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE', link2,
-                                     existing_dict)
+                              .format(err_msg, self.jobname, bug_id))
+            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE',
+                                         existing_dict)
         except:
             self.cli.LOG.info("Special case bug found! '{0}' (bug #{1})"
                               .format(err_msg, bug_id))
             yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE', None,
-                                     existing_dict)        
+                                         existing_dict)
+        self.message = 0
         return yaml_dict
 
     def join_dicts(self, old_dict, new_dict):
@@ -73,3 +77,47 @@ class Common(object):
         earlier_items = list(old_dict.items())
         current_items = list(new_dict.items())
         return dict(earlier_items + current_items)
+
+    def write_output_yaml(self, output_dir, filename, yaml_dict):
+        """
+        """
+        file_path = os.path.join(output_dir, filename)
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
+        with open(file_path, 'w') as outfile:
+            outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
+            self.cli.LOG.info(filename + " written to "
+                              + os.path.abspath(output_dir))
+
+    def get_yaml(self, file_location, yaml_dict):
+        return self.get_from_file(file_location, yaml_dict, ftype='yaml')
+
+    def get_txt(self, file_location, yaml_dict):
+        return self.get_from_file(file_location, yaml_dict, ftype='text')
+
+    def get_from_file(self, file_location, yaml_dict, ftype='yaml'):
+        try:
+            with open(file_location, "r") as f:
+                if ftype == 'yaml':
+                    return (yaml.load(f), yaml_dict)
+                else:
+                    return (f.read(), yaml_dict)
+        except IOError, e:
+            fname = file_location.split('/')[-1]
+            self.cli.LOG.error("%s: %s is not in artifacts folder (%s)"
+                               % (self.pipeline, fname, e[1]))
+            msg = fname + ' MISSING'
+            yaml_dict = self.non_db_bug(special_cases.bug_dict[fname],
+                                        yaml_dict, msg)
+            return (None, yaml_dict)
+
+    def dictator(self, dictionary, dkey, dvalue):
+        """ Adds dvalue to list in a given dictionary (self.oil_df/oil_nodes).
+            Assumes that dictionary will be self.oil_df, self.oil_nodes, etc so
+            nothing is returned.
+
+        """
+
+        if dkey not in dictionary:
+            dictionary[dkey] = []
+        dictionary[dkey].append(dvalue)

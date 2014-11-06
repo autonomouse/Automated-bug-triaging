@@ -3,14 +3,16 @@ from crude_common import Common
 
 import os
 import re
-import yaml
 import tarfile
 import uuid
-import special_cases
+import bisect
+import time
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat
 from jenkinsapi.custom_exceptions import *
+from glob import glob
+from datetime import datetime
 
 
 class Jenkins(Common):
@@ -76,6 +78,68 @@ class Jenkins(Common):
     def pipeline_check(self, pipeline_id):
         return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
 
+    def write_console_to_file(self, build, outdir):
+        with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
+            self.cli.LOG.info('Saving console @ {0} to {1}'.format(
+                              build.baseurl, outdir))
+            console = build.get_console()
+            cnsl.write(console)
+            cnsl.write('\n')
+            cnsl.flush()
+
+    def get_pipelines_from_date_range(self):
+        job = 'pipeline_deploy'
+        jenkins_job = self.jenkins_api[job]
+        builds = jenkins_job._poll()['builds']
+        builds.sort(key=lambda r: r['timestamp'])
+        start_idx = self.find_build_newer_than(builds, self.cli.start)
+        end_idx = self.find_build_newer_than(builds, self.cli.end)
+
+        # If end date is newer than we have builds, just use
+        # the most recent build:
+        if end_idx is None and start_idx is None:
+            start_idx = builds.index(builds[-1])
+
+        if end_idx is None:
+            end_idx = builds.index(builds[-1])
+
+        st_num = builds[start_idx]['number']
+        st_ts = datetime.fromtimestamp(builds[start_idx]['timestamp'] / 1000)
+        end_num = builds[end_idx]['number']
+        end_ts = datetime.fromtimestamp(builds[end_idx]['timestamp'] / 1000)
+
+        self.cli.LOG.info("Start Job: {0} - {1}".format(st_num, st_ts))
+        self.cli.LOG.info("End Job: {0} - {1}".format(end_num, end_ts))
+
+        # From idx to end:
+        builds_to_check = [r['number'] for r in builds[start_idx:end_idx]]
+        nr_builds = len(builds_to_check)
+        self.cli.LOG.info("Fetching {0} build objects".format(nr_builds))
+        build_objs = [b for b in builds if b['number'] in builds_to_check]
+
+        # With these deploy build numbers, we can now get the pipeline:
+        return map(lambda x, self=self: self.get_pipeline_from_deploy_build(x),
+                   [b['number'] for b in build_objs])
+
+    def find_build_newer_than(self, builds, start):
+        """
+        assumes builds has been sorted
+        """
+
+        # pre calculate key list
+        keys = [r['timestamp'] for r in builds]
+
+        # make a micro timestamp from input
+        start_ts = int(time.mktime(start.timetuple())) * 1000
+
+        # find leftmost item greater than or equal to start
+        i = bisect.bisect_left(keys, start_ts)
+        if i != len(keys):
+            return i
+
+        self.cli.LOG.error("No job newer than %s" % (start))
+        return None
+
     def get_triage_data(self, build_num, job, reportdir):
         """ Get the artifacts from jenkins via jenkinsapi object. """
         jenkins_job = self.jenkins_api[job]
@@ -90,13 +154,7 @@ class Jenkins(Common):
         except OSError:
             if not os.path.isdir(outdir):
                 raise
-        with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
-            self.cli.LOG.info('Saving console @ {0} to {1}'.format(
-                              build.baseurl, outdir))
-            console = build.get_console()
-            cnsl.write(console)
-            cnsl.write('\n')
-            cnsl.flush()
+        self.write_console_to_file(build, outdir)
 
         for artifact in build.get_artifacts():
             artifact.save_to_dir(outdir)
@@ -164,45 +222,6 @@ class Build(Common):
         except:
             self.bsnode['jenkins'] = 'Unknown'
 
-        try:
-            self.bsnode['timestamp'] = \
-                cons_txt.split('timestamp')[1].split('|')[1].lstrip().rstrip()
-        except:
-            self.bsnode['timestamp'] = 'Unknown'
-
-    def get_yaml(self, file_location, yaml_dict):
-        return self.get_from_file(file_location, yaml_dict, ftype='yaml')
-
-    def get_txt(self, file_location, yaml_dict):
-        return self.get_from_file(file_location, yaml_dict, ftype='text')
-
-    def get_from_file(self, file_location, yaml_dict, ftype='yaml'):
-        try:
-            with open(file_location, "r") as f:
-                if ftype == 'yaml':
-                    return (yaml.load(f), yaml_dict)
-                else:
-                    return (f.read(), yaml_dict)
-        except IOError, e:
-            fname = file_location.split('/')[-1]
-            self.cli.LOG.error("%s: %s is not in artifacts folder (%s)"
-                               % (self.pipeline, fname, e[1]))
-            msg = fname + ' MISSING'
-            yaml_dict = self.non_db_bug(special_cases.bug_dict[fname],
-                                        yaml_dict, msg)
-            return (None, yaml_dict)
-
-    def dictator(self, dictionary, dkey, dvalue):
-        """ Adds dvalue to list in a given dictionary (self.oil_df/oil_nodes).
-            Assumes that dictionary will be self.oil_df, self.oil_nodes, etc so
-            nothing is returned.
-
-        """
-
-        if dkey not in dictionary:
-            dictionary[dkey] = []
-        dictionary[dkey].append(dvalue)
-
     def bug_hunt(self, path):
         """ Using information from the bugs database, opens target file and
             searches the text for each associated regexp. """
@@ -219,7 +238,6 @@ class Build(Common):
         build_status = (build_details['result'] if 'result' in build_details
                         else 'Unknown')
         matching_bugs = {}
-        link2 = ''
 
         bug_unmatched = True
         if not self.bugs:
@@ -232,9 +250,9 @@ class Build(Common):
                 for and_dict in or_dict:
                     # Within the dictionary all have to match (and):
                     hit_dict = {}
+                    glob_hits = []
                     # Load up file for each target_file in the DB for this bug:
                     for target_file in and_dict.keys():
-                        target_location = os.path.join(path, target_file)
                         try:
                             for bssub in self.bsnode:
                                 if 'bootstrap_node' not in info:
@@ -243,56 +261,68 @@ class Build(Common):
                                     self.bsnode[bssub]
                         except:
                             pass
-                        if not os.path.isfile(target_location):
+                        globs = glob(os.path.join(path, target_file))
+                        if len(globs) == 0:
                             info['error'] = target_file + " not present"
                             break
-                        if target_file == 'console.txt':
-                            link2 = ('/job/{0}/{1}/console'
-                                     .format(self.jobname, self.build_number))
-                        else:
-                            link2 = ('/job/%s/%s/artifact/artifacts/%s'
-                                     % (self.jobname, self.build_number,
-                                        target_file))
-                        if not (target_file in parse_as_xml):
-                            with open(target_location, 'r') as grep_me:
-                                text = grep_me.read()
-                            hit = self.rematch(and_dict, target_file, text)
-                            if hit:
-                                hit_dict = self.join_dicts(hit_dict, hit)
-                                self.message = 0
-                            else:
-                                info['target file'] = target_file
-                                if not self.cli.reduced_output_text:
-                                    info['text'] = text
-                        else:
-                            # Get tempest results:
-                            p = etree.XMLParser(huge_tree=True)
-                            et = etree.parse(target_location, parser=p)
-                            doc = et.getroot()
-                            errors_and_fails = doc.xpath('.//failure')
-                            errors_and_fails += doc.xpath('.//error')
-                            # TODO: There is not currently a way to do multiple
-                            # 'and' regexps within a single tempest file - you
-                            # can do console AND tempest or tempest OR tempest,
-                            # but not tempest AND tempest. Needs it please!
-                            for num, fail in enumerate(errors_and_fails):
-                                pre_log = fail.get('message')\
-                                    .split("begin captured logging")[0]
-                                hit = self.rematch(and_dict, target_file,
-                                                   pre_log)
-                                info['target file'] = target_file
-                                info['xunit class'] = \
-                                    fail.getparent().get('classname')
-                                info['xunit name'] = \
-                                    fail.getparent().get('name')
+                        for target_location in globs:
+                            if not (target_file in parse_as_xml):
+                                with open(target_location, 'r') as grep_me:
+                                    text = grep_me.read()
+                                hit = self.rematch(and_dict, target_file, text)
                                 if hit:
+                                    glob_hits.append(
+                                        target_location.split('/')[-1])
                                     hit_dict = self.join_dicts(hit_dict, hit)
-                                    break
+                                    self.message = 0
                                 else:
+                                    info['target file'] = target_file
                                     if not self.cli.reduced_output_text:
-                                        info['text'] = pre_log
-
+                                        info['text'] = text
+                            else:
+                                # Get tempest results:
+                                p = etree.XMLParser(huge_tree=True)
+                                et = etree.parse(target_location, parser=p)
+                                doc = et.getroot()
+                                errors_and_fails = doc.xpath('.//failure')
+                                errors_and_fails += doc.xpath('.//error')
+                                # TODO: There is not currently a way to do
+                                # multiple 'and' regexps within a single
+                                # tempest file - you can do console AND tempest
+                                # or tempest OR tempest, but not tempest AND
+                                # tempest. Needs it please!
+                                for num, fail in enumerate(errors_and_fails):
+                                    pre_log = fail.get('message')\
+                                        .split("begin captured logging")[0]
+                                    hit = self.rematch(and_dict, target_file,
+                                                       pre_log)
+                                    info['target file'] = target_file
+                                    info['xunit class'] = \
+                                        fail.getparent().get('classname')
+                                    info['xunit name'] = \
+                                        fail.getparent().get('name')
+                                    if hit:
+                                        hit_dict = self.join_dicts(hit_dict,
+                                                                   hit)
+                                        break
+                                    else:
+                                        if not self.cli.reduced_output_text:
+                                            info['text'] = pre_log
                     if and_dict == hit_dict:
+                        links = []
+                        url = self.cli.external_jenkins_url
+                        if (not glob_hits) and (target_file in parse_as_xml):
+                            glob_hits = [target_file]
+                        for hit_file in glob_hits:
+                            if hit_file == "console.txt":
+                                link = '{0}/job/{1}/{2}/console'
+                                links.append(link.format(url, self.jobname,
+                                             self.build_number))
+                            else:
+                                link = '{0}/job/{1}/{2}/artifact/artifacts/{3}'
+                                links.append(link.format(url, self.jobname,
+                                             self.build_number, hit_file))
+                        jlink = ", ".join(links)
                         matching_bugs[bug_id] = \
                             {'regexps': hit_dict,
                              'vendors': self.oil_df['vendor'],
@@ -301,7 +331,8 @@ class Build(Common):
                              'charms': self.oil_df['charm'],
                              'ports': self.oil_df['ports'],
                              'states': self.oil_df['state'],
-                             'slaves': self.oil_df['slaves']}
+                             'slaves': self.oil_df['slaves'],
+                             'link to jenkins': jlink}
                         if info:
                             matching_bugs[bug_id]['additional info'] = info
                         self.cli.LOG.info("Bug found! ({0}, bug #{1})"
@@ -313,6 +344,8 @@ class Build(Common):
         if bug_unmatched and (build_status == 'FAILURE' or
                               build_status == 'Unknown'):
             bug_id = 'unfiled-' + str(uuid.uuid4())
+            jlink = (self.cli.external_jenkins_url + '/job/{0}/{1}/console'
+                     .format(self.jobname, self.build_number))
             matching_bugs[bug_id] = {'regexps':
                                      'NO REGEX - UNFILED/UNMATCHED BUG',
                                      'vendors': self.oil_df['vendor'],
@@ -321,7 +354,8 @@ class Build(Common):
                                      'charms': self.oil_df['charm'],
                                      'ports': self.oil_df['ports'],
                                      'states': self.oil_df['state'],
-                                     'slaves': self.oil_df['slaves']}
+                                     'slaves': self.oil_df['slaves'],
+                                     'link to jenkins': jlink}
             self.cli.LOG.info("Unfiled bug found! ({0})".format(self.jobname))
             hit_dict = {}
             self.message = 1
@@ -329,7 +363,7 @@ class Build(Common):
                 matching_bugs[bug_id]['additional info'] = info
         else:
             self.message = 0
-        return (matching_bugs, build_status, link2)
+        return (matching_bugs, build_status)
 
     def rematch(self, bugs, target_file, text):
         """ Search files in bugs for multiple matching regexps. """
@@ -472,6 +506,7 @@ class Deploy(Build):
 
                 m_name = machine_info.get('dns-name', "")
                 state = machine_info.get('agent-state', '')
+                state = state + ". " if state else state + ""
                 state += container['agent-state-info'] + ". " \
                     if 'agent-state-info' in container else ''
                 state += container['instance-id'] if 'instance-id' in \
@@ -496,8 +531,8 @@ class Deploy(Build):
             self.dictator(self.oil_df, 'ports', 'N/A')
             self.dictator(self.oil_df, 'state', 'N/A')
             self.dictator(self.oil_df, 'slaves', 'N/A')
-        matching_bugs, build_status, link = self.bug_hunt(pipeline_deploy_path)
-        self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
+        matching_bugs, build_status = self.bug_hunt(pipeline_deploy_path)
+        self.yaml_dict = self.add_to_yaml(matching_bugs, build_status,
                                           self.yaml_dict)
 
 
@@ -527,8 +562,8 @@ class Prepare(Build):
         # Read console:
         self.process_console_data(prepare_path)
 
-        matching_bugs, build_status, link = self.bug_hunt(prepare_path)
-        self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
+        matching_bugs, build_status = self.bug_hunt(prepare_path)
+        self.yaml_dict = self.add_to_yaml(matching_bugs, build_status,
                                           self.yaml_dict)
 
 
@@ -559,7 +594,7 @@ class Tempest(Build):
         # Read console:
         self.process_console_data(tts_path)
 
-        matching_bugs, build_status, link = \
+        matching_bugs, build_status = \
             self.bug_hunt(tts_path)
-        self.yaml_dict = self.add_to_yaml(matching_bugs, build_status, link,
+        self.yaml_dict = self.add_to_yaml(matching_bugs, build_status,
                                           self.yaml_dict)

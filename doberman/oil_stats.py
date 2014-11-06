@@ -243,6 +243,7 @@ def main():
         print("Fetching %s build objects" % (nr_builds))
         build_objs = [b for b in builds if b['number'] in builds_to_check]
 
+        active = filter(lambda x: is_running(x) is True, build_objs)
         if job == 'test_tempest_smoke':
             tests = []
             errors = []
@@ -290,9 +291,9 @@ def main():
             print("  Success Rate: %s good / %s (%s total - %s skip) = %2.2f%%"
                   % (n_good, n_total, sum(tests), sum(skip), success_rate))
             print('')
+            nr_nab = nr_builds - len(active)
         else:
             # TODO: handle case where we don't have active, good or bad builds
-            active = filter(lambda x: is_running(x) is True, build_objs)
             good = filter(lambda x: is_good(x), build_objs)
             bad = filter(lambda x: is_good(x) is False and
                          is_running(x) is False, build_objs)
@@ -313,12 +314,14 @@ def main():
     # overall success
     if opts.summary:
         tt = totals['test_tempest_smoke']['total_builds']
-        tp = totals['pipeline_deploy']['total_builds']
-        overall = (float(tt) / float(tp) * 100.0) if tp else 0
+        # tp = totals['pipeline_prepare']['total_builds']
+        td = totals['pipeline_deploy']['total_builds']
+        overall = (float(tt) / float(td) * 100.0) if td else 0
         print('')
         print("Overall Success Rate for [%s to %s] " % (start, end))
         print("  %s tempest builds out of %s total jobs = %2.2f%%"
-              % (tt, tp, overall))
+              % (tt, td, overall))
+        print('')
 
     # triage report
     if opts.triage:
