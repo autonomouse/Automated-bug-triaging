@@ -22,6 +22,7 @@ setup(
             'oil-stats = doberman.oil_stats:main',
             'oil-cookie = doberman.oil_cookie:main',
             'crude-analysis = doberman.analysis.analysis:main',
+            'refinery = doberman.refinery.refinery:main',
         ]
         },
     )
