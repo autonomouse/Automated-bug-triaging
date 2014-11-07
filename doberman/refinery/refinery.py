@@ -11,7 +11,7 @@ from doberman.analysis.analysis import CrudeAnalysis, CLI
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
 from difflib import SequenceMatcher
-from pylab import xticks, yticks, gca, title
+from pylab import xticks, gca, title
 from matplotlib.backends.backend_pdf import PdfPages
 
 
