@@ -77,7 +77,10 @@ class Jenkins(Common):
                 raise Exception(msg)
 
     def pipeline_check(self, pipeline_id):
-        return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
+        try:
+            return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
+        else:
+            return False
 
     def write_console_to_file(self, build, outdir):
         with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
