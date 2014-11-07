@@ -79,7 +79,7 @@ class Jenkins(Common):
     def pipeline_check(self, pipeline_id):
         try:
             return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
-        else:
+        except:
             return False
 
     def write_console_to_file(self, build, outdir):
