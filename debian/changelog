@@ -1,3 +1,10 @@
+doberman (0.0.5-0ubuntu1) trusty; urgency=medium
+
+  * Bug fix in date range
+  * Fix for crash if given a dodgy build number 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Mon, 10 Nov 2014 14:00:26 +0000
+
 doberman (1.0.4-0ubuntu1) trusty; urgency=medium
 
   * Crude-analysis and refinery now allow a range of build numbers to be entered using '-'. 

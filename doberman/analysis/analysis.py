@@ -71,8 +71,8 @@ class CrudeAnalysis(Common):
             if not self.jenkins.pipeline_check(pipeline):
                 msg = "Pipeline ID \"%s\" is an unrecognised format" % pipeline
                 self.cli.LOG.error(msg)
-                raise Exception(msg)
-            self.pipeline_ids.append(pipeline)
+            else:
+                self.pipeline_ids.append(pipeline)
 
             # Notify user/log of progress
             progress = [round((pc / 100.0) * len(self.ids))
@@ -416,10 +416,11 @@ class CLI(Common):
             raise Exception(msg)
         self.LOG.debug('tc_auth token=%s' % self.tc_auth)
 
-        if not set(args):
-            opts.start = '24 hours ago'
-            msg = "No pipeline IDs provided, defaulting to the past 24 hours"
-            self.LOG.info(msg)
+        if (not opts.start) and (not opts.end):
+            if not set(args):
+                opts.start = '24 hours ago'
+                msg = "No pipeline IDs provided, defaulting to the past 24 hours"
+                self.LOG.info(msg)
 
         # Start and end datetimes:
         if opts.start or opts.end:
