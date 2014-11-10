@@ -69,7 +69,10 @@ class Refinery(CrudeAnalysis):
         self.write_output_yaml(self.cli.reportdir,
                                'bug_ranking.yml',
                                {'pipelines': self.bug_rank})
-        self.plot(self.bug_rank, self.cli.reportdir, 'charts.pdf')
+        try:
+            self.plot(self.bug_rank, self.cli.reportdir, 'charts.pdf')
+        except:
+            self.cli.LOG.error("Error creating charts")
 
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):

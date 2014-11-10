@@ -42,12 +42,25 @@ class CrudeAnalysis(Common):
             msg = "Looking up pipeline ids for the following jenkins "
             msg += "pipeline_deploy build numbers: %s"
             self.cli.LOG.info(msg % ", ".join([str(i) for i in self.cli.ids]))
+
+            # Expand out id numbers if a range has been used:        
+            exp_ids = []
+            for idn in self.ids:
+                if '-' in idn:
+                    range_start = int(idn.split('-')[0])
+                    range_end = int(idn.split('-')[-1]) + 1
+                    exp_range = [str(b) for b in range(range_start, range_end)]
+                    exp_ids.extend(exp_range)
+                else:
+                    exp_ids.append(idn)
+            self.ids = set(exp_ids)
         elif self.cli.use_date_range:
             # If using a date range instead of pipelines, get pipeline:
             msg = "Getting pipeline ids for between {0} and {1} (this locale)"
             self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
                                          self.cli.end.strftime('%c')))
             self.ids = self.jenkins.get_pipelines_from_date_range()
+
         self.calc_when_to_report()
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
@@ -261,8 +274,6 @@ class CLI(Common):
         prsr.add_option('-k', '--keep', action='store_true', dest='keep_data',
                         default=False,
                         help='Do not delete extracted tarballs when finished')
-        prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
-                        default=False, help='Reduced text in output yaml.')
         prsr.add_option('-n', '--netloc', action='store', dest='netloc',
                         default=None,
                         help='Specify an IP to rewrite URLs')
@@ -284,6 +295,8 @@ class CLI(Common):
         prsr.add_option('-u', '--unverified', action='store_true',
                         dest='unverified', default=False,
                         help='set to allow unverified certificate requests')
+        prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
+                        default=False, help='Reduced text in output yaml.')
         prsr.add_option('-x', '--xmls', action='store', dest='xmls',
                         default=None,
                         help='XUnit files to parse as XML, not as plain text')
@@ -402,6 +415,11 @@ class CLI(Common):
             self.LOG.error(msg)
             raise Exception(msg)
         self.LOG.debug('tc_auth token=%s' % self.tc_auth)
+
+        if not set(args):
+            opts.start = '24 hours ago'
+            msg = "No pipeline IDs provided, defaulting to the past 24 hours"
+            self.LOG.info(msg)
 
         # Start and end datetimes:
         if opts.start or opts.end:
