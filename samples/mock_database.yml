@@ -497,8 +497,8 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "NeutronError......message.....Invalid input for operation..Gateway is not valid on subnet......type......InvalidInput"
-
+            - "NeutronError': {u'message': u'Invalid input for operation: Gateway is not valid on subnet.', u'type': u'InvalidInput"
+            
   "1386754":
     category: None
     description: "ceilometer-agent <-> nova-compute relation does not exist for nova-compute-vmware"
