@@ -416,10 +416,11 @@ class CLI(Common):
             raise Exception(msg)
         self.LOG.debug('tc_auth token=%s' % self.tc_auth)
 
-        if not set(args):
-            opts.start = '24 hours ago'
-            msg = "No pipeline IDs provided, defaulting to the past 24 hours"
-            self.LOG.info(msg)
+        if not self.use_date_range:
+            if not set(args):
+                opts.start = '24 hours ago'
+                msg = "No pipeline IDs provided, defaulting to the past 24 hours"
+                self.LOG.info(msg)
 
         # Start and end datetimes:
         if opts.start or opts.end:
