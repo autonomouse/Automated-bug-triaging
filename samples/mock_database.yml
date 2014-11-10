@@ -497,9 +497,9 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "NeutronError': {u'message': u'Invalid input for operation: Gateway is not valid on subnet.', u'type': u'InvalidInput"
-            
-  "1386754":
+            - "NeutronError.+message.+Invalid input for operation..Gateway is not valid on subnet.+type.+InvalidInput"
+
+"1386754":
     category: None
     description: "ceilometer-agent <-> nova-compute relation does not exist for nova-compute-vmware"
     pipeline_deploy:
@@ -508,3 +508,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Invalid relation in config, service nova-compute not found, rel ceilometer-agent <-> nova-compute"
 
+  "1386754":
+    category: None
+    description: "Prodstack: Cinder VNX cannot add james-page/partner-testing PPA (deploy fail)"
+    pipeline_deploy:
+      -
+        "*cinder-vnx_*.oil_var_log_juju_unit-cinder-vnx-*log":
+            regexp:
+            - "Cannot add PPA"
