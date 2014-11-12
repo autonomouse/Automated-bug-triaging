@@ -508,7 +508,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Invalid relation in config, service nova-compute not found, rel ceilometer-agent <-> nova-compute"
 
-  "1386754":
+  "1391266":
     category: None
     description: "Prodstack: Cinder VNX cannot add james-page/partner-testing PPA (deploy fail)"
     pipeline_deploy:
