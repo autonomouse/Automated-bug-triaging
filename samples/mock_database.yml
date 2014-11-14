@@ -515,4 +515,4 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "juju_status.yaml":
             regexp:
-            - "agent-state: pending.{5}(containers|agent-version):"
+            - "agent-state. pending.{5}(containers|agent-version):"
