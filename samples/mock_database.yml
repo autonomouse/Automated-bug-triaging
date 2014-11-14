@@ -349,15 +349,6 @@ bugs:
             regexp: 
             - "hook failed.+swift-storage-relation-changed"
 
-  "1375244":
-    category: None
-    description: "Deployment failed: oil_ci.deploy.oil_deployer reached deployment timeout (deploy fail)"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - "deployer.import. Reached deployment timeout.+ exiting.+oil_ci.deploy.oil_deployer. Deployment failed"
-
   "1375876":
     category: None
     description: "prodstack: template container juju-trusty-lxc-template did not stop"
@@ -516,3 +507,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "*cinder-vnx_*.oil_var_log_juju_unit-cinder-vnx-*log":
             regexp:
             - "Cannot add PPA"
+
+  "1392536":
+    category: None
+    description: "OIL systems in pending state in juju_status.yaml"
+    pipeline_deploy:
+      -
+        "juju_status.yaml":
+            regexp:
+            - "agent-state: pending.{5}(containers|agent-version):"
