@@ -47,6 +47,7 @@ bugs:
         "console.txt":
             regexp: 
             - "ERROR.*Deployment failed:.*No route to host"
+            
   "1352503":
     category: None
     description: "nova-cloud-controller fails to install with neutron-nsx"
@@ -54,7 +55,8 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "nova-cloud-controller.*hook failed.*install"    
+            - "unit..nova-cloud-controller... machine... agent-state..error details..hook failed...install"  
+                      
   "1352506":
     category: None
     description: "prodstack: unit: nova-compute/1,2,3 hook failed \"ceph-relation-changed\""
@@ -62,7 +64,8 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "nova-compute.*hook failed.*ceph-relation-changed"
+            - "unit. nova-compute... machine... agent-state. error details. hook failed...ceph-relation-changed"
+            
   "1358326":
     category: None
     description: "prodstack: nova-vmware hooks failed: cloud-compute-relation-changed"
@@ -70,7 +73,8 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "nova-vmware.*hook failed.*cloud-compute-relation-changed"
+            - "nova-vmware.. (.*) in error state..hook failed...cloud-compute-relation-changed..for nova-cloud-controller.cloud-compute"
+            
   "1355265":
     category: None
     description: "hook failed: \"mon-relation-joined\""
@@ -78,15 +82,17 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "ceph.*machine.*hook failed.*mon-relation-joined"
+            - "unit. ceph... machine... agent-state. error details. hook failed...mon-relation-joined"
+            
   "1346597":
     category: None
     description: "mongo timeout? cannot get replica set configuration"
     pipeline_deploy:
       -
-        "console.txt":
+        "juju_debug_log.txt":
             regexp: 
-            - ''
+            - "DEBUG juju.mongo open.go... connection failed, will retry. dial tcp ................ connection refused"
+            
   "1353529":
     category: None
     description: "nova-vmware: nova-compute-vmware package not found"
@@ -94,7 +100,8 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "nova-vmware.*hook failed.*install"
+            - "unit. nova-vmware... machine... agent-state. error details. hook failed...install"
+            
   "1372417":
     category: None
     description: "prodstack: Could not query juju status"
@@ -103,6 +110,7 @@ bugs:
         "console.txt":
             regexp: 
             - "ERROR.*Could not query juju status"
+            
   "1372942":
     category: None
     description: error executing lxc - container failed to start
@@ -111,6 +119,7 @@ bugs:
         "juju_status.yaml":
             regexp: 
             - "error executing .lxc-start.: The container failed to start.+To get more details, run the container in foreground mode.+Additional information can be obtained by setting the --logfile and --log-priority options"
+            
   "1372941":
     category: None
     description: 
@@ -469,8 +478,8 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
     pipeline_deploy:
       -
         "console.txt":
-            regexp:
-            - "unit. cassandra... machine.+ agent-state. error details. hook failed...config-changed"
+            regexp:            
+            - "unit. cassandra/.. machine. . agent-state. error details. hook failed...config-changed"     
 
   "1389332":
     category: None
@@ -516,3 +525,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "juju_status.yaml":
             regexp:
             - "agent-state. pending.{5}(containers|agent-version):"
+
+  "1396657":
+    category: None
+    description: "prodstack unit ceph/2 machine: 3 agent-state error details hook failed install"  
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "unit. ceph/.. machine. . agent-state. error details. hook failed...install"
+            
