@@ -479,7 +479,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:            
-            - "unit. cassandra/.. machine. . agent-state. error details. hook failed...config-changed"     
+            - "unit. cassandra/.. machine. .{1,7} agent-state. error details. hook failed...config-changed"     
 
   "1389332":
     category: None
@@ -534,4 +534,28 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp: 
             - "unit. ceph/.. machine. . agent-state. error details. hook failed...install"
+
+  "1393835":
+    category: None
+    description: "[Prodstack] Invalid config charm cinder-vnx vnx_source_key (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "deployer.deploy. Invalid config charm cinder-vnx vnx_source_key="   
+
+  "1397308":
+    category: None
+    description: "[Prodstack] Permission denied in ceph.client.glance.keyring. (prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:            
+            - "OSError.{9,13} Permission denied. ./tmp/.{25,40}/etc/ceph/ceph.client.glance.keyring"     
+     
+        
             
+
+
+
+
