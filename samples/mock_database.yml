@@ -91,7 +91,7 @@ bugs:
       -
         "juju_debug_log.txt":
             regexp: 
-            - "DEBUG juju.mongo open.go... connection failed, will retry. dial tcp ................ connection refused"
+            - "DEBUG juju.mongo open.go... connection failed, will retry. dial tcp .{16} connection refused"
             
   "1353529":
     category: None
@@ -117,8 +117,9 @@ bugs:
     pipeline_deploy:
       -
         "juju_status.yaml":
-            regexp: 
-            - "error executing .lxc-start.: The container failed to start.+To get more details, run the container in foreground mode.+Additional information can be obtained by setting the --logfile and --log-priority options"
+            regexp:
+            - "error executing .lxc-start.. The container failed to start.+To get more details, run the container in foreground mode.+Additional information can be obtained by setting the --logfile and --log-priority options"
+            
             
   "1372941":
     category: None
@@ -127,11 +128,11 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Server.+failed to build and is in ERROR status"
+            - "failed to build and is in ERROR status"
       -
         "tempest_xunit.xml":
             regexp: 
-            - Server.+failed to build and is in ERROR status.+Details.+failed to get to expected status.+In ERROR state
+            - failed to build and is in ERROR status.{1,2000}Details.{1,2000}failed to get to expected status.{1,2000}In ERROR state
 
   "1372946":
     category: None
@@ -140,7 +141,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "assertFalse.+raise self.failureException.+AssertionError: True is not false"
+            - "assertFalse.{1,2000}raise self.failureException.{1,2000}AssertionError: True is not false"
 
   "1372947":
     category: None
@@ -149,7 +150,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "SSHTimeout: Connection to the .+ via SSH timed out.+User: .+, Password: .+"
+            - "SSHTimeout: Connection to the .{1,2000} via SSH timed out.{1,2000}User: .{1,2000}, Password: .{1,2000}"
 
   "1372949":
     category: None
@@ -167,7 +168,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "TimeoutException: Request timed out.+Details: Server .+ failed to reach ACTIVE status.+within the required time .+ Current status: SHUTOFF"
+            - "TimeoutException: Request timed out.{1,2000}Details: Server .{1,2000} failed to reach ACTIVE status.{1,2000}within the required time .{1,2000} Current status: SHUTOFF"
 
   "1372958":
     category: None
@@ -176,7 +177,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status within the required time .+ Current status: BUILD"
+            - "Request timed out.{1,2000}Details: Server .{1,2000} failed to reach ACTIVE status within the required time .{1,2000} Current status: BUILD"
 
   "1372960":
     category: None
@@ -185,7 +186,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Request timed out.+Details: Server .+ failed to reach ACTIVE status and task state .+within the required time .+ Current status: BUILD. Current task state: spawning"
+            - "Request timed out.{1,2000}Details: Server .{1,2000} failed to reach ACTIVE status and task state .{1,2000}within the required time .{1,2000} Current status: BUILD. Current task state: spawning"
 
   "1372964":
     category: None
@@ -194,7 +195,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Unable to find network with name 'private'.+returned non-zero exit status 1"
+            - "Unable to find network with name 'private'.{1,2000}returned non-zero exit status 1"
 
   "1318783":
     category: None
@@ -203,7 +204,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "^No more IP addresses available on network.+"
+            - "^No more IP addresses available on network"
 
   "1372997":
     category: None
@@ -212,7 +213,7 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "oil_ci.deploy.oil_deployer. Deployment failed.+Deployment failed"
+            - "oil_ci.deploy.oil_deployer. Deployment failed.{1,2000}Deployment failed"
 
   "1372970":
     category: None
@@ -221,7 +222,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Object not found.+Details: No ResellerAdmin role found"
+            - "Object not found.{1,2000}Details: No ResellerAdmin role found"
 
   "1319855":
     category: None
@@ -266,7 +267,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "type object 'ServerRescueV3Test.+' has no attribute 'volumes_client'"
+            - "type object 'ServerRescueV3Test.{1,2000}' has no attribute 'volumes_client'"
 
   "1373027":
     category: None
@@ -275,7 +276,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "ServerFault: Got server fault.+Details: Failed to attach interface"
+            - "ServerFault: Got server fault.{1,2000}Details: Failed to attach interface"
 
   "1373028":
     category: None
@@ -292,7 +293,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "itemNotFound.+Image not found"
+            - "itemNotFound.{1,2000}Image not found"
 
   "1372459":
     category: None
@@ -301,7 +302,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "itemNotFound.+FloatingIpPoolNotFound: Floating ip pool not found"
+            - "itemNotFound.{1,2000}FloatingIpPoolNotFound: Floating ip pool not found"
 
   "1372461":
     category: None
@@ -310,7 +311,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "AssertionError. Timed out waiting for.+to become reachable"
+            - "AssertionError. Timed out waiting for.{1,2000}to become reachable"
 
   "1373035":
     category: None
@@ -319,7 +320,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - "Volume volume.+failed to reach available status within the required time"
+            - "Volume volume.{1,2000}failed to reach available status within the required time"
 
   "1371792":
     category: None
@@ -346,7 +347,7 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "Failed to prepare deployed cloud.+HTTPInternalServerError. 500 Internal Server Error"
+            - "Failed to prepare deployed cloud.{1000,1200}HTTPInternalServerError. 500 Internal Server Error"
 
 
   "1375220":
@@ -356,7 +357,7 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "hook failed.+swift-storage-relation-changed"
+            - "hook failed.{1,2000}swift-storage-relation-changed"
 
   "1375876":
     category: None
@@ -394,7 +395,7 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "Failed to prepare deployed cloud.+CommunicationError. Error communicating with .+ timed out"
+            - "Failed to prepare deployed cloud.{1,2000}CommunicationError. Error communicating with .{1,2000} timed out"
 
   "1387670":
     category: None
@@ -403,7 +404,7 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "Failed to prepare deployed cloud.+ConnectionFailed. Connection to neutron failed. Maximum attempts reached"
+            - "Failed to prepare deployed cloud.{1,2000}ConnectionFailed. Connection to neutron failed. Maximum attempts reached"
 
   "1387688":
     category: None
@@ -413,7 +414,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp: 
-            - "oil_ci.prepare.oil_prepper. Failed to prepare deployed cloud.+NeutronClientException. Request Failed. internal server error while processing your request"
+            - "oil_ci.prepare.oil_prepper. Failed to prepare deployed cloud.{1,2000}NeutronClientException. Request Failed. internal server error while processing your request"
 
   "1387698":
     category: None
@@ -461,7 +462,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "juju_status.yaml":
             regexp: 
-            - "hook failed...storage.backend.relation.joined.+for cinder-vnx.storage.backend"
+            - "hook failed...storage.backend.relation.joined.{1,2000}for cinder-vnx.storage.backend"
 
   "1389318":
     category: None
@@ -479,7 +480,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:            
-            - "unit. cassandra/.. machine. .{1,7} agent-state. error details. hook failed...config-changed"     
+            - "unit. cassandra... machine.{1,10} agent-state. error details. hook failed...config-changed"     
 
   "1389332":
     category: None
@@ -497,7 +498,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "NeutronError.+message.+Invalid input for operation..Gateway is not valid on subnet.+type.+InvalidInput"
+            - "NeutronError.{1,2000}message.{1,2000}Invalid input for operation..Gateway is not valid on subnet.{1,2000}type.{1,2000}InvalidInput"
 
   "1386754":
     category: None
@@ -552,10 +553,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:            
             - "OSError.{9,13} Permission denied. ./tmp/.{25,40}/etc/ceph/ceph.client.glance.keyring"     
+
+  "1397392":
+    category: None
+    description: "[Prodstack] nova-compute hook failed 'ceph-relation-changed' (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:            
+            - "unit. nova-compute... machine. . agent-state. error details. hook failed. .ceph-relation-changed" 
      
-        
-            
-
-
-
-
