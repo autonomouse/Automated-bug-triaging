@@ -7,38 +7,7 @@ bugs:
         "console.txt":
             regexp: 
             - "nvp-transport-node.*hook failed:.*config-changed"
-  "1319855":
-    category: None
-    description: "On pipeline deploy sometimes get hook failed: \"shared-db-relation-changed\""
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
-  "1335325":
-    category: None
-    description: "prodstack: error on deploying services Deployment failed: 'units'"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
-  "1336339":
-    category: None
-    description: "prodstack: cinder-iscsi charm failure Command"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
-  "1346338":
-    category: None
-    description: "juju bootstrap failed to init, unauthorized mongo access"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - ''
+
   "1346340":
     category: None
     description: "deployer fails with no route to host"
@@ -132,7 +101,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp: 
-            - failed to build and is in ERROR status.{1,2000}Details.{1,2000}failed to get to expected status.{1,2000}In ERROR state
+            - "failed to build and is in ERROR status.{1,2000}Details.{1,2000}failed to get to expected status.{1,2000}In ERROR state"
 
   "1372946":
     category: None
