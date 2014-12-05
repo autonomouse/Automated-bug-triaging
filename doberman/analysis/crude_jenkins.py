@@ -1,6 +1,4 @@
 
-from crude_common import Common
-
 import os
 import re
 import tarfile
@@ -10,9 +8,9 @@ import time
 from lxml import etree
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat
+from doberman.common.common import Common
 from jenkinsapi.custom_exceptions import *
 from glob import glob
-from datetime import datetime
 
 
 class Jenkins(Common):
@@ -90,40 +88,6 @@ class Jenkins(Common):
             cnsl.write(console)
             cnsl.write('\n')
             cnsl.flush()
-
-    def get_pipelines_from_date_range(self):
-        job = 'pipeline_deploy'
-        jenkins_job = self.jenkins_api[job]
-        builds = jenkins_job._poll()['builds']
-        builds.sort(key=lambda r: r['timestamp'])
-        start_idx = self.find_build_newer_than(builds, self.cli.start)
-        end_idx = self.find_build_newer_than(builds, self.cli.end)
-
-        # If end date is newer than we have builds, just use
-        # the most recent build:
-        if end_idx is None and start_idx is None:
-            start_idx = builds.index(builds[-1])
-
-        if end_idx is None:
-            end_idx = builds.index(builds[-1])
-
-        st_num = builds[start_idx]['number']
-        st_ts = datetime.fromtimestamp(builds[start_idx]['timestamp'] / 1000)
-        end_num = builds[end_idx]['number']
-        end_ts = datetime.fromtimestamp(builds[end_idx]['timestamp'] / 1000)
-
-        self.cli.LOG.info("Start Job: {0} - {1}".format(st_num, st_ts))
-        self.cli.LOG.info("End Job: {0} - {1}".format(end_num, end_ts))
-
-        # From idx to end:
-        builds_to_check = [r['number'] for r in builds[start_idx:end_idx]]
-        nr_builds = len(builds_to_check)
-        self.cli.LOG.info("Fetching {0} build objects".format(nr_builds))
-        build_objs = [b for b in builds if b['number'] in builds_to_check]
-
-        # With these deploy build numbers, we can now get the pipeline:
-        return map(lambda x, self=self: self.get_pipeline_from_deploy_build(x),
-                   [b['number'] for b in build_objs])
 
     def find_build_newer_than(self, builds, start):
         """
