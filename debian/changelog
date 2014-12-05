@@ -1,3 +1,17 @@
+doberman (1.0.6-0ubuntu1) trusty; urgency=medium
+
+  * Started to abstract out the cli input a bit so refinery can have it's own options without affecting the cli input to crude
+  * Refinery now works on folders with output files in top-level so can work on crude output run locally rather than over jenkins
+  * Started to farm out some functionality into it's own methods and move the more generic methods into common with an aim to move to an API model in the future
+  * Moved plotting methods out of refinery into it's own class. Also better plots (but only a bit better)
+  * Tweeked progress reporting to user
+  * Now does bug rankings for individual jobs too
+  * Better refinery groupings
+  * Bug fixes - keep data fix, fix for no data
+  * Reports top 10 bugs to console. Added top ten output to refinery and number of duplicates to pie charts 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Fri, 05 Dec 2014 10:12:16 +0000
+
 doberman (0.0.5-0ubuntu1) trusty; urgency=medium
 
   * Bug fix in date range

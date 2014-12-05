@@ -1,10 +1,10 @@
 
-from crude_common import Common
-
+import os
 import yaml
 from test_catalog.client.api import TCClient
 from test_catalog.client.base import TCCTestPipeline
 from doberman.common import pycookiecheat
+from doberman.common.common import Common
 from jenkinsapi.custom_exceptions import *
 
 
@@ -53,22 +53,49 @@ class TestCatalog(Common):
         self.client = self.tc_client(endpoint=self.cli.tc_host,
                                      cookies=self.cookie, verify=self.verify)
 
+    def get_all_pipelines(self, pipeline_ids):
+        """
+        """
+
+        filename = 'pipelines_and_associated_build_numbers.yml'
+        build_numbers = {}
+
+        self.mkdir(self.cli.reportdir)
+
+        # The local dictionary way:
+        if filename in os.listdir(self.cli.reportdir):
+            with open(os.path.join(self.cli.reportdir, filename), "r") as f:
+                build_numbers = yaml.load(f)
+
+        # Check that all pipeline_ids were in the yaml file:
+        missing = [pl for pl in pipeline_ids if pl not in build_numbers.keys()]
+        if missing:
+            # The test catalog way:
+            for pipeline_id in missing:
+                pldata = self.get_pipelines(pipeline_id)
+                if pldata:
+                    build_numbers[pipeline_id] = pldata
+
+            # Create local dictionary for next time:
+            self.write_output_yaml(self.cli.reportdir, filename, build_numbers)
+
+        return build_numbers
+
     def get_pipelines(self, pipeline):
         """ Using test-catalog, return the build numbers for the jobs that are
             part of the given pipeline.
-
         """
-        self.cli.LOG.info('Fetching data on pipeline: %s' % (pipeline))
+
         try:
             pl_tcat = TCCTestPipeline(self.client, pipeline)
         except Exception, e:
             msg = "test-catalog error. Does pipeline exist? Is there a cookie-"
             msg += "related issue? (%s)" % e
             self.cli.LOG.error(msg)
-            raise Exception(msg)
+            return
 
         build_numbers = {}
-        parent_dict = str(pl_tcat.dict['parent'])
+        parent_dict = str(pl_tcat.__dict__)
 
         for jname in self.cli.job_names:
             try:
@@ -77,7 +104,22 @@ class TestCatalog(Common):
                 build_numbers[jname] = build
             except:
                 build_numbers[jname] = None
+        bstr = ", ".join(["{} ({})".format(val, key)
+                          for key, val in build_numbers.items() if val])
+        msg = 'Build numbers {1} associated with pipeline: {0}'
+        self.cli.LOG.info(msg.format(pipeline, bstr))
         return build_numbers
 
     def pipeline_check(self, pipeline_id):
         return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
+
+    def get_pipelines_from_date_range(self, limit=2000):
+        start_date = 'start="{}"'.format(self.cli.start.strftime('%c'))
+        end_date = 'end="{}"'.format(self.cli.end.strftime('%c'))
+        params = [start_date, end_date]
+        return self.client.search_pipelines(params, limit=limit, extra=False)
+
+    def get_pipeline_from_deploy_build(self, id_number,
+                                       job='jenkins-pipeline_deploy'):
+        data = self.client.get_job_by_build_tag('{}-{}'.format(job, id_number))
+        return data.get('pipeline_id')

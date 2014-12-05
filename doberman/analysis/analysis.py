@@ -7,14 +7,13 @@ import urlparse
 import shutil
 import optparse
 import json
-import special_cases
 import pytz
 import parsedatetime as pdt
 from dateutil.parser import parse
 from datetime import datetime
-from doberman.common import utils
+from doberman.common import utils, special_cases
 from jenkinsapi.custom_exceptions import *
-from crude_common import Common
+from doberman.common.common import Common
 from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
 from crude_test_catalog import TestCatalog
 from doberman.__init__ import __version__
@@ -54,12 +53,13 @@ class CrudeAnalysis(Common):
                 else:
                     exp_ids.append(idn)
             self.ids = set(exp_ids)
+
         elif self.cli.use_date_range:
             # If using a date range instead of pipelines, get pipeline:
             msg = "Getting pipeline ids for between {0} and {1} (this locale)"
             self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
                                          self.cli.end.strftime('%c')))
-            self.ids = self.jenkins.get_pipelines_from_date_range()
+            self.ids = self.test_catalog.get_pipelines_from_date_range()
 
         self.calc_when_to_report()
         for pos, idn in enumerate(self.ids):
@@ -89,11 +89,11 @@ class CrudeAnalysis(Common):
 
         """
 
-        if len(self.ids) > 35:
+        if len(self.ids) > 350:
             self.report_at = range(5, 100, 5)  # Notify every 5 percent
-        elif len(self.ids) > 25:
+        elif len(self.ids) > 150:
             self.report_at = range(10, 100, 10)  # Notify every 10 percent
-        elif len(self.ids) > 10:
+        elif len(self.ids) > 50:
             self.report_at = range(25, 100, 25)  # Notify every 25 percent
         else:
             self.report_at = [50]  # Notify at 50 percent
@@ -111,11 +111,14 @@ class CrudeAnalysis(Common):
                     shutil.rmtree(kill_me)
 
     def pipeline_processor(self):
+
         self.message = -1
         deploy_yamldict = {}
         prepare_yamldict = {}
         tempest_yamldict = {}
         problem_pipelines = []
+
+        build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
         for pipeline_id in self.pipeline_ids:
             deploy_dict = {}
@@ -124,10 +127,10 @@ class CrudeAnalysis(Common):
             self.pipeline = pipeline_id
             try:
                 # Get pipeline data then process each:
-                build_numbers = self.test_catalog.get_pipelines(pipeline_id)
-                deploy_build = build_numbers['pipeline_deploy']
-                prepare_build = build_numbers['pipeline_prepare']
-                tempest_build = build_numbers['test_tempest_smoke']
+                deploy_build = build_numbers[pipeline_id]['pipeline_deploy']
+                prepare_build = build_numbers[pipeline_id]['pipeline_prepare']
+                tempest_build = \
+                    build_numbers[pipeline_id]['test_tempest_smoke']
 
                 # Pull console and artifacts from jenkins:
                 deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
@@ -205,20 +208,7 @@ class CrudeAnalysis(Common):
                 errmsg += "_pipelines.yaml in " + self.cli.reportdir + "\n\n"
                 self.cli.LOG.error(errmsg)
 
-        # Record which pipelines were processed in a yaml:
-        if self.cli.logpipelines:
-            file_path = os.path.join(self.cli.reportdir,
-                                     'pipelines_processed.yaml')
-            open(file_path, 'a').close()  # Create file if doesn't exist yet
-            with open(file_path, 'r+') as pp_file:
-                existing_content = pp_file.read()
-                pp_file.seek(0, 0)  # Put at beginning of file
-                pp_file.write("\n" + str(datetime.now())
-                              + "\n--------------------------\n")
-                pp_file.write(" ".join(self.pipeline_ids))
-                pp_file.write("\n" + existing_content)
-                info_msg = "All processed pipelines recorded to {0}"
-                self.cli.LOG.info(info_msg.format(file_path))
+        self.log_pipelines()
 
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """
@@ -247,13 +237,18 @@ class CLI(Common):
     """
 
     def __init__(self):
+        self.set_up_log_and_parser()
+        self.parse_cli_args()
+
+    def set_up_log_and_parser(self):
         self.LOG = utils.get_logger('doberman.analysis')
         self.LOG.info("Doberman version {0}".format(__version__))
-        self.cli()
-
-    def cli(self):
         usage = "usage: %prog [options] pipeline_id1 pipeline_id2 ..."
-        prsr = optparse.OptionParser(usage=usage)
+        self.parser = optparse.OptionParser(usage=usage)
+        self.add_options_to_parser()
+
+    def add_options_to_parser(self):
+        prsr = self.parser
         prsr.add_option('-b', '--usebuildnos', action='store_true',
                         dest='use_deploy', default=False,
                         help='use pipeline_deploy build numbers not pipelines')
@@ -300,7 +295,9 @@ class CLI(Common):
         prsr.add_option('-x', '--xmls', action='store', dest='xmls',
                         default=None,
                         help='XUnit files to parse as XML, not as plain text')
-        (opts, args) = prsr.parse_args()
+
+    def parse_cli_args(self):
+        (opts, args) = self.parser.parse_args()
 
         # cli override of config values
         if opts.configfile:
@@ -419,7 +416,7 @@ class CLI(Common):
         if (not opts.start) and (not opts.end):
             if not set(args):
                 opts.start = '24 hours ago'
-                msg = "No pipeline IDs provided, defaulting to the past 24 hours"
+                msg = "No pipeline IDs provided, defaulting to past 24 hours"
                 self.LOG.info(msg)
 
         # Start and end datetimes:
