@@ -531,4 +531,33 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:            
             - "unit. nova-compute... machine. . agent-state. error details. hook failed. .ceph-relation-changed" 
-     
+         
+
+  "1398282":
+    category: None
+    description: "[Prodstack] rabbitmq-server/0 hook failed - install Cannot initiate the connection to archive.ubuntu.com"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "unit. rabbitmq-server... machine.{1,12} agent-state. error details. hook failed. .install"
+                  
+  "1399818":
+    category: None
+    description: "[Prostack] nova-compute hook failed image-service-relation-changed - can't ssh into hayward-03"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "unit. nova-compute... machine.{1,4} agent-state. error details. hook failed...image-service-relation-changed.+oil_ci.ssh. Could not setup ssh connection to"
+                  
+  "1400396":
+    category: None
+    description: "[Prodstack] cannot add unit 1/1 to service - dial tcp 10.245.0.10 connection refused"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Error.{1,5}cannot add unit 1.1 to service .nova-compute.. cannot add unit to service .nova-compute.. Get http.{4,20}/MAAS/api/1.0/nodes/.op.list.status...status...status...status...status... dial tcp .{4,25} connection refused"
+            
+
