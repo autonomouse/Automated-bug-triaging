@@ -200,6 +200,7 @@ class Build(Common):
         # test_tempest_smoke).
 
         parse_as_xml = self.cli.xmls
+        xml_files_parsed = []
         build_details = [build_info for build_info in self.jenkins.jenkins_api
                          [self.jobname]._poll()['builds'] if build_info
                          ['number'] == int(self.build_number)][0]
@@ -210,8 +211,9 @@ class Build(Common):
         bug_unmatched = True
         if not self.bugs:
             raise Exception("No bugs in database!")
+
+        unfiled_xml_fails = {}
         for bug_id in self.bugs.keys():
-            info = {}
             if self.jobname in self.bugs[bug_id]:
                 # Any dict in self.bugs[bug_id][self.jobname] can match (or):
                 or_dict = self.bugs[bug_id][self.jobname]
@@ -221,6 +223,7 @@ class Build(Common):
                     glob_hits = []
                     # Load up file for each target_file in the DB for this bug:
                     for target_file in and_dict.keys():
+                        info = {}
                         try:
                             for bssub in self.bsnode:
                                 if 'bootstrap_node' not in info:
@@ -234,7 +237,11 @@ class Build(Common):
                             info['error'] = target_file + " not present"
                             break
                         for target_location in globs:
-                            if not (target_file in parse_as_xml):
+                            try:
+                                target = target_location.split(os.sep)[-1]
+                            except:
+                                target = target_file
+                            if not (target in parse_as_xml):
                                 with open(target_location, 'r') as grep_me:
                                     text = grep_me.read()
                                 hit = self.rematch(and_dict, target_file, text)
@@ -244,10 +251,15 @@ class Build(Common):
                                     hit_dict = self.join_dicts(hit_dict, hit)
                                     self.message = 0
                                 else:
-                                    info['target file'] = target_file
+                                    info['target file'] = target
                                     if not self.cli.reduced_output_text:
                                         info['text'] = text
                             else:
+                                if target in xml_files_parsed:
+                                    xml_unparsed = False
+                                else:
+                                    xml_unparsed = True
+                                    xml_files_parsed.append(target)
                                 # Get tempest results:
                                 p = etree.XMLParser(huge_tree=True)
                                 et = etree.parse(target_location, parser=p)
@@ -259,23 +271,38 @@ class Build(Common):
                                 # tempest file - you can do console AND tempest
                                 # or tempest OR tempest, but not tempest AND
                                 # tempest. Needs it please!
+                                if xml_unparsed:
+                                    unfiled_xml_fails = self.populate_uxfs(
+                                        errors_and_fails, info, target,
+                                        bug_unmatched, build_status,
+                                        unfiled_xml_fails)
                                 for num, fail in enumerate(errors_and_fails):
                                     pre_log = fail.get('message')\
                                         .split("begin captured logging")[0]
-                                    hit = self.rematch(and_dict, target_file,
-                                                       pre_log)
-                                    info['target file'] = target_file
+                                    if not self.cli.reduced_output_text:
+                                            info['text'] = pre_log
+                                    info['target file'] = target
                                     info['xunit class'] = \
                                         fail.getparent().get('classname')
                                     info['xunit name'] = \
                                         fail.getparent().get('name')
+                                    hit = self.rematch(and_dict, target,
+                                                       pre_log)
                                     if hit:
+                                        # Add to hit_dict:
                                         hit_dict = self.join_dicts(hit_dict,
                                                                    hit)
-                                        break
-                                    else:
-                                        if not self.cli.reduced_output_text:
-                                            info['text'] = pre_log
+                                        # Remove hit from unfiled_xml_fails:
+                                        for uxf in unfiled_xml_fails:
+                                            remove = unfiled_xml_fails[uxf]
+                                            inf = remove.get('additional info')
+                                            xname = inf['xunit name']
+                                            if xname == info['xunit name']:
+                                                del unfiled_xml_fails[uxf]
+
+                                # TODO: But if there are multiple globs, it'll
+                                # overwrite these in the xml - FIXME!!!
+
                     if and_dict == hit_dict:
                         links = []
                         url = self.cli.external_jenkins_url
@@ -309,6 +336,8 @@ class Build(Common):
                         hit_dict = {}
                         bug_unmatched = False
                         break
+        matching_bugs = self.join_dicts(matching_bugs, unfiled_xml_fails)
+
         if bug_unmatched and (build_status == 'FAILURE' or
                               build_status == 'Unknown'):
             bug_id = 'unfiled-' + str(uuid.uuid4())
@@ -324,14 +353,45 @@ class Build(Common):
                                      'states': self.oil_df['state'],
                                      'slaves': self.oil_df['slaves'],
                                      'link to jenkins': jlink, }
-            self.cli.LOG.info("Unfiled bug found! ({0})".format(self.jobname))
-            hit_dict = {}
+            if announce:
+                self.cli.LOG.info("Unfiled bug found! ({0})"
+                                  .format(self.jobname))
             self.message = 1
-            if info:
-                matching_bugs[bug_id]['additional info'] = info
+            matching_bugs[bug_id]['additional info'] = info
         else:
-            self.message = 0
+            if self.message != 1:
+                self.message = 0
         return (matching_bugs, build_status)
+
+    def populate_uxfs(self, errors_and_fails, info, target, bug_unmatched,
+                      build_status, unfiled_xml_fails):
+        """ Populates unfiled_xml_fails dictionary. """
+        uxf_dict = {}
+        for fail in errors_and_fails:
+            specific_info = info.copy()
+            pre_log = fail.get('message').split("begin captured logging")[0]
+            if not self.cli.reduced_output_text:
+                specific_info['text'] = pre_log
+            specific_info['target file'] = target
+            specific_info['xunit class'] = fail.getparent().get('classname')
+            specific_info['xunit name'] = fail.getparent().get('name')
+
+            bug_id = 'unfiled-' + str(uuid.uuid4())
+            jlink = ('{0}/job/{1}/{2}/console'
+                     .format(self.cli.external_jenkins_url, self.jobname,
+                             self.build_number))
+            uxf_dict[bug_id] = {'regexps': 'NO REGEX - UNFILED/UNMATCHED BUG',
+                                'vendors': self.oil_df['vendor'],
+                                'machines': self.oil_df['node'],
+                                'units': self.oil_df['service'],
+                                'charms': self.oil_df['charm'],
+                                'ports': self.oil_df['ports'],
+                                'states': self.oil_df['state'],
+                                'slaves': self.oil_df['slaves'],
+                                'link to jenkins': jlink, }
+            uxf_dict[bug_id]['additional info'] = specific_info
+
+        return uxf_dict
 
     def rematch(self, bugs, target_file, text):
         """ Search files in bugs for multiple matching regexps. """
