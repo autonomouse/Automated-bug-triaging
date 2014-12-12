@@ -294,15 +294,20 @@ class Build(Common):
                                                                    hit)
                                         # Remove hit from unfiled_xml_fails:
                                         edited_uxfs = unfiled_xml_fails.copy()
+
                                         for uxf in unfiled_xml_fails:
                                             removeme = edited_uxfs[uxf]
                                             addinfo = removeme.get(
                                                 'additional info')
                                             xname = addinfo['xunit name']
-                                            if xname == info['xunit name']:
+                                            namecheck = \
+                                                (xname == info['xunit name'])
+                                            xclass = addinfo['xunit class']
+                                            classcheck = \
+                                                (xclass == info['xunit class'])
+                                            if (namecheck and classcheck):
                                                 del edited_uxfs[uxf]
                                         unfiled_xml_fails = edited_uxfs.copy()
-
                                 # TODO: But if there are multiple globs, it'll
                                 # overwrite these in the xml - FIXME!!!
 
