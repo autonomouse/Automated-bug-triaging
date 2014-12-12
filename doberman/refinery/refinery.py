@@ -145,7 +145,7 @@ class Refinery(CrudeAnalysis):
                 build_num = build_numbers[pipeline_id].get(job)
 
                 if build_num:
-                    outdir = os.path.join(output_folder, str(build_num))
+                    outdir = os.path.join(output_folder, job, str(build_num))
                     self.all_build_numbers.append(build_num)
                     self.download_specific_file(job, pipeline_id, build_num,
                                                 marker, outdir)
@@ -164,14 +164,14 @@ class Refinery(CrudeAnalysis):
 
         bug_dict = {}
         job_specific_bugs_dict = {}
+        crude_folder = os.path.join(self.cli.reportdir, crude_job)
         if not os.path.exists(self.cli.reportdir):
-            self.cli.LOG.error("{0} doesn't exist!"
-                               .format(self.cli.reportdir))
+            self.cli.LOG.error("{0} doesn't exist!".format(crude_folder))
         else:
             other_jobs = [j for j in self.cli.job_names if j != crude_job]
             for job in other_jobs:
                 filename = "{0}_{1}.yml".format(marker, job)
-                if filename in os.listdir(self.cli.reportdir):
+                if filename in os.listdir(crude_folder):
                     # If they're in the top level directory, just do this...:
                     new_bugs = self.unify(crude_job, marker, job, filename)
 
@@ -181,7 +181,7 @@ class Refinery(CrudeAnalysis):
                 else:
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
-                    for build_num in os.walk(self.cli.reportdir).next()[1]:
+                    for build_num in os.walk(crude_folder).next()[1]:
                         new_bugs = self.unify(crude_job, marker, job, filename,
                                               build_num)
                         bug_dict = self.join_dicts(bug_dict, new_bugs)
@@ -198,10 +198,11 @@ class Refinery(CrudeAnalysis):
         """
 
         if build_num:
-            file_location = os.path.join(self.cli.reportdir, build_num,
-                                         filename)
+            file_location = os.path.join(self.cli.reportdir, crude_job, 
+                                         build_num, filename)
         else:
-            file_location = os.path.join(self.cli.reportdir, filename)
+            file_location = os.path.join(self.cli.reportdir, crude_job, 
+                                        filename)
         # Read in each yaml output file:
         try:
             with open(file_location, "r") as f:
@@ -496,7 +497,7 @@ class Refinery(CrudeAnalysis):
                             except:
                                 pass
         return (unaccounted, duplicates, text, all_scores)           
-                        
+                         
     def report_top_ten_bugs(self, bug_rankings):
         """ Print the top ten bugs for each job to the console. """
         for job in self.cli.job_names:
