@@ -293,12 +293,15 @@ class Build(Common):
                                         hit_dict = self.join_dicts(hit_dict,
                                                                    hit)
                                         # Remove hit from unfiled_xml_fails:
+                                        edited_uxfs = unfiled_xml_fails.copy()
                                         for uxf in unfiled_xml_fails:
-                                            remove = unfiled_xml_fails[uxf]
-                                            inf = remove.get('additional info')
-                                            xname = inf['xunit name']
+                                            removeme = edited_uxfs[uxf]
+                                            addinfo = removeme.get(
+                                                'additional info')
+                                            xname = addinfo['xunit name']
                                             if xname == info['xunit name']:
-                                                del unfiled_xml_fails[uxf]
+                                                del edited_uxfs[uxf]
+                                        unfiled_xml_fails = edited_uxfs.copy()
 
                                 # TODO: But if there are multiple globs, it'll
                                 # overwrite these in the xml - FIXME!!!
