@@ -277,8 +277,16 @@ class Refinery(CrudeAnalysis):
                                 self.cli.LOG.info(err.format(pipeline_id, bug,
                                                   e))
                                 bug_output['console'] = None
-                        with open(os.path.join(op_dir, rename), 'r') as f:
-                            bug_output['console'] = f.read()
+                        
+                        try:
+                            openme = os.path.join(op_dir, rename)
+                            with open(openme, 'r') as f:
+                                bug_output['console'] = f.read()
+                        except Exception, e:
+                            err = "Could not open {} for pl {} (bug {}). {}"
+                            self.cli.LOG.info(err.format(openme, pipeline_id, 
+                                              bug, e))
+                            bug_output['console'] = None
                     bug_dict[pipeline_id][bug] = bug_output
                     # TODO: end of would be else block
         return bug_dict
