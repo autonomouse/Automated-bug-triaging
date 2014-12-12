@@ -242,12 +242,15 @@ class Refinery(CrudeAnalysis):
                     link_to_tcat = plop.get('link to test-catalog')
                     bug_output['link to test-catalog'] = link_to_tcat
                     bug_output['job'] = job
-
-                    if ('unfiled' in bug) and build_num:
-                        op_dir = os.path.join(self.cli.reportdir, build_num)
-                        rename = "{0}_console.txt".format(job)
+                    if not build_num:
+                        build_num = plop.get('build')
+                        
+                    if ('unfiled' in bug):
+                        op_dir = os.path.join(self.cli.reportdir, job, 
+                                              build_num)
+                        #rename = "{0}_console.txt".format(job)
+                        rename = "console.txt"
                         # Check to see if console is present. If not, download:
-
                         if not os.path.isfile(os.path.join(op_dir, rename)):
                             params = (job, pipeline_id, build, 'console.txt',
                                       op_dir, rename)
@@ -314,6 +317,21 @@ class Refinery(CrudeAnalysis):
 
         return (pipelines_affected_by_bug, bug_rankings)
 
+    def get_identifying_bug_details(self, bugs, bug_id, multi_bpp=False):
+        """ """
+        if multi_bpp:
+            return self.get_xunit_class_and_name(bugs, bug_id)
+        else:            
+            return self.normalise_bug_details(bugs, bug_id)
+    
+    def get_xunit_class_and_name(self, bugs, bug_id):
+        """ Make info_a/b equal to xunitclass + xunitname. """
+        try:
+            addinfo = bugs[bug_id].get('additional info')
+            return "{} {}".format(addinfo['xunit class'], addinfo['xunit name'])
+        except:
+            return None 
+
     def normalise_bug_details(self, bugs, bug_id):
         """
         get info on bug from additional info. Replace build number,
@@ -324,7 +342,7 @@ class Refinery(CrudeAnalysis):
 
         # replace numbers with 'X'
         info = re.sub(r'\d', 'X', info) if info else ''
-
+        
         # Search for traceback:
         traceback_list = []
         tb_split = info.split('Traceback')
@@ -333,8 +351,7 @@ class Refinery(CrudeAnalysis):
                         else '')
             this_tb = 'Traceback' + dt_split[0] if dt_split != '' else ''
             traceback_list.append(this_tb)
-        traceback = " ".join([str(n) for n in traceback_list])
-
+        traceback = " ".join([str(n) for n in set(traceback_list)])
         errs = ''
         fails = ''
         if not traceback:
@@ -362,6 +379,7 @@ class Refinery(CrudeAnalysis):
             for bug_no in unified_bugdict[pipeline]:
                 if 'unfiled' in bug_no:
                     unfiled_bugs[bug_no] = unified_bugdict[pipeline][bug_no]
+
         duplicates = {}
         text = {}
         unaccounted_bugs = unfiled_bugs.keys()
@@ -393,7 +411,7 @@ class Refinery(CrudeAnalysis):
             info_a = self.normalise_bug_details(unfiled_bugs, unf_bug)
             text[unf_bug] = info_a
             unaccounted_bugs.remove(unf_bug)
-
+        '''
         # Re-compare only those bugs identified as having duplicates (to
         # quickly check that the list cannot be further reduced):
         self.cli.LOG.info("Double checking...")
@@ -410,6 +428,8 @@ class Refinery(CrudeAnalysis):
                         duplicates[dupe].extend(duplicates[double_dupe])
                         del duplicates[double_dupe]
             duplicates[dupe] = set(duplicates[dupe])
+        '''
+        
         if len(duplicates):
             num_dupes = len(duplicates)
             self.cli.LOG.info("{} unique bugs detected".format(num_dupes))
@@ -433,39 +453,50 @@ class Refinery(CrudeAnalysis):
             grouped_bugs[bug_key]['match text'] = text.get(bug_key)
 
         return (grouped_bugs, all_scores)
-
+                    
     def loop_group(self, unfiled_bugs, unaccounted_bugs, duplicates, text,
                    all_scores):
         """
         """
-        for unf_bug_a in unaccounted_bugs:
+        unaccounted = list(unaccounted_bugs)  # copies list, not just link to it
+        if unfiled_bugs[unaccounted[0]].get('job') in self.cli.multi_bugs_in_pl:
+            multiple_bugs_per_pipeline = True
+        else:
+            multiple_bugs_per_pipeline = False            
+        
+        for unf_bug_a in unaccounted:
             duplicates[unf_bug_a] = [unf_bug_a]
-            info_a = self.normalise_bug_details(unfiled_bugs, unf_bug_a)
+            info_a = self.get_identifying_bug_details(
+                unfiled_bugs, unf_bug_a, multiple_bugs_per_pipeline)
             text[unf_bug_a] = info_a
-            for unf_bug_b in unaccounted_bugs:
+            for unf_bug_b in unaccounted:
                 if unf_bug_b != unf_bug_a:
-                    try:
-                        info_b = self.normalise_bug_details(unfiled_bugs,
-                                                            unf_bug_b)
-                        score = SequenceMatcher(None, info_a, info_b).ratio()
+                    info_b = self.get_identifying_bug_details(
+                        unfiled_bugs, unf_bug_b, multiple_bugs_per_pipeline)
+                    try:            
+                        score = SequenceMatcher(None, string1, string2).ratio()
                     except:
                         score = -1
-                    if score > float(self.cli.match_threshold):
+                    if multiple_bugs_per_pipeline:
+                        threshold = 1.0
+                    else:
+                        threshold = float(self.cli.match_threshold)                    
+                    if score >= threshold:
                         if unf_bug_a not in all_scores:
                             all_scores[unf_bug_a] = {}
                         all_scores[unf_bug_a][unf_bug_b] = score
                         if unf_bug_b not in duplicates:
                             try:
-                                unaccounted_bugs.remove(unf_bug_a)
+                                unaccounted.remove(unf_bug_a)
                             except:
                                 pass
                             duplicates[unf_bug_a].append(unf_bug_b)
                             try:
-                                unaccounted_bugs.remove(unf_bug_b)
+                                unaccounted.remove(unf_bug_b)
                             except:
                                 pass
-        return (unaccounted_bugs, duplicates, text, all_scores)
-
+        return (unaccounted, duplicates, text, all_scores)           
+                        
     def report_top_ten_bugs(self, bug_rankings):
         """ Print the top ten bugs for each job to the console. """
         for job in self.cli.job_names:
@@ -477,7 +508,7 @@ class Refinery(CrudeAnalysis):
                 if bug_rankings.get(job):
                     for count, bug in enumerate(bug_rankings.get(job)):
                         if count < 10:
-                            print("{0}-{1} duplicates".format(bug[0], bug[1]))
+                            print("{0} - {1} duplicates".format(bug[0], bug[1]))
                 else:
                     print("No bugs found.")
                 print
