@@ -171,19 +171,36 @@ class Refinery(CrudeAnalysis):
             other_jobs = [j for j in self.cli.job_names if j != crude_job]
             for job in other_jobs:
                 filename = "{0}_{1}.yml".format(marker, job)
-                if filename in os.listdir(crude_folder):
+                scan_sub_folder = False 
+                if os.path.exists(crude_folder): 
+                    if filename in os.listdir(crude_folder):
+                        # If they're in the top level directory, just do this...:
+                        new_bugs = self.unify(crude_job, marker, job, filename, 
+                                              crude_folder)
+
+                        bug_dict = self.join_dicts(bug_dict, new_bugs)
+
+                        job_specific_bugs_dict[job] = new_bugs
+                    else:
+                        scan_sub_folder = True
+                elif filename in os.listdir(self.cli.reportdir):
                     # If they're in the top level directory, just do this...:
-                    new_bugs = self.unify(crude_job, marker, job, filename)
+                    new_bugs = self.unify(crude_job, marker, job, filename,
+                                          self.cli.reportdir)
 
                     bug_dict = self.join_dicts(bug_dict, new_bugs)
 
                     job_specific_bugs_dict[job] = new_bugs
                 else:
+                    scan_sub_folder = True
+
+                if scan_sub_folder:
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
+                    
                     for build_num in os.walk(crude_folder).next()[1]:
                         new_bugs = self.unify(crude_job, marker, job, filename,
-                                              build_num)
+                                          self.cli.reportdir, build_num)
                         bug_dict = self.join_dicts(bug_dict, new_bugs)
                         job_specific_bugs = self.join_dicts(job_specific_bugs,
                                                             new_bugs)
@@ -191,18 +208,15 @@ class Refinery(CrudeAnalysis):
                         job_specific_bugs_dict[job] = new_bugs
         return (bug_dict, job_specific_bugs_dict)
 
-    def unify(self, crude_job, marker, job, filename, build_num=None):
+    def unify(self, crude_job, marker, job, filename, rdir, build_num=None):
         """
         Unify the downloaded crude output yamls into a single dictionary.
 
         """
-
         if build_num:
-            file_location = os.path.join(self.cli.reportdir, crude_job, 
-                                         build_num, filename)
+            file_location = os.path.join(rdir, build_num, filename)
         else:
-            file_location = os.path.join(self.cli.reportdir, crude_job, 
-                                        filename)
+            file_location = os.path.join(rdir, filename)
         # Read in each yaml output file:
         try:
             with open(file_location, "r") as f:
@@ -247,7 +261,7 @@ class Refinery(CrudeAnalysis):
                         build_num = plop.get('build')
                         
                     if ('unfiled' in bug):
-                        op_dir = os.path.join(self.cli.reportdir, job, 
+                        op_dir = os.path.join(rdir, job, 
                                               build_num)
                         #rename = "{0}_console.txt".format(job)
                         rename = "console.txt"
