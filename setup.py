@@ -23,6 +23,7 @@ setup(
             'oil-cookie = doberman.oil_cookie:main',
             'crude-analysis = doberman.analysis.analysis:main',
             'refinery = doberman.refinery.refinery:main',
+            'filing-station = doberman.filing_station.filing_station:main',
         ]
         },
     )
