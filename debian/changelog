@@ -1,3 +1,12 @@
+doberman (1.0.7-0ubuntu1) trusty; urgency=medium
+
+  * Fixed a horrible bug where crude was completely ignoring failed tempest tests
+  * Added a preliminary version of filing station - not yet for production use, but worth including for people to play with
+  * Refinery no longer attempts to compare tempest xmls in the same way as the other jobs
+  * Better matching in refinery
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Mon, 15 Dec 2014 15:51:28 +0000
+
 doberman (1.0.6-0ubuntu1) trusty; urgency=medium
 
   * Started to abstract out the cli input a bit so refinery can have it's own options without affecting the cli input to crude
