@@ -190,7 +190,7 @@ class Build(Common):
         except:
             self.bsnode['jenkins'] = 'Unknown'
 
-    def bug_hunt(self, path):
+    def bug_hunt(self, path, announce=True):
         """ Using information from the bugs database, opens target file and
             searches the text for each associated regexp. """
         # TODO: As it stands, files are only searched if there is an entry in

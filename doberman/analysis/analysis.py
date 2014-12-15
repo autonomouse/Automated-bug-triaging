@@ -82,8 +82,6 @@ class CrudeAnalysis(Common):
                 self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pc))
         self.cli.LOG.info("All pipelines checked. Now polling jenkins " +
                           "and processing data")
-
-            
         return self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
     def calc_when_to_report(self):
@@ -210,7 +208,6 @@ class CrudeAnalysis(Common):
                 self.cli.LOG.error(errmsg)
 
         self.log_pipelines()
-        
 
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """

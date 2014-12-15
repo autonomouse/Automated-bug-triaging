@@ -52,8 +52,6 @@ class Refinery(CrudeAnalysis):
             self.build_numbers = self.build_pl_ids_and_check()
             self.download_triage_files(self.cli.crude_job, marker,
                                        self.cli.reportdir)
-
-                                       
         else:
             self.cli.LOG.info("*** Offline mode is on. ***")
         self.cli.LOG.info("Working on {0} as refinery input directory"
@@ -161,31 +159,31 @@ class Refinery(CrudeAnalysis):
 
     def move_artifacts_from_crude_job_folder(self, marker):
         """ """
-        
+
         crude_job = self.cli.crude_job
-        
+
         if crude_job in os.walk(self.cli.reportdir).next()[1]:
             path_to_crude_folder = os.path.join(self.cli.reportdir, crude_job)
             for build_num in os.walk(path_to_crude_folder).next()[1]:
                 bpath = os.path.join(path_to_crude_folder, build_num)
                 other_jobs = [j for j in self.cli.job_names if j != crude_job]
-                pipelines = [x for x in self.build_numbers if 
-                            self.build_numbers[x].get(crude_job) == build_num]
+                pipelines = [x for x in self.build_numbers if
+                             self.build_numbers[x].get(crude_job) == build_num]
                 pipeline = pipelines[0]  # There can be only one...
-                for job in other_jobs: 
+                for job in other_jobs:
                     filename = "{0}_{1}.yml".format(marker, job)
-                    if os.path.exists(os.path.join(bpath, filename)):                        
+                    if os.path.exists(os.path.join(bpath, filename)):
                         src_file = os.path.join(bpath, filename)
                         job_pl = self.build_numbers[pipeline].get(job)
                         if job_pl:
-                            newpath = os.path.join(self.cli.reportdir, job, 
+                            newpath = os.path.join(self.cli.reportdir, job,
                                                    job_pl)
                             self.mkdir(newpath)
                             dst_file = os.path.join(newpath, filename)
                             shutil.move(src_file, dst_file)
         # TODO: Check if empty
         shutil.rmtree(path_to_crude_folder)
-        
+
     def unify_downloaded_triage_files(self, crude_job, marker):
         """
         Unify the downloaded crude output yamls into a single dictionary.
@@ -201,12 +199,12 @@ class Refinery(CrudeAnalysis):
             other_jobs = [j for j in self.cli.job_names if j != crude_job]
             for job in other_jobs:
                 filename = "{0}_{1}.yml".format(marker, job)
-                scan_sub_folder = False 
-                
-                if os.path.exists(crude_folder): 
+                scan_sub_folder = False
+
+                if os.path.exists(crude_folder):
                     if filename in os.listdir(crude_folder):
-                        # If they're in the top level directory, just do this...
-                        new_bugs = self.unify(crude_job, marker, job, filename, 
+                        # If they're in the top level directory, just do this:
+                        new_bugs = self.unify(crude_job, marker, job, filename,
                                               crude_folder)
 
                         bug_dict = self.join_dicts(bug_dict, new_bugs)
@@ -228,16 +226,14 @@ class Refinery(CrudeAnalysis):
                 if scan_sub_folder:
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
-                    
                     crude_dir = os.path.join(self.cli.reportdir, crude_job)
-                    
+
                     for build_num in os.walk(crude_folder).next()[1]:
                         new_bugs = self.unify(crude_job, marker, job, filename,
-                                          crude_dir, build_num)
+                                              crude_dir, build_num)
                         bug_dict = self.join_dicts(bug_dict, new_bugs)
                         job_specific_bugs = self.join_dicts(job_specific_bugs,
                                                             new_bugs)
-                        
                     if 'new_bugs' in locals():
                         job_specific_bugs_dict[job] = new_bugs
         return (bug_dict, job_specific_bugs_dict)
@@ -293,15 +289,13 @@ class Refinery(CrudeAnalysis):
                     bug_output['job'] = job
                     if not build_num:
                         build_num = plop.get('build')
-                        
                     if ('unfiled' in bug):
                         # op_dir = os.path.join(rdir, job, build_num)
                         op_dir = os.path.join(rdir, build_num)
-                        #rename = "{0}_console.txt".format(job)
+                        # rename = "{0}_console.txt".format(job)
                         rename = "console.txt"
                         # Check to see if console is present. If not, download:
                         if not os.path.isfile(os.path.join(op_dir, rename)):
-                            #import pdb; pdb.set_trace()
                             params = (job, pipeline_id, build, 'console.txt',
                                       op_dir, rename)
                             try:
@@ -318,7 +312,7 @@ class Refinery(CrudeAnalysis):
                                 bug_output['console'] = f.read()
                         except Exception, e:
                             err = "Could not open {} for pl {} (bug {}). {}"
-                            self.cli.LOG.info(err.format(openme, pipeline_id, 
+                            self.cli.LOG.info(err.format(openme, pipeline_id,
                                               bug, e))
                             bug_output['console'] = None
                     bug_dict[pipeline_id][bug] = bug_output
@@ -378,16 +372,17 @@ class Refinery(CrudeAnalysis):
         """ """
         if multi_bpp:
             return self.get_xunit_class_and_name(bugs, bug_id)
-        else:            
+        else:
             return self.normalise_bug_details(bugs, bug_id)
-    
+
     def get_xunit_class_and_name(self, bugs, bug_id):
         """ Make info_a/b equal to xunitclass + xunitname. """
         try:
             addinfo = bugs[bug_id].get('additional info')
-            return "{} {}".format(addinfo['xunit class'], addinfo['xunit name'])
+            return "{} {}".format(addinfo['xunit class'],
+                                  addinfo['xunit name'])
         except:
-            return None 
+            return None
 
     def normalise_bug_details(self, bugs, bug_id):
         """
@@ -399,7 +394,7 @@ class Refinery(CrudeAnalysis):
 
         # replace numbers with 'X'
         info = re.sub(r'\d', 'X', info) if info else ''
-        
+
         # Search for traceback:
         traceback_list = []
         tb_split = info.split('Traceback')
@@ -468,25 +463,6 @@ class Refinery(CrudeAnalysis):
             info_a = self.normalise_bug_details(unfiled_bugs, unf_bug)
             text[unf_bug] = info_a
             unaccounted_bugs.remove(unf_bug)
-        '''
-        # Re-compare only those bugs identified as having duplicates (to
-        # quickly check that the list cannot be further reduced):
-        self.cli.LOG.info("Double checking...")
-        unaccounted_bugs = duplicates.keys()
-        new_unaccounted_bugs, new_duplicates, new_text, new_all_scores = \
-            self.loop_group(unfiled_bugs, unaccounted_bugs, {}, text,
-                            all_scores)
-        # For any new_duplicates with more than one duplicate, copy in the
-        # duplicates's duplicates (sorry!) into one and remove the others:
-        for dupe in new_duplicates:
-            if len(new_duplicates[dupe]) > 1:
-                for double_dupe in new_duplicates[dupe]:
-                    if double_dupe != dupe:
-                        duplicates[dupe].extend(duplicates[double_dupe])
-                        del duplicates[double_dupe]
-            duplicates[dupe] = set(duplicates[dupe])
-        '''
-        
         if len(duplicates):
             num_dupes = len(duplicates)
             self.cli.LOG.info("{} unique bugs detected".format(num_dupes))
@@ -510,17 +486,18 @@ class Refinery(CrudeAnalysis):
             grouped_bugs[bug_key]['match text'] = text.get(bug_key)
 
         return (grouped_bugs, all_scores)
-                    
+
     def loop_group(self, unfiled_bugs, unaccounted_bugs, duplicates, text,
                    all_scores):
         """
         """
-        unaccounted = list(unaccounted_bugs)  # copies list, not just link to it
-        if unfiled_bugs[unaccounted[0]].get('job') in self.cli.multi_bugs_in_pl:
+        unaccounted = list(unaccounted_bugs)  # copies list not just link to it
+        ujob = unfiled_bugs[unaccounted[0]].get('job')
+        if ujob in self.cli.multi_bugs_in_pl:
             multiple_bugs_per_pipeline = True
         else:
-            multiple_bugs_per_pipeline = False            
-        
+            multiple_bugs_per_pipeline = False
+
         for unf_bug_a in unaccounted:
             duplicates[unf_bug_a] = [unf_bug_a]
             info_a = self.get_identifying_bug_details(
@@ -530,14 +507,14 @@ class Refinery(CrudeAnalysis):
                 if unf_bug_b != unf_bug_a:
                     info_b = self.get_identifying_bug_details(
                         unfiled_bugs, unf_bug_b, multiple_bugs_per_pipeline)
-                    try:            
-                        score = SequenceMatcher(None, string1, string2).ratio()
+                    try:
+                        score = SequenceMatcher(None, info_a, info_b).ratio()
                     except:
                         score = -1
                     if multiple_bugs_per_pipeline:
                         threshold = 1.0
                     else:
-                        threshold = float(self.cli.match_threshold)                    
+                        threshold = float(self.cli.match_threshold)
                     if score >= threshold:
                         if unf_bug_a not in all_scores:
                             all_scores[unf_bug_a] = {}
@@ -552,8 +529,8 @@ class Refinery(CrudeAnalysis):
                                 unaccounted.remove(unf_bug_b)
                             except:
                                 pass
-        return (unaccounted, duplicates, text, all_scores)           
-                         
+        return (unaccounted, duplicates, text, all_scores)
+
     def report_top_ten_bugs(self, bug_rankings):
         """ Print the top ten bugs for each job to the console. """
         for job in self.cli.job_names:
@@ -565,7 +542,8 @@ class Refinery(CrudeAnalysis):
                 if bug_rankings.get(job):
                     for count, bug in enumerate(bug_rankings.get(job)):
                         if count < 10:
-                            print("{0} - {1} duplicates".format(bug[0], bug[1]))
+                            msg = "{0} - {1} duplicates"
+                            print(msg.format(bug[0], bug[1]))
                 else:
                     print("No bugs found.")
                 print
