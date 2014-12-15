@@ -389,9 +389,14 @@ class Refinery(CrudeAnalysis):
         get info on bug from additional info. Replace build number,
         pipeline id, date newlines, \ etc with blanks...
         """
+        pipelines = [bugs[b].get('pipeline_id') for b in bugs]
         bug = bugs[bug_id]
         info = bug.get('console')
 
+        # replace pipeline id(s) with placeholder:
+        for pl in pipelines:
+            info.replace(pl, 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE')
+        
         # replace numbers with 'X'
         info = re.sub(r'\d', 'X', info) if info else ''
 
@@ -412,6 +417,7 @@ class Refinery(CrudeAnalysis):
 
             # Search for failure:
             fails = sorted(re.findall('fail.*', info, re.IGNORECASE))
+        
         bug_feedback = " ".join([str(n) for n in (traceback, errs, fails)])
         if (bug_feedback == ' [] []') or not bug_feedback.strip(' '):
             return
