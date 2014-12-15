@@ -209,6 +209,7 @@ class CrudeAnalysis(Common):
                 self.cli.LOG.error(errmsg)
 
         self.log_pipelines()
+        
 
     def export_to_yaml(self, yaml_dict, job, reportdir):
         """ Write output files. """

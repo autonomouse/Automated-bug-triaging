@@ -5,6 +5,7 @@ import os
 import yaml
 import operator
 import re
+import shutil
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
 from doberman.analysis.crude_jenkins import Jenkins
@@ -51,6 +52,9 @@ class Refinery(CrudeAnalysis):
             self.build_pl_ids_and_check()
             self.download_triage_files(self.cli.crude_job, marker,
                                        self.cli.reportdir)
+            import pdb; pdb.set_trace()
+            self.move_artifacts_from_crude_job_folder(marker)
+                                       
         else:
             self.cli.LOG.info("*** Offline mode is on. ***")
         self.cli.LOG.info("Working on {0} as refinery input directory"
@@ -156,6 +160,25 @@ class Refinery(CrudeAnalysis):
                 self.cli.LOG.error("Error downloading pipeline {0} ({1}) - {2}"
                                    .format(job, pipeline_id, e))
 
+    def move_artifacts_from_crude_job_folder(self, marker):
+        """ """
+        crude_job = self.cli.crude_job
+        
+        if crude_job in os.walk(self.cli.reportdir).next()[1]:
+            path_to_crude_folder = os.path.join(self.cli.reportdir, crude_job)
+            for build_num in path_to_crude_folder:
+                bpath = os.path.join(path_to_crude_folder, build_num)
+                other_jobs = [j for j in self.cli.job_names if j != crude_job]
+                for job in other_jobs: 
+                    filename = "{0}_{1}.yml".format(marker, job)
+                    if os.path.exists(os.path.join(bpath, filename)):                        
+                        src_file = os.path.join(bpath, filename)
+                        #newpath = '' ######
+                        import pdb; pdb.set_trrace()
+                        #dst_file = os.path.join(newpath, filename)
+                        #shutil.move(src_file, dst_file)   
+                        #self.paabns     
+        
     def unify_downloaded_triage_files(self, crude_job, marker):
         """
         Unify the downloaded crude output yamls into a single dictionary.
@@ -198,9 +221,11 @@ class Refinery(CrudeAnalysis):
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
                     
+                    crude_dir = os.path.join(self.cli.reportdir, job)
+                    
                     for build_num in os.walk(crude_folder).next()[1]:
                         new_bugs = self.unify(crude_job, marker, job, filename,
-                                          self.cli.reportdir, build_num)
+                                          crude_dir, build_num)
                         bug_dict = self.join_dicts(bug_dict, new_bugs)
                         job_specific_bugs = self.join_dicts(job_specific_bugs,
                                                             new_bugs)
@@ -277,7 +302,6 @@ class Refinery(CrudeAnalysis):
                                 self.cli.LOG.info(err.format(pipeline_id, bug,
                                                   e))
                                 bug_output['console'] = None
-                        
                         try:
                             openme = os.path.join(op_dir, rename)
                             with open(openme, 'r') as f:
