@@ -49,11 +49,10 @@ class Refinery(CrudeAnalysis):
         if not self.cli.offline_mode:
             self.jenkins = Jenkins(self.cli)
             self.test_catalog = TestCatalog(self.cli)
-            self.build_pl_ids_and_check()
+            self.build_numbers = self.build_pl_ids_and_check()
             self.download_triage_files(self.cli.crude_job, marker,
                                        self.cli.reportdir)
-            import pdb; pdb.set_trace()
-            self.move_artifacts_from_crude_job_folder(marker)
+
                                        
         else:
             self.cli.LOG.info("*** Offline mode is on. ***")
@@ -162,22 +161,30 @@ class Refinery(CrudeAnalysis):
 
     def move_artifacts_from_crude_job_folder(self, marker):
         """ """
+        
         crude_job = self.cli.crude_job
         
         if crude_job in os.walk(self.cli.reportdir).next()[1]:
             path_to_crude_folder = os.path.join(self.cli.reportdir, crude_job)
-            for build_num in path_to_crude_folder:
+            for build_num in os.walk(path_to_crude_folder).next()[1]:
                 bpath = os.path.join(path_to_crude_folder, build_num)
                 other_jobs = [j for j in self.cli.job_names if j != crude_job]
+                pipelines = [x for x in self.build_numbers if 
+                            self.build_numbers[x].get(crude_job) == build_num]
+                pipeline = pipelines[0]  # There can be only one...
                 for job in other_jobs: 
                     filename = "{0}_{1}.yml".format(marker, job)
                     if os.path.exists(os.path.join(bpath, filename)):                        
                         src_file = os.path.join(bpath, filename)
-                        #newpath = '' ######
-                        import pdb; pdb.set_trrace()
-                        #dst_file = os.path.join(newpath, filename)
-                        #shutil.move(src_file, dst_file)   
-                        #self.paabns     
+                        job_pl = self.build_numbers[pipeline].get(job)
+                        if job_pl:
+                            newpath = os.path.join(self.cli.reportdir, job, 
+                                                   job_pl)
+                            self.mkdir(newpath)
+                            dst_file = os.path.join(newpath, filename)
+                            shutil.move(src_file, dst_file)
+        # TODO: Check if empty
+        shutil.rmtree(path_to_crude_folder)
         
     def unify_downloaded_triage_files(self, crude_job, marker):
         """
@@ -195,9 +202,10 @@ class Refinery(CrudeAnalysis):
             for job in other_jobs:
                 filename = "{0}_{1}.yml".format(marker, job)
                 scan_sub_folder = False 
+                
                 if os.path.exists(crude_folder): 
                     if filename in os.listdir(crude_folder):
-                        # If they're in the top level directory, just do this...:
+                        # If they're in the top level directory, just do this...
                         new_bugs = self.unify(crude_job, marker, job, filename, 
                                               crude_folder)
 
@@ -221,7 +229,7 @@ class Refinery(CrudeAnalysis):
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
                     
-                    crude_dir = os.path.join(self.cli.reportdir, job)
+                    crude_dir = os.path.join(self.cli.reportdir, crude_job)
                     
                     for build_num in os.walk(crude_folder).next()[1]:
                         new_bugs = self.unify(crude_job, marker, job, filename,
@@ -229,6 +237,7 @@ class Refinery(CrudeAnalysis):
                         bug_dict = self.join_dicts(bug_dict, new_bugs)
                         job_specific_bugs = self.join_dicts(job_specific_bugs,
                                                             new_bugs)
+                        
                     if 'new_bugs' in locals():
                         job_specific_bugs_dict[job] = new_bugs
         return (bug_dict, job_specific_bugs_dict)
@@ -239,7 +248,7 @@ class Refinery(CrudeAnalysis):
 
         """
         if build_num:
-            file_location = os.path.join(rdir, build_num, filename)
+            file_location = os.path.join(rdir, str(build_num), filename)
         else:
             file_location = os.path.join(rdir, filename)
         # Read in each yaml output file:
@@ -286,12 +295,13 @@ class Refinery(CrudeAnalysis):
                         build_num = plop.get('build')
                         
                     if ('unfiled' in bug):
-                        op_dir = os.path.join(rdir, job, 
-                                              build_num)
+                        # op_dir = os.path.join(rdir, job, build_num)
+                        op_dir = os.path.join(rdir, build_num)
                         #rename = "{0}_console.txt".format(job)
                         rename = "console.txt"
                         # Check to see if console is present. If not, download:
                         if not os.path.isfile(os.path.join(op_dir, rename)):
+                            #import pdb; pdb.set_trace()
                             params = (job, pipeline_id, build, 'console.txt',
                                       op_dir, rename)
                             try:

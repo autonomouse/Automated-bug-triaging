@@ -28,8 +28,8 @@ class CrudeAnalysis(Common):
         self.cli = CLI()
         self.jenkins = Jenkins(self.cli)
         self.test_catalog = TestCatalog(self.cli)
-        self.build_pl_ids_and_check()
-        self.pipeline_processor()
+        self.build_numbers = self.build_pl_ids_and_check()
+        self.pipeline_processor(self.build_numbers)
         self.remove_dirs(self.cli.job_names)
 
     def build_pl_ids_and_check(self):
@@ -83,6 +83,9 @@ class CrudeAnalysis(Common):
         self.cli.LOG.info("All pipelines checked. Now polling jenkins " +
                           "and processing data")
 
+            
+        return self.test_catalog.get_all_pipelines(self.pipeline_ids)
+
     def calc_when_to_report(self):
         """ Determine at what percentage completion to notify user of progress
             based on the number of entries in self.ids
@@ -110,15 +113,13 @@ class CrudeAnalysis(Common):
                 if os.path.isdir(kill_me):
                     shutil.rmtree(kill_me)
 
-    def pipeline_processor(self):
+    def pipeline_processor(self, build_numbers):
 
         self.message = -1
         deploy_yamldict = {}
         prepare_yamldict = {}
         tempest_yamldict = {}
         problem_pipelines = []
-
-        build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
         for pipeline_id in self.pipeline_ids:
             deploy_dict = {}
