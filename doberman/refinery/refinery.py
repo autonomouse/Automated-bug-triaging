@@ -395,7 +395,8 @@ class Refinery(CrudeAnalysis):
 
         # replace pipeline id(s) with placeholder:
         for pl in pipelines:
-            info.replace(pl, 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE')
+            pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
+            info.replace(pl, pl_placeholder) if info else ''
 
         # replace numbers with 'X'
         info = re.sub(r'\d', 'X', info) if info else ''
