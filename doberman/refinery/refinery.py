@@ -41,7 +41,6 @@ class Refinery(CrudeAnalysis):
 
         # Tidy Up:
         if not self.cli.keep_data:
-            import pdb; pdb.set_trace()
             self.remove_dirs(self.all_build_numbers)
 
     def analyse_crude_output(self):
