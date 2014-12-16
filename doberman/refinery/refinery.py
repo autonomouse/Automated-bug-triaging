@@ -33,12 +33,15 @@ class Refinery(CrudeAnalysis):
 
         self.message = -1
         self.cli = CLI()
+        
+        self.all_build_numbers = []
 
         # Download and analyse the crude output yamls:
         self.analyse_crude_output()
 
         # Tidy Up:
         if not self.cli.keep_data:
+            import pdb; pdb.set_trace()
             self.remove_dirs(self.all_build_numbers)
 
     def analyse_crude_output(self):
