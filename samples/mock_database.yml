@@ -308,16 +308,10 @@ bugs:
         "console.txt":
             regexp: 
             - "No handlers could be found for logger .glanceclient.common.http"
-
-  "1373406":
-    category: None
-    description: "InternalServerError - Failed to upload image and deploy cloud (pipeline_prepare fail)"
-    pipeline_prepare:
       -
         "console.txt":
             regexp: 
             - "Failed to prepare deployed cloud.{1000,1200}HTTPInternalServerError. 500 Internal Server Error"
-
 
   "1375220":
     category: None
