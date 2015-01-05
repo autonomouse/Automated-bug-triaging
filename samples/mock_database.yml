@@ -308,10 +308,16 @@ bugs:
         "console.txt":
             regexp: 
             - "No handlers could be found for logger .glanceclient.common.http"
+
+  "1407690":
+    category: None
+    description: "[Prodstack] HTTPInternalServerError - 500 Internal Server Error(prepare fail)"
+    pipeline_prepare:
       -
         "console.txt":
             regexp: 
             - "Failed to prepare deployed cloud.{1000,1200}HTTPInternalServerError. 500 Internal Server Error"
+
 
   "1375220":
     category: None
