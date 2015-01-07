@@ -33,7 +33,6 @@ class Refinery(CrudeAnalysis):
 
         self.message = -1
         self.cli = CLI()
-        
         self.all_build_numbers = []
 
         # Download and analyse the crude output yamls:
@@ -48,8 +47,8 @@ class Refinery(CrudeAnalysis):
         """
         # Get crude output:
         marker = 'triage'
+        self.jenkins = Jenkins(self.cli)
         if not self.cli.offline_mode:
-            self.jenkins = Jenkins(self.cli)
             self.test_catalog = TestCatalog(self.cli)
             self.build_numbers = self.build_pl_ids_and_check()
             self.download_triage_files(self.cli.crude_job, marker,
@@ -370,12 +369,31 @@ class Refinery(CrudeAnalysis):
 
         return (pipelines_affected_by_bug, bug_rankings)
 
-    def get_identifying_bug_details(self, bugs, bug_id, multi_bpp=False):
+    '''def get_identifying_bug_details(self, bugs, bug_id, multi_bpp=False):
         """ """
         if multi_bpp:
             return self.get_xunit_class_and_name(bugs, bug_id)
         else:
             return self.normalise_bug_details(bugs, bug_id)
+    '''
+    
+    def get_identifying_bug_details(self, bugs, bug_id, multi_bpp=False):
+        """ """
+        if multi_bpp:
+            return self.get_multiple_pipeline_bug_info(bugs, bug_id)
+        else:
+            return self.get_single_pipeline_bug_info(bugs, bug_id)
+
+    def get_single_pipeline_bug_info(self, bugs, bug_id):
+        return self.normalise_bug_details(bugs, bug_id)
+
+    def get_multiple_pipeline_bug_info(self, bugs, bug_id):
+        # TODO: instead of just getting xunit class and name, we want to get 
+        # the traceback etc as before and ... stuff
+        import pdb; pdb.set_trace()
+        #return self.get_xunit_class_and_name(bugs, bug_id)
+        return self.normalise_bug_details(bugs, bug_id)
+            
 
     def get_xunit_class_and_name(self, bugs, bug_id):
         """ Make info_a/b equal to xunitclass + xunitname. """
