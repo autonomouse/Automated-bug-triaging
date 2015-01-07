@@ -33,8 +33,8 @@ bugs:
       -
         "console.txt":
             regexp: 
-            - "unit. nova-compute... machine... agent-state. error details. hook failed...ceph-relation-changed"
-            
+            - "unit. nova-compute.+agent-state. error details. hook failed...ceph-relation-changed"
+                        
   "1358326":
     category: None
     description: "prodstack: nova-vmware hooks failed: cloud-compute-relation-changed"
@@ -460,15 +460,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "deployer.deploy. Invalid config charm cinder remove-missing=True"
 
-  "1386857":
-    category: None
-    description: "prepare failing to create networks with valid subnet"
-    pipeline_prepare:
-      -
-        "console.txt":
-            regexp:
-            - "NeutronError.{1,2000}message.{1,2000}Invalid input for operation..Gateway is not valid on subnet.{1,2000}type.{1,2000}InvalidInput"
-
   "1386754":
     category: None
     description: "ceilometer-agent <-> nova-compute relation does not exist for nova-compute-vmware"
@@ -521,17 +512,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:            
-            - "OSError.{9,13} Permission denied. ./tmp/.{25,40}/etc/ceph/ceph.client.glance.keyring"     
-
-  "1397392":
-    category: None
-    description: "[Prodstack] nova-compute hook failed 'ceph-relation-changed' (deploy fail)"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:            
-            - "unit. nova-compute... machine. . agent-state. error details. hook failed. .ceph-relation-changed" 
-         
+            - "OSError.{9,13} Permission denied. ./tmp/.{25,40}/etc/ceph/ceph.client.glance.keyring"             
 
   "1398282":
     category: None
@@ -569,4 +550,35 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "unit. keystone... machine. .{1,3}lxc.{1,3} agent-state. error details. hook failed...config-changed"
             
+          
+  "1387693":
+    category: None
+    description: "nova-compute-libvirt fails install on precise"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp: 
+            - "unit..nova-compute... machine... agent-state..error details..hook failed...install"
+
+  "1386857":
+    category: None
+    description: "prepare failing to create networks with valid subnet (prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "NeutronError.{1,2000}message.{1,2000}Invalid input for operation..Gateway is not valid on subnet.{1,2000}type.{1,2000}InvalidInput"
+      -
+        "console.txt":
+            regexp: 
+            - "NeutronClientException.{9}NeutronError.{6}message.{5}Invalid input for operation..Gateway is not valid on subnet.{6}type.{5}InvalidInput"
+
+  "1408306":
+    category: None
+    description: "[Prodstack] hook failed for mysql lxc (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "unit. mysql... machine. .{1,3}lxc.{1,3} agent-state. error details. hook failed...install"
 
