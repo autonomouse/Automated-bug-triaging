@@ -158,14 +158,15 @@ class Build(Common):
 
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline):
+        self.cli = cli
         # Pull console and artifacts from jenkins:
-        self.still_running = jenkins.get_triage_data(build_number, jobname,
-                                                     cli.reportdir)
+        if not self.cli.offline_mode:
+            self.still_running = jenkins.get_triage_data(build_number, jobname,
+                                                         self.cli.reportdir)
         self.build_number = build_number
         self.jobname = jobname
         self.jenkins = jenkins
         self.yaml_dict = yaml_dict
-        self.cli = cli
         self.bugs = bugs
         self.pipeline = pipeline
 
