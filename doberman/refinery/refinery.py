@@ -14,7 +14,6 @@ from doberman.analysis.crude_test_catalog import TestCatalog
 from plotting import Plotting
 from difflib import SequenceMatcher
 from cli import CLI
-from collections import deque
 
 
 class Refinery(CrudeAnalysis):
@@ -210,11 +209,11 @@ class Refinery(CrudeAnalysis):
                 self.cli.op_dir_structure = os.path.join("{0}", "{1}", "{2}")
                 # Where 0 is reportdir, 1 is job name and 2 is build number
 
-                if os.path.exists(crude_folder):                      
+                if os.path.exists(crude_folder):
                     # Change directory structure for downloads:
                     self.cli.op_dir_structure = os.path.join("{0}", "{2}")
                     # Where 0 is reportdir and 2 is build number
-                    if filename in os.listdir(crude_folder):         
+                    if filename in os.listdir(crude_folder):
                         # If they're in the top level directory, just do this:
                         new_bugs = self.unify(crude_job, marker, job, filename,
                                               crude_folder)
@@ -449,7 +448,7 @@ class Refinery(CrudeAnalysis):
         else:
             return bug_feedback
 
-    def group_similar_unfiled_bugs(self, unified_bugdict, maxlen=5, 
+    def group_similar_unfiled_bugs(self, unified_bugdict, maxlen=5,
                                    max_sequence_size=10000):
         """
         Group unfiled bugs together by similarity of error message. This
@@ -464,29 +463,35 @@ class Refinery(CrudeAnalysis):
                 if 'unfiled' in bug_no:
                     unfiled_bugs[bug_no] = unified_bugdict[pipeline][bug_no]
 
+        if not unfiled_bugs:
+            self.cli.LOG.info("No unfiled bugs found!")
+            return ([], [])
+
         unaccounted_bugs = unfiled_bugs.keys()
         unique_bugs = {}
         all_scores = {}
         duplicates = {}
-        
+
         ujob = unfiled_bugs[unaccounted_bugs[0]].get('job')
+
         if ujob in self.cli.multi_bugs_in_pl:
             multiple_bugs_per_pipeline = True
         else:
             multiple_bugs_per_pipeline = False
 
         report_at = self.calc_when_to_report(unaccounted_bugs)
-        
+
         for pos, unfiled_bug in enumerate(unaccounted_bugs):
             info_a = \
-                self.get_identifying_bug_details(unfiled_bugs, unfiled_bug, 
+                self.get_identifying_bug_details(unfiled_bugs, unfiled_bug,
                                                  multiple_bugs_per_pipeline)
-                                                 
+
             # Have we seen this bug before?
             for already_seen in unique_bugs:
                 info_b = unique_bugs[already_seen]
                 if info_a and info_b:
                     if (len(info_a) + len(info_b)) > max_sequence_size:
+                        score = -1
                         a_md5 = hashlib.md5()
                         a_md5.update(info_a)
                         b_md5 = hashlib.md5()
@@ -513,20 +518,20 @@ class Refinery(CrudeAnalysis):
                         all_scores[unfiled_bug] = {}
                     all_scores[unfiled_bug][already_seen] = score
                     duplicates[already_seen].append(unfiled_bug)
-                    break           
+                    break
             else:
                 unique_bugs[unfiled_bug] = info_a
-                duplicates[unfiled_bug] = [unfiled_bug] 
-            
+                duplicates[unfiled_bug] = [unfiled_bug]
+
             # Notify user of progress:
-            progress = [round((pc / 100.0) * len(unaccounted_bugs)) for pc in 
+            progress = [round((pc / 100.0) * len(unaccounted_bugs)) for pc in
                         report_at]
             if pos in progress:
                 pc = str(report_at[progress.index(pos)])
                 self.cli.LOG.info("Bug grouping {0}% complete.".format(pc))
-            
+
         self.cli.LOG.info("{} unique bugs detected".format(len(unique_bugs)))
-              
+
         # Now group the duplicated bugs together...
         grouped_bugs = {}
         for bug_key in unique_bugs:
@@ -545,7 +550,7 @@ class Refinery(CrudeAnalysis):
             grouped_bugs[bug_key]['match text'] = unique_bugs[bug_key]
 
         return (grouped_bugs, all_scores)
-    
+
     def report_top_ten_bugs(self, bug_rankings):
         """ Print the top ten bugs for each job to the console. """
         for job in self.cli.job_names:

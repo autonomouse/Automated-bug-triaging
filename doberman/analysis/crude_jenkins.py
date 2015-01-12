@@ -113,7 +113,7 @@ class Jenkins(Common):
         jenkins_job = self.jenkins_api[job]
         build = jenkins_job.get_build(int(build_num))
         outdir = os.path.join(self.cli.reportdir, job, str(build_num))
-        self.cli.LOG.info('Downloading debug data to: %s' % (outdir))
+
         # Check to make sure it is not still running!:
         if build._data['duration'] == 0:
             return True  # Still running
