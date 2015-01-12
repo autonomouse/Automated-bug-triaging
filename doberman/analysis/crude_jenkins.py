@@ -108,7 +108,7 @@ class Jenkins(Common):
         self.cli.LOG.error("No job newer than %s" % (start))
         return None
 
-    def get_triage_data(self, build_num, job, reportdir):
+    def get_triage_data(self, build_num, job, reportdir, console_only=False):
         """ Get the artifacts from jenkins via jenkinsapi object. """
         jenkins_job = self.jenkins_api[job]
         build = jenkins_job.get_build(int(build_num))
@@ -124,9 +124,10 @@ class Jenkins(Common):
                 raise
         self.write_console_to_file(build, outdir)
 
-        for artifact in build.get_artifacts():
-            artifact.save_to_dir(outdir)
-            self.extract_and_delete_archive(outdir, artifact)
+        if not console_only:
+            for artifact in build.get_artifacts():
+                artifact.save_to_dir(outdir)
+                self.extract_and_delete_archive(outdir, artifact)
         return False  # Not still running
 
     def extract_and_delete_archive(self, outdir, artifact):
@@ -160,9 +161,18 @@ class Build(Common):
                  pipeline):
         self.cli = cli
         # Pull console and artifacts from jenkins:
-        if not self.cli.offline_mode:
-            self.still_running = jenkins.get_triage_data(build_number, jobname,
-                                                         self.cli.reportdir)
+        path = os.path.join(self.cli.reportdir, jobname, build_number)
+        if self.cli.dont_replace:
+            if not os.path.exists(path):
+                self.cli.LOG.info("{} missing - redownloading data"
+                                  .format(path))
+                self.still_running = (jenkins.get_triage_data(build_number,
+                                      jobname, self.cli.reportdir))
+            else:
+                self.still_running = False
+        else:
+            self.still_running = jenkins.\
+                get_triage_data(build_number, jobname, self.cli.reportdir)
         self.build_number = build_number
         self.jobname = jobname
         self.jenkins = jenkins
@@ -171,7 +181,7 @@ class Build(Common):
         self.pipeline = pipeline
 
     def process_console_data(self, pipeline_path):
-
+        """"""
         console_location = os.path.join(pipeline_path, 'console.txt')
         cons_txt, self.yaml_dict = self.get_txt(console_location,
                                                 self.yaml_dict)
@@ -197,11 +207,12 @@ class Build(Common):
         # TODO: As it stands, files are only searched if there is an entry in
         # the DB. This shouldn't be a problem if there is always a dummy bug in
         # the DB for the important files such as console and tempest_xunit.xml
-        # FOR EACHJOB TYPE (i.e. pipeline_deploy, pipeline_prepare and
+        # FOR EACH JOB TYPE (i.e. pipeline_deploy, pipeline_prepare and
         # test_tempest_smoke).
 
         parse_as_xml = self.cli.xmls
         xml_files_parsed = []
+        # TODO: This still polls jenkins, even in 'offline' mode:
         build_details = [build_info for build_info in self.jenkins.jenkins_api
                          [self.jobname]._poll()['builds'] if build_info
                          ['number'] == int(self.build_number)][0]
@@ -278,8 +289,8 @@ class Build(Common):
                                         bug_unmatched, build_status,
                                         unfiled_xml_fails)
                                 for num, fail in enumerate(errors_and_fails):
-                                    pre_log = fail.get('message')\
-                                        .split("begin captured logging")[0]
+                                    pre_log = fail.get('message')  # \
+                                    #    .split("end captured logging")[0]
                                     if not self.cli.reduced_output_text:
                                             info['text'] = pre_log
                                     info['target file'] = target

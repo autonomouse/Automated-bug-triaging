@@ -6,7 +6,6 @@ import yaml
 from doberman.analysis.analysis import CrudeAnalysis
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
-from doberman.refinery.refinery import Refinery
 from pprint import pprint
 from cli import CLI
 
