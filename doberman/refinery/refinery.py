@@ -49,6 +49,7 @@ class Refinery(CrudeAnalysis):
         # Get crude output:
         marker = 'triage'
         self.jenkins = Jenkins(self.cli)
+        self.cli.op_dir_structure = self.determine_folder_structure()
         if not self.cli.offline_mode:
             self.test_catalog = TestCatalog(self.cli)
             self.build_numbers = self.build_pl_ids_and_check()
@@ -77,6 +78,23 @@ class Refinery(CrudeAnalysis):
 
         if 'pipeline_ids' in self.__dict__:
             self.log_pipelines()
+
+    def determine_folder_structure(self):
+        """ Set directory structure for downloads, where 0 is reportdir, 1 is
+            job name and 2 is build number.
+        """
+        crude_folder = os.path.join(self.cli.reportdir, self.cli.crude_job)
+
+        if not os.path.exists(self.cli.reportdir):
+            self.cli.LOG.error("{0} doesn't exist!".format(crude_folder))
+        else:
+            other_jobs = [j for j in self.cli.job_names if j !=
+                          self.cli.crude_job]
+            for job in other_jobs:
+                if os.path.exists(crude_folder):
+                    return os.path.join("{0}", "{2}")
+                else:
+                    return os.path.join("{0}", "{1}", "{2}")
 
     def generate_yamls(self):
         """ Write data to output yaml files.
@@ -148,6 +166,8 @@ class Refinery(CrudeAnalysis):
                 build_num = build_numbers[pipeline_id].get(job)
 
                 if build_num:
+                    outdir = (self.cli.op_dir_structure
+                              .format(self.cli.reportdir, job, build_num))
                     self.cli.op_dir_structure.format(output_folder, job,
                                                      str(build_num))
                     self.all_build_numbers.append(build_num)
@@ -205,14 +225,7 @@ class Refinery(CrudeAnalysis):
                 filename = "{0}_{1}.yml".format(marker, job)
                 scan_sub_folder = False
 
-                # Set directory structure for downloads:
-                self.cli.op_dir_structure = os.path.join("{0}", "{1}", "{2}")
-                # Where 0 is reportdir, 1 is job name and 2 is build number
-
                 if os.path.exists(crude_folder):
-                    # Change directory structure for downloads:
-                    self.cli.op_dir_structure = os.path.join("{0}", "{2}")
-                    # Where 0 is reportdir and 2 is build number
                     if filename in os.listdir(crude_folder):
                         # If they're in the top level directory, just do this:
                         new_bugs = self.unify(crude_job, marker, job, filename,
