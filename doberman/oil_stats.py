@@ -218,7 +218,6 @@ def main():
         jenkins_job = j[job]
         print("Polling jenkins for build data...")
         builds = jenkins_job._poll()['builds']
-        import pdb; pdb.set_trace()
         builds.sort(key=lambda r: r.get('timestamp'))
 
         print("Finding %s jobs newer than %s" % (job, start))
