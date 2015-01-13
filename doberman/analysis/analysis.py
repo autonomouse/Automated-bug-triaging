@@ -152,8 +152,11 @@ class CrudeAnalysis(Common):
                         self.non_db_bug(special_cases.bug_dict['pipeline_id'],
                                         deploy_dict, msg)
                 else:
-                    print("Problem with " + pipeline_id + " - skipping "
-                          "(deploy_build:  " + deploy_build + ")")
+                    probmsg = "Problem with {} - skipping "
+                    if deploy_build:
+                        probmsg += "(deploy_build: {})"
+                    self.cli.LOG.error(probmsg.format(pipeline_id, 
+                                                      deploy_build))
                     problem_pipelines.append((pipeline_id, deploy_build, e))
                 self.cli.LOG.exception(e)
 

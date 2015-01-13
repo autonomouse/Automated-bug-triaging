@@ -92,7 +92,7 @@ class Refinery(CrudeAnalysis):
                           self.cli.crude_job]
             for job in other_jobs:
                 if os.path.exists(crude_folder):
-                    return os.path.join("{0}", "{2}")
+                    return os.path.join("{0}", "{2}", "{3}")
                 else:
                     return os.path.join("{0}", "{1}", "{2}")
 
@@ -166,10 +166,9 @@ class Refinery(CrudeAnalysis):
                 build_num = build_numbers[pipeline_id].get(job)
 
                 if build_num:
-                    outdir = (self.cli.op_dir_structure
-                              .format(self.cli.reportdir, job, build_num))
-                    self.cli.op_dir_structure.format(output_folder, job,
-                                                     str(build_num))
+                    outdir = (self.cli.op_dir_structure.format(
+                              self.cli.reportdir, job, str(build_num),
+                              self.cli.crude_job))
                     self.all_build_numbers.append(build_num)
                     self.download_specific_file(job, pipeline_id, build_num,
                                                 marker, outdir)
@@ -319,7 +318,8 @@ class Refinery(CrudeAnalysis):
                         build_num = plop.get('build')
                     if ('unfiled' in bug):
                         op_dir = self.cli.op_dir_structure.format(rdir, job,
-                                                                  build_num)
+                                                                  build_num,
+                                                                  crude_job)
                         # rename = "{0}_console.txt".format(job)
                         rename = "console.txt"
                         # Check to see if console is present. If not, download:
@@ -461,15 +461,18 @@ class Refinery(CrudeAnalysis):
         else:
             return bug_feedback
 
-    def group_similar_unfiled_bugs(self, unified_bugdict, maxlen=5,
+    def group_similar_unfiled_bugs(self, unified_bugdict,
                                    max_sequence_size=10000):
         """
-        Group unfiled bugs together by similarity of error message. This
-        whole section is currently a little silly and needs replacing by an
-        fminsearch style ODE-solver thing, to minimise the length of
-        unaccounted bugs.
+            Group unfiled bugs together by similarity of error message. If the
+            string to compare is larger than the given max_sequence_size
+            (default: 10000 characters) then a md5 hashlib is used to check for
+            an exact match, otherwise, SequenceMatcher is used to determine if
+            an error is close enough (i.e. greater than the given threshold
+            value) to be considered a match.
         """
-        self.cli.LOG.info("Grouping similar unfiled bugs by error similarity.")
+
+        self.cli.LOG.info("Grouping unfiled bugs by error similarity.")
         unfiled_bugs = {}
         for pipeline in unified_bugdict:
             for bug_no in unified_bugdict[pipeline]:
