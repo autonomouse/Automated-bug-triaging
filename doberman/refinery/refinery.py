@@ -49,7 +49,6 @@ class Refinery(CrudeAnalysis):
         # Get crude output:
         marker = 'triage'
         self.jenkins = Jenkins(self.cli)
-        self.cli.op_dir_structure = self.determine_folder_structure()
         if not self.cli.offline_mode:
             self.test_catalog = TestCatalog(self.cli)
             self.build_numbers = self.build_pl_ids_and_check()
@@ -57,6 +56,7 @@ class Refinery(CrudeAnalysis):
                                        self.cli.reportdir)
         else:
             self.cli.LOG.info("*** Offline mode is on. ***")
+            self.cli.op_dir_structure = self.determine_folder_structure()
         self.cli.LOG.info("Working on {0} as refinery input directory"
                           .format(self.cli.reportdir))
         self.unified_bugdict, self.job_specific_bugs_dict = \
@@ -86,13 +86,14 @@ class Refinery(CrudeAnalysis):
         crude_folder = os.path.join(self.cli.reportdir, self.cli.crude_job)
 
         if not os.path.exists(self.cli.reportdir):
-            self.cli.LOG.error("{0} doesn't exist!".format(crude_folder))
+            self.cli.LOG.error("Directory doesn't exist! {}"\
+                .format(self.cli.reportdir))
         else:
             other_jobs = [j for j in self.cli.job_names if j !=
                           self.cli.crude_job]
             for job in other_jobs:
                 if os.path.exists(crude_folder):
-                    return os.path.join("{0}", "{2}", "{3}")
+                    return os.path.join("{0}", "{3}", "{2}")
                 else:
                     return os.path.join("{0}", "{1}", "{2}")
 
@@ -157,7 +158,7 @@ class Refinery(CrudeAnalysis):
         """
         Get crude output
         """
-
+        self.cli.op_dir_structure = os.path.join("{0}", "{3}", "{2}")
         self.all_build_numbers = []
         build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
@@ -317,9 +318,9 @@ class Refinery(CrudeAnalysis):
                     if not build_num:
                         build_num = plop.get('build')
                     if ('unfiled' in bug):
-                        op_dir = self.cli.op_dir_structure.format(rdir, job,
-                                                                  build_num,
-                                                                  crude_job)
+                        op_dir = \
+                            (self.cli.op_dir_structure.format(
+                             self.cli.reportdir, job, build_num, crude_job))
                         # rename = "{0}_console.txt".format(job)
                         rename = "console.txt"
                         # Check to see if console is present. If not, download:
