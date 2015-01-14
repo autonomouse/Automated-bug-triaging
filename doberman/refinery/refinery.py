@@ -86,7 +86,7 @@ class Refinery(CrudeAnalysis):
         crude_folder = os.path.join(self.cli.reportdir, self.cli.crude_job)
 
         if not os.path.exists(self.cli.reportdir):
-            self.cli.LOG.error("Directory doesn't exist! {}"\
+            self.cli.LOG.error("Directory doesn't exist! {}"
                 .format(self.cli.reportdir))
         else:
             other_jobs = [j for j in self.cli.job_names if j !=

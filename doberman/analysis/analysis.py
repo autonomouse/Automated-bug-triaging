@@ -155,7 +155,7 @@ class CrudeAnalysis(Common):
                     probmsg = "Problem with {} - skipping "
                     if deploy_build:
                         probmsg += "(deploy_build: {})"
-                    self.cli.LOG.error(probmsg.format(pipeline_id, 
+                    self.cli.LOG.error(probmsg.format(pipeline_id,
                                                       deploy_build))
                     problem_pipelines.append((pipeline_id, deploy_build, e))
                 self.cli.LOG.exception(e)
