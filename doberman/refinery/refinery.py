@@ -6,6 +6,7 @@ import yaml
 import operator
 import re
 import shutil
+import hashlib
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
 from doberman.analysis.crude_jenkins import Jenkins
@@ -13,7 +14,6 @@ from doberman.analysis.crude_test_catalog import TestCatalog
 from plotting import Plotting
 from difflib import SequenceMatcher
 from cli import CLI
-from collections import deque
 
 
 class Refinery(CrudeAnalysis):
@@ -33,7 +33,6 @@ class Refinery(CrudeAnalysis):
 
         self.message = -1
         self.cli = CLI()
-        
         self.all_build_numbers = []
 
         # Download and analyse the crude output yamls:
@@ -46,16 +45,18 @@ class Refinery(CrudeAnalysis):
     def analyse_crude_output(self):
         """ Get and analyse the crude output yamls.
         """
+
         # Get crude output:
         marker = 'triage'
+        self.jenkins = Jenkins(self.cli)
         if not self.cli.offline_mode:
-            self.jenkins = Jenkins(self.cli)
             self.test_catalog = TestCatalog(self.cli)
             self.build_numbers = self.build_pl_ids_and_check()
             self.download_triage_files(self.cli.crude_job, marker,
                                        self.cli.reportdir)
         else:
             self.cli.LOG.info("*** Offline mode is on. ***")
+            self.cli.op_dir_structure = self.determine_folder_structure()
         self.cli.LOG.info("Working on {0} as refinery input directory"
                           .format(self.cli.reportdir))
         self.unified_bugdict, self.job_specific_bugs_dict = \
@@ -77,6 +78,24 @@ class Refinery(CrudeAnalysis):
 
         if 'pipeline_ids' in self.__dict__:
             self.log_pipelines()
+
+    def determine_folder_structure(self):
+        """ Set directory structure for downloads, where 0 is reportdir, 1 is
+            job name and 2 is build number.
+        """
+        crude_folder = os.path.join(self.cli.reportdir, self.cli.crude_job)
+
+        if not os.path.exists(self.cli.reportdir):
+            self.cli.LOG.error("Directory doesn't exist! {}"
+                .format(self.cli.reportdir))
+        else:
+            other_jobs = [j for j in self.cli.job_names if j !=
+                          self.cli.crude_job]
+            for job in other_jobs:
+                if os.path.exists(crude_folder):
+                    return os.path.join("{0}", "{3}", "{2}")
+                else:
+                    return os.path.join("{0}", "{1}", "{2}")
 
     def generate_yamls(self):
         """ Write data to output yaml files.
@@ -139,7 +158,7 @@ class Refinery(CrudeAnalysis):
         """
         Get crude output
         """
-
+        self.cli.op_dir_structure = os.path.join("{0}", "{3}", "{2}")
         self.all_build_numbers = []
         build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
@@ -148,7 +167,9 @@ class Refinery(CrudeAnalysis):
                 build_num = build_numbers[pipeline_id].get(job)
 
                 if build_num:
-                    outdir = os.path.join(output_folder, job, str(build_num))
+                    outdir = (self.cli.op_dir_structure.format(
+                              self.cli.reportdir, job, str(build_num),
+                              self.cli.crude_job))
                     self.all_build_numbers.append(build_num)
                     self.download_specific_file(job, pipeline_id, build_num,
                                                 marker, outdir)
@@ -200,6 +221,7 @@ class Refinery(CrudeAnalysis):
         else:
             other_jobs = [j for j in self.cli.job_names if j != crude_job]
             for job in other_jobs:
+                skip = False
                 filename = "{0}_{1}.yml".format(marker, job)
                 scan_sub_folder = False
 
@@ -223,7 +245,9 @@ class Refinery(CrudeAnalysis):
 
                     job_specific_bugs_dict[job] = new_bugs
                 else:
-                    scan_sub_folder = True
+                    skip = True
+                    self.cli.LOG.error("Cannot find {} in {} - skipping"
+                                       .format(filename, self.cli.reportdir))
 
                 if scan_sub_folder:
                     # ...otherwise, scan the sub-folders:
@@ -238,6 +262,8 @@ class Refinery(CrudeAnalysis):
                                                             new_bugs)
                     if 'new_bugs' in locals():
                         job_specific_bugs_dict[job] = new_bugs
+                if not skip:
+                    self.cli.LOG.info("{} data unified.".format(job))
         return (bug_dict, job_specific_bugs_dict)
 
     def unify(self, crude_job, marker, job, filename, rdir, build_num=None):
@@ -292,8 +318,9 @@ class Refinery(CrudeAnalysis):
                     if not build_num:
                         build_num = plop.get('build')
                     if ('unfiled' in bug):
-                        # op_dir = os.path.join(rdir, job, build_num)
-                        op_dir = os.path.join(rdir, build_num)
+                        op_dir = \
+                            (self.cli.op_dir_structure.format(
+                             self.cli.reportdir, job, build_num, crude_job))
                         # rename = "{0}_console.txt".format(job)
                         rename = "console.txt"
                         # Check to see if console is present. If not, download:
@@ -373,31 +400,39 @@ class Refinery(CrudeAnalysis):
     def get_identifying_bug_details(self, bugs, bug_id, multi_bpp=False):
         """ """
         if multi_bpp:
-            return self.get_xunit_class_and_name(bugs, bug_id)
+            return self.get_multiple_pipeline_bug_info(bugs, bug_id)
         else:
-            return self.normalise_bug_details(bugs, bug_id)
+            return self.get_single_pipeline_bug_info(bugs, bug_id)
+
+    def get_single_pipeline_bug_info(self, bugs, bug_id):
+        return self.normalise_bug_details(bugs, bug_id)
+
+    def get_multiple_pipeline_bug_info(self, bugs, bug_id):
+        xmlclass, xmlname = self.get_xunit_class_and_name(bugs, bug_id)
+        info = bugs[bug_id]['additional info'].get('text')
+        bug_feedback = self.normalise_bug_details(bugs, bug_id, info)
+        return bug_feedback
 
     def get_xunit_class_and_name(self, bugs, bug_id):
         """ Make info_a/b equal to xunitclass + xunitname. """
         try:
             addinfo = bugs[bug_id].get('additional info')
-            return "{} {}".format(addinfo['xunit class'],
-                                  addinfo['xunit name'])
+            return (addinfo['xunit class'], addinfo['xunit name'])
         except:
-            return None
+            return (None, None)
 
-    def normalise_bug_details(self, bugs, bug_id):
+    def normalise_bug_details(self, bugs, bug_id, info=None):
         """
         get info on bug from additional info. Replace build number,
         pipeline id, date newlines, \ etc with blanks...
         """
         pipelines = [bugs[b].get('pipeline_id') for b in bugs]
-        bug = bugs[bug_id]
-        info = bug.get('console')
+        if not info:
+            info = bugs[bug_id].get('console')
 
         # replace pipeline id(s) with placeholder:
+        pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
         for pl in pipelines:
-            pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
             info.replace(pl, pl_placeholder) if info else ''
 
         # replace numbers with 'X'
@@ -427,118 +462,111 @@ class Refinery(CrudeAnalysis):
         else:
             return bug_feedback
 
-    def group_similar_unfiled_bugs(self, unified_bugdict, maxlen=5):
+    def group_similar_unfiled_bugs(self, unified_bugdict,
+                                   max_sequence_size=10000):
         """
-        Group unfiled bugs together by similarity of error message. This
-        whole section is currently a little silly and needs replacing by an
-        fminsearch style ODE-solver thing, to minimise the length of
-        unaccounted bugs.
+            Group unfiled bugs together by similarity of error message. If the
+            string to compare is larger than the given max_sequence_size
+            (default: 10000 characters) then a md5 hashlib is used to check for
+            an exact match, otherwise, SequenceMatcher is used to determine if
+            an error is close enough (i.e. greater than the given threshold
+            value) to be considered a match.
         """
-        self.cli.LOG.info("Grouping similar unfiled bugs by error similarity.")
+
+        self.cli.LOG.info("Grouping unfiled bugs by error similarity.")
         unfiled_bugs = {}
         for pipeline in unified_bugdict:
             for bug_no in unified_bugdict[pipeline]:
                 if 'unfiled' in bug_no:
                     unfiled_bugs[bug_no] = unified_bugdict[pipeline][bug_no]
 
-        duplicates = {}
-        text = {}
+        if not unfiled_bugs:
+            self.cli.LOG.info("No unfiled bugs found!")
+            return ([], [])
+
         unaccounted_bugs = unfiled_bugs.keys()
+        unique_bugs = {}
         all_scores = {}
+        duplicates = {}
 
-        bah_numbugs = deque(maxlen=maxlen)
-        while len(unaccounted_bugs) > 1:
-            self.cli.LOG.info("{} unaccounted bugs remaining..."
-                              .format(len(unaccounted_bugs)))
-            unaccounted_bugs, duplicates, text, all_scores = self.loop_group(
-                unfiled_bugs, unaccounted_bugs, duplicates, text, all_scores)
-            bah_numbugs.append(len(unaccounted_bugs))
-            if len(bah_numbugs) == maxlen:
-                # If the number of unfiled bugs has not reduced in maxlen
-                # number of attempts, then break:
-                if not (bah_numbugs[-1] < bah_numbugs[0]):
-                    break
+        ujob = unfiled_bugs[unaccounted_bugs[0]].get('job')
 
-        # Mop up the last one(s), if necessary:
-        if len(unaccounted_bugs):
-            msg = "The remaining {} unaccounted bug(s) appear to be unique "
-            msg += "(match threshold of {})"
+        if ujob in self.cli.multi_bugs_in_pl:
+            multiple_bugs_per_pipeline = True
         else:
-            msg = "All bugs accounted for (match threshold of {1})"
-        thshld = self.cli.match_threshold
-        self.cli.LOG.info(msg.format(len(unaccounted_bugs), thshld))
-        for unf_bug in unaccounted_bugs:
-            duplicates[unf_bug] = [unf_bug]
-            info_a = self.normalise_bug_details(unfiled_bugs, unf_bug)
-            text[unf_bug] = info_a
-            unaccounted_bugs.remove(unf_bug)
-        if len(duplicates):
-            num_dupes = len(duplicates)
-            self.cli.LOG.info("{} unique bugs detected".format(num_dupes))
+            multiple_bugs_per_pipeline = False
+
+        report_at = self.calc_when_to_report(unaccounted_bugs)
+
+        for pos, unfiled_bug in enumerate(unaccounted_bugs):
+            info_a = \
+                self.get_identifying_bug_details(unfiled_bugs, unfiled_bug,
+                                                 multiple_bugs_per_pipeline)
+
+            # Have we seen this bug before?
+            for already_seen in unique_bugs:
+                info_b = unique_bugs[already_seen]
+                if info_a and info_b:
+                    if (len(info_a) + len(info_b)) > max_sequence_size:
+                        score = -1
+                        a_md5 = hashlib.md5()
+                        a_md5.update(info_a)
+                        b_md5 = hashlib.md5()
+                        b_md5.update(info_b)
+                        if a_md5.hexdigest() == b_md5.hexdigest():
+                            score = 1
+                            msg = "{} and {} were over maximum sequence size "
+                            msg += "and so were compared using md5 and found "
+                            msg += "to be equivalent."
+                            self.cli.LOG.info(msg.format(already_seen,
+                                                         unfiled_bug))
+                        else:
+                            score = -1
+                    else:
+                        score = SequenceMatcher(None, info_a, info_b).ratio()
+                else:
+                    score = -1
+                if multiple_bugs_per_pipeline:
+                    threshold = 1.0
+                else:
+                    threshold = float(self.cli.match_threshold)
+                if score >= threshold:
+                    if unfiled_bug not in all_scores:
+                        all_scores[unfiled_bug] = {}
+                    all_scores[unfiled_bug][already_seen] = score
+                    duplicates[already_seen].append(unfiled_bug)
+                    break
+            else:
+                unique_bugs[unfiled_bug] = info_a
+                duplicates[unfiled_bug] = [unfiled_bug]
+
+            # Notify user of progress:
+            progress = [round((pc / 100.0) * len(unaccounted_bugs)) for pc in
+                        report_at]
+            if pos in progress:
+                pc = str(report_at[progress.index(pos)])
+                self.cli.LOG.info("Bug grouping {0}% complete.".format(pc))
+
+        self.cli.LOG.info("{} unique bugs detected".format(len(unique_bugs)))
 
         # Now group the duplicated bugs together...
         grouped_bugs = {}
-        for bug_key in duplicates:
+        for bug_key in unique_bugs:
             pline = unfiled_bugs[bug_key]['pipeline_id']
             uf_bug = unified_bugdict[pline][bug_key]
             # Prob won't need these now:
             if 'additional info' in uf_bug:
                 if 'text' in uf_bug['additional info']:
-                    if 'text' in uf_bug['additional info']:
-                        del uf_bug['additional info']['text']
+                    del uf_bug['additional info']['text']
             if 'console' in uf_bug:
                 del uf_bug['console']
             grouped_bugs[bug_key] = uf_bug
             grouped_bugs[bug_key]['duplicates'] = \
                 [unfiled_bugs[dup]['pipeline_id'] for dup in
                  duplicates[bug_key]]
-            grouped_bugs[bug_key]['match text'] = text.get(bug_key)
+            grouped_bugs[bug_key]['match text'] = unique_bugs[bug_key]
 
         return (grouped_bugs, all_scores)
-
-    def loop_group(self, unfiled_bugs, unaccounted_bugs, duplicates, text,
-                   all_scores):
-        """
-        """
-        unaccounted = list(unaccounted_bugs)  # copies list not just link to it
-        ujob = unfiled_bugs[unaccounted[0]].get('job')
-        if ujob in self.cli.multi_bugs_in_pl:
-            multiple_bugs_per_pipeline = True
-        else:
-            multiple_bugs_per_pipeline = False
-
-        for unf_bug_a in unaccounted:
-            duplicates[unf_bug_a] = [unf_bug_a]
-            info_a = self.get_identifying_bug_details(
-                unfiled_bugs, unf_bug_a, multiple_bugs_per_pipeline)
-            text[unf_bug_a] = info_a
-            for unf_bug_b in unaccounted:
-                if unf_bug_b != unf_bug_a:
-                    info_b = self.get_identifying_bug_details(
-                        unfiled_bugs, unf_bug_b, multiple_bugs_per_pipeline)
-                    try:
-                        score = SequenceMatcher(None, info_a, info_b).ratio()
-                    except:
-                        score = -1
-                    if multiple_bugs_per_pipeline:
-                        threshold = 1.0
-                    else:
-                        threshold = float(self.cli.match_threshold)
-                    if score >= threshold:
-                        if unf_bug_a not in all_scores:
-                            all_scores[unf_bug_a] = {}
-                        all_scores[unf_bug_a][unf_bug_b] = score
-                        if unf_bug_b not in duplicates:
-                            try:
-                                unaccounted.remove(unf_bug_a)
-                            except:
-                                pass
-                            duplicates[unf_bug_a].append(unf_bug_b)
-                            try:
-                                unaccounted.remove(unf_bug_b)
-                            except:
-                                pass
-        return (unaccounted, duplicates, text, all_scores)
 
     def report_top_ten_bugs(self, bug_rankings):
         """ Print the top ten bugs for each job to the console. """
