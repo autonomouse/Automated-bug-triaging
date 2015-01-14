@@ -573,9 +573,9 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp: 
             - "NeutronClientException.{9}NeutronError.{6}message.{5}Invalid input for operation..Gateway is not valid on subnet.{6}type.{5}InvalidInput"
 
-  "1408306":
+  "1397451":
     category: None
-    description: "[Prodstack] hook failed for mysql lxc (deploy fail)"
+    description: "prodstack: unit: mysql/0: machine: 3/lxc/0 agent-state: error details: hook failed: install"
     pipeline_deploy:
       -
         "console.txt":
