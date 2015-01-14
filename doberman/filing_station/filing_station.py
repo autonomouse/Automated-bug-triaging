@@ -43,16 +43,15 @@ class FilingStation(CrudeAnalysis):
         """
         # Get refinery output
         fname = 'auto-triaged_unfiled_bugs.yml'
-        self.test_catalog = TestCatalog(self.cli)
-        if not self.cli.offline_mode:
-            self.jenkins = Jenkins(self.cli)
-            self.build_pl_ids_and_check() # But should be pl_start uilds, not pl_deploy
-            output_folder = self.cli.reportdir
-            self.download_unfiled_bugs(fname, output_folder)
-            # TODO: Fetch from pipeline_start on jenkins...
-
-        else:
-            self.cli.LOG.info("*** Offline mode is on. ***")
+        #self.test_catalog = TestCatalog(self.cli)
+        #if not self.cli.offline_mode:
+        #    self.jenkins = Jenkins(self.cli)
+        #    self.build_pl_ids_and_check() # But should be pl_start uilds, not pl_deploy
+        #    output_folder = self.cli.reportdir
+        #    self.download_unfiled_bugs(fname, output_folder)
+        #    # TODO: Fetch from pipeline_start on jenkins...
+        #else:
+        #    self.cli.LOG.info("*** Offline mode is on. ***")
         self.cli.LOG.info("Working on {0} as refinery output directory"
                           .format(self.cli.reportdir))
         file_location = os.path.join(self.cli.reportdir, fname)
@@ -96,7 +95,7 @@ class FilingStation(CrudeAnalysis):
             link2jen += "\n{}\n\n".format(bug_to_file.pop('link to jenkins'))
             cons_op = "ERRORS, FAILS AND TRACEBACK (NORMALISED) \n"
             cons_op += "------------------------------------ \n"
-            cons_op += "\n{}\n\n".format(bug_to_file.pop('match text'))
+            cons_op += "\n{}\n\n".format(bug_to_file.pop('match text'))            
             example_pl = "EXAMPLE PIPELINE \n --------------------------- \n"
             for buginfo in bug_to_file:
                 # I need to turn this into a nice table eventually...
