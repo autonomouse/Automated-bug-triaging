@@ -625,7 +625,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
   "1405804":
     category: None
     description: "Prodstack oil_ci.deploy.oil_deployer Deployment failed Env Error - Details - Error  cannot add relation neutron-gateway amqp rabbitmq-server amqp relation already exists"
-    :
+    pipeline_deploy:
       -
         "console.txt":
             regexp:
