@@ -202,15 +202,6 @@ bugs:
             regexp: 
             - "shared-db-relation-changed"
 
-  "1358326":
-    category: None
-    description: prodstack. nova-vmware hooks failed. cloud-compute-relation-changed
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp: 
-            - "cloud-compute-relation-changed"
-
   "1373020":
     category: None
     description: oil_deployer Deployment failed - Name or service not known (pipeline_deploy fail)
@@ -442,7 +433,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "error. pathspec .stable.juno. did not match any file.s. known to git.+subprocess.CalledProcessError. Command '.'git', 'checkout', 'stable/juno'.' returned non-zero exit status 1"
 
-  "1389330":
+  "1386963":
     category: None
     description: "Prodstack: cassandra, error details hook failed config-changed (deploy fail)"
     pipeline_deploy:
@@ -532,15 +523,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "unit. nova-compute... machine.{1,4} agent-state. error details. hook failed...image-service-relation-changed.+oil_ci.ssh. Could not setup ssh connection to"
                   
-  "1400396":
-    category: None
-    description: "[Prodstack] cannot add unit 1/1 to service - dial tcp 10.245.0.10 connection refused"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "Error.{1,5}cannot add unit 1.1 to service .nova-compute.. cannot add unit to service .nova-compute.. Get http.{4,20}/MAAS/api/1.0/nodes/.op.list.status...status...status...status...status... dial tcp .{4,25} connection refused"
-                  
   "1403548":
     category: None
     description: "[Prodstack] Failed deployment due to keystone, lxc, hook failed (deploy fail)"
@@ -590,3 +572,94 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Error.....ambiguous relation...neutron-api keystone. could refer to .neutron-api.identity-admin keystone.identity-admin....neutron-api.identity-service keystone.identity-service"
+
+  "1408037":
+    category: None
+    description: "serverstack unit swift-storage/2 .. hook failed: install - Invalid Cloud Archive release specified trusty-juno"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Invalid Cloud Archive release specified. trusty-juno"
+
+  "1396798":
+    category: None
+    description: "prodstack: error executing .lxc-clone.. lxc_container. utils.c. mkdir_p"
+    pipeline_deploy:
+      -
+        "juju_status.yaml":
+            regexp:
+            - "agent-state-info...error executing .lxc-clone.. lxc_container. utils.c. mkdir_p"
+
+  "1400396":
+    category: None
+    description: "Prodstack cannot add unit 1/1 to service - dial tcp 10.245.0.10 connection refused"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "cannot add unit ... to service .nova-compute.. cannot add unit to service .nova-compute.. Get http.{10,20}MAAS.api.{3,7}nodes"
+  
+  "1399810":
+    category: None
+    description: "Prodstack unit ceph/0 machine 1 agent-state error details hook failed mon-relation-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "unit. ceph....machine... agent-state. error details. hook failed...mon-relation-changed"
+      -
+        "*ceph_*.oil_var_log_juju_unit-ceph-*.log":
+            regexp:
+            - "ERROR juju.worker.uniter uniter.go.{2,6} hook failed. exit status 1"
+
+  "1398879":
+    category: None
+    description: "prodstack No available node matches constraints tags=hw-ok - non-oil allocated node"
+    pipeline_deploy:
+      -
+        "juju_status.yaml":
+            regexp:
+            - "409 CONFLICT .No available node matches constraints. tags=hw-ok."
+
+  "1405804":
+    category: None
+    description: "Prodstack oil_ci.deploy.oil_deployer Deployment failed Env Error - Details - Error  cannot add relation neutron-gateway amqp rabbitmq-server amqp relation already exists"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "cannot add relation .neutron-gateway.amqp rabbitmq-server.amqp.. relation already exists"
+
+  "1336339":
+    category: None
+    description: "prodstack cinder-iscsi charm failure Command vgextend, cinder-volumes, /dev/loop0 returned non-zero exit status 5"
+    pipeline_deploy:
+      -
+        "*cinder_*.oil_var_log_juju_unit-cinder-*.log":
+            regexp:
+            - "CalledProcessError. Command ...vgextend.....cinder-volumes.....dev.loop.....returned non-zero exit status 5"
+
+  "1372941":
+    category: None
+    description: 
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "failed to build and is in ERROR status"
+      -
+        "tempest_xunit.xml":
+            regexp: 
+            - "failed to build and is in ERROR status.{1,2000}Details.{1,2000}failed to get to expected status.{1,2000}In ERROR state"
+            
+  "1318786":
+    category: None
+    description: "keystone auth EndpointNotFound Endpoint not found"
+    test_tempest_smoke:
+      -
+        "*":
+            regexp:
+            - "EndpointNotFound. Endpoint not found"
+
+
