@@ -48,7 +48,7 @@ def find_build_newer_than(builds, start):
     # assuming builds has been sorted
 
     # pre calculate key list
-    keys = [r['timestamp'] for r in builds]
+    keys = [r.get('timestamp') for r in builds]
 
     # make a micro timestamp from input
     start_ts = int(time.mktime(start.timetuple())) * 1000
