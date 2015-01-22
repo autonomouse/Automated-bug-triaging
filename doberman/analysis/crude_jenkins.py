@@ -419,7 +419,7 @@ class Build(Common):
         """ Search files in bugs for multiple matching regexps. """
         target_bugs = bugs.get(target_file, bugs.get('*'))
         regexps = target_bugs.get('regexp')
-        
+
         if type(regexps) == list:
             if len(regexps) > 1:
                 regexp = '|'.join(regexps)

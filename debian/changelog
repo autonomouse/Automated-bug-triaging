@@ -1,3 +1,10 @@
+doberman (1.0.11-0ubuntu1) trusty; urgency=medium
+
+  * Missed a variable :-(
+  * Made some changes to rematch for XML processing to eventually be able to handle the catch all ('*') given as the target_file, but this still will not work for tempest as there is a bug where if there are multiple globs it overwrites these in the xml. Needs fixing.
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 22 Jan 2015 12:16:34 +0000
+
 doberman (1.0.10-0ubuntu1) trusty; urgency=medium
 
   * Added 9 bugs from LP to the DB and deleted 2 duplicates.
