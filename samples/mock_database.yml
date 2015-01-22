@@ -648,10 +648,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "tempest_xunit.xml":
             regexp:
             - "failed to build and is in ERROR status"
-      -
-        "tempest_xunit.xml":
-            regexp:
-            - "failed to build and is in ERROR status.{1,2000}Details.{1,2000}failed to get to expected status.{1,2000}In ERROR state"
 
   "1318786":
     category: None
