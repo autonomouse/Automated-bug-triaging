@@ -12,9 +12,6 @@ class CLI(CLI):
 
     def add_refinery_specific_options_to_parser(self):
         prsr = self.parser
-        prsr.add_option('-f', '--offline', action='store_true',
-                        dest='offline_mode', default=False,
-                        help='Offline mode must provide a local path using -o')
         prsr.add_option('-m', '--multibug', action='store', dest='multibugppl',
                         default=None, help=('jenkins job names with multiple' +
                                             ' jobs per pipeline (must be in ' +
@@ -26,8 +23,6 @@ class CLI(CLI):
             cfg = utils.get_config(opts.configfile)
         else:
             cfg = utils.get_config()
-
-        self.offline_mode = opts.offline_mode
 
         if opts.multibugppl:
             multi_bugs_in_pl = opts.multibugppl

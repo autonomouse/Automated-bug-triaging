@@ -6,18 +6,17 @@ import yaml
 from doberman.analysis.analysis import CrudeAnalysis
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
-from doberman.refinery.refinery import Refinery
 from pprint import pprint
 from cli import CLI
 
-'''    
-    def autofile(self):  
+'''
+    def autofile(self):
         self.api.associate_jobs_into_pipelines()
         self.api.get_data_from_refinery()
         self.message = self.api.analyse_refinery_output()
         self.api.generate_filing_station_output_files()
         self.api.file_bugs()
-        self.api.tidy_up()        
+        self.api.tidy_up()
 '''
 
 class FilingStation(CrudeAnalysis):
@@ -44,16 +43,15 @@ class FilingStation(CrudeAnalysis):
         """
         # Get refinery output
         fname = 'auto-triaged_unfiled_bugs.yml'
-        self.test_catalog = TestCatalog(self.cli)
-        if not self.cli.offline_mode:
-            self.jenkins = Jenkins(self.cli)
-            self.build_pl_ids_and_check() # But should be pl_start uilds, not pl_deploy
-            output_folder = self.cli.reportdir
-            self.download_unfiled_bugs(fname, output_folder)
-            # TODO: Fetch from pipeline_start on jenkins...
-
-        else:
-            self.cli.LOG.info("*** Offline mode is on. ***")
+        #self.test_catalog = TestCatalog(self.cli)
+        #if not self.cli.offline_mode:
+        #    self.jenkins = Jenkins(self.cli)
+        #    self.build_pl_ids_and_check() # But should be pl_start uilds, not pl_deploy
+        #    output_folder = self.cli.reportdir
+        #    self.download_unfiled_bugs(fname, output_folder)
+        #    # TODO: Fetch from pipeline_start on jenkins...
+        #else:
+        #    self.cli.LOG.info("*** Offline mode is on. ***")
         self.cli.LOG.info("Working on {0} as refinery output directory"
                           .format(self.cli.reportdir))
         file_location = os.path.join(self.cli.reportdir, fname)
@@ -78,9 +76,9 @@ class FilingStation(CrudeAnalysis):
             num_dupes = str(len(bug_to_file.get('duplicates')))
 
             environments = {'91.189.92.95': 'Prodstack',
-                            '10.98.191.145:8080': 'Serverstack'} 
+                            '10.98.191.145:8080': 'Serverstack'}
             # Environments should probably be in an external yaml...?
-            
+
             cloud = environments.get(self.cli.netloc, '')
             pipeline = bug_to_file.get('job').split('_')[1]
             title = "[{}] {} ({} fail)".format(cloud, bug, pipeline)
@@ -101,18 +99,18 @@ class FilingStation(CrudeAnalysis):
             example_pl = "EXAMPLE PIPELINE \n --------------------------- \n"
             for buginfo in bug_to_file:
                 # I need to turn this into a nice table eventually...
-                txt = bug_to_file[buginfo]           
+                txt = bug_to_file[buginfo]
                 if not txt:
                      conv_txt = "?"
                 elif type(txt) is list:
-                    conv_txt = "\n".join(txt)    
-                elif type(txt) is dict: 
-                    conv_txt = "\n".join("{}: {}".format(k,v) for k,v in 
+                    conv_txt = "\n".join(txt)
+                elif type(txt) is dict:
+                    conv_txt = "\n".join("{}: {}".format(k,v) for k,v in
                                          txt.items())
                 else:
                     conv_txt = txt
                 example_pl += "{}:\n{}\n\n".format(buginfo, conv_txt)
-            
+
             example_pl +="\n"
             affectedpls = "AFFECTED PIPELINES \n --------------------------- \n"
             affectedpls += "\n{}\n\n".format(dup_pipelines)
@@ -124,7 +122,7 @@ class FilingStation(CrudeAnalysis):
 
             bug_description = notes + link2jen + cons_op + example_pl + affectedpls
 
-            tags = ""            
+            tags = ""
 
             single_file = (num_dupes, title, bug_description, tags)
 
@@ -152,29 +150,29 @@ class FilingStation(CrudeAnalysis):
 
     def file_bugs_on_launchpad(self, bug_to_file):
         """ """
-        
+
         # TODO:
         #lp = self.cli.launchpad_bug_tracker
         #bug_info = BugInfo(lp, 'oil',)
         #lp_bug_id = bug_info(lp, title, bug_description, tags)
-        
+
         pass
-        
-    def file_bugs_in_folder(self, bug_to_file):    
+
+    def file_bugs_in_folder(self, bug_to_file):
         """
         For now, we're just going to create a file in a mock launchpad folder.
         """
-        msg = "Bug filed on {} with launchpad bug id: {}"           
-        
+        msg = "Bug filed on {} with launchpad bug id: {}"
+
         bug_tracker = '/tmp/mock_launchpad/' # tmp
         self.mkdir(bug_tracker) # tmp
-        
-        file_path = os.path.join(bug_tracker, '{}_{}.yml'.format(bug_to_file[0], 
+
+        file_path = os.path.join(bug_tracker, '{}_{}.yml'.format(bug_to_file[0],
                                  bug_to_file[1]))
-        with open(file_path, 'w') as outfile:            
+        with open(file_path, 'w') as outfile:
             for line in bug_to_file[1:]:
                 outfile.write(line + "\n")
-        
+
         lp_bug_id = bug_to_file[1] # tmp
 
         self.cli.LOG.info(msg.format(bug_tracker, lp_bug_id))

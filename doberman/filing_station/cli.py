@@ -2,6 +2,7 @@
 
 from doberman.refinery.cli import CLI
 
+
 class CLI(CLI):
     def __init__(self):
         self.set_up_log_and_parser()
@@ -17,4 +18,3 @@ class CLI(CLI):
 
         (opts, args) = self.parser.parse_args()
         self.autofile_on_launchpad = opts.autofile_on_launchpad
-

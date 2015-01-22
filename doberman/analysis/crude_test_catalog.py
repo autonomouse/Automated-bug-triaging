@@ -53,22 +53,33 @@ class TestCatalog(Common):
         self.client = self.tc_client(endpoint=self.cli.tc_host,
                                      cookies=self.cookie, verify=self.verify)
 
+    def get_pipelines_from_paabn(self, filename=None):
+        """
+        """
+        if not filename:
+            filename = 'pipelines_and_associated_build_numbers.yml'
+        if filename in os.listdir(self.cli.reportdir):
+            with open(os.path.join(self.cli.reportdir, filename), "r") as f:
+                return yaml.load(f)
+        return {}
+
     def get_all_pipelines(self, pipeline_ids):
         """
         """
-
-        filename = 'pipelines_and_associated_build_numbers.yml'
         build_numbers = {}
-
         self.mkdir(self.cli.reportdir)
 
         # The local dictionary way:
-        if filename in os.listdir(self.cli.reportdir):
-            with open(os.path.join(self.cli.reportdir, filename), "r") as f:
-                build_numbers = yaml.load(f)
+        filename = 'pipelines_and_associated_build_numbers.yml'
+        build_numbers = self.get_pipelines_from_paabn(filename)
 
         # Check that all pipeline_ids were in the yaml file:
-        missing = [pl for pl in pipeline_ids if pl not in build_numbers.keys()]
+        if build_numbers:
+            missing = [pl for pl in pipeline_ids if pl not in
+                       build_numbers.keys()]
+        else:
+            missing = pipeline_ids
+
         if missing:
             # The test catalog way:
             for pipeline_id in missing:

@@ -36,7 +36,12 @@ class CrudeAnalysis(Common):
         self.pipeline_ids = []
         self.ids = self.cli.ids
 
-        if self.cli.use_deploy:
+        if self.cli.offline_mode:
+            self.cli.LOG.info(" *** Offline mode *** ")
+            build_numbers = self.test_catalog.get_pipelines_from_paabn()
+            self.ids = build_numbers.keys()
+
+        elif self.cli.use_deploy:
             # If using build numbers instead of pipelines, get pipeline:
             msg = "Looking up pipeline ids for the following jenkins "
             msg += "pipeline_deploy build numbers: %s"
@@ -61,7 +66,7 @@ class CrudeAnalysis(Common):
                                          self.cli.end.strftime('%c')))
             self.ids = self.test_catalog.get_pipelines_from_date_range()
 
-        self.calc_when_to_report()
+        self.report_at = self.calc_when_to_report(self.ids)
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
                 pipeline = self.jenkins.get_pipeline_from_deploy_build(idn)
@@ -83,21 +88,6 @@ class CrudeAnalysis(Common):
         self.cli.LOG.info("All pipelines checked. Now polling jenkins " +
                           "and processing data")
         return self.test_catalog.get_all_pipelines(self.pipeline_ids)
-
-    def calc_when_to_report(self):
-        """ Determine at what percentage completion to notify user of progress
-            based on the number of entries in self.ids
-
-        """
-
-        if len(self.ids) > 350:
-            self.report_at = range(5, 100, 5)  # Notify every 5 percent
-        elif len(self.ids) > 150:
-            self.report_at = range(10, 100, 10)  # Notify every 10 percent
-        elif len(self.ids) > 50:
-            self.report_at = range(25, 100, 25)  # Notify every 25 percent
-        else:
-            self.report_at = [50]  # Notify at 50 percent
 
     def remove_dirs(self, folders_to_remove):
         """ Remove data folders used to store untarred artifacts (just leaving
@@ -162,8 +152,11 @@ class CrudeAnalysis(Common):
                         self.non_db_bug(special_cases.bug_dict['pipeline_id'],
                                         deploy_dict, msg)
                 else:
-                    print("Problem with " + pipeline_id + " - skipping "
-                          "(deploy_build:  " + deploy_build + ")")
+                    probmsg = "Problem with {} - skipping "
+                    if deploy_build:
+                        probmsg += "(deploy_build: {})"
+                    self.cli.LOG.error(probmsg.format(pipeline_id,
+                                                      deploy_build))
                     problem_pipelines.append((pipeline_id, deploy_build, e))
                 self.cli.LOG.exception(e)
 
@@ -259,6 +252,9 @@ class CLI(Common):
                         help='set URI to bug/regex db: /path/to/mock_db.yaml')
         prsr.add_option('-e', '--end', action='store', dest='end',
                         default=None, help='ending date string. Default = now')
+        prsr.add_option('-f', '--offline', action='store_true',
+                        dest='offline_mode', default=False,
+                        help='Offline mode must provide a local path using -o')
         prsr.add_option('-i', '--jobnames', action='store', dest='jobnames',
                         default=None, help=('jenkins job names (must be in ' +
                                             'quotes, seperated by spaces)'))
@@ -308,6 +304,8 @@ class CLI(Common):
         self.match_threshold = cfg.get('DEFAULT', 'match_threshold')
         self.crude_job = cfg.get('DEFAULT', 'crude_job')
 
+        self.offline_mode = opts.offline_mode
+
         self.database = opts.database
         self.LOG.info("database=%s" % self.database)
         # database filepath might be set in config
@@ -315,6 +313,8 @@ class CLI(Common):
             self.LOG.info('getting DB from config file')
             self.database = cfg.get('DEFAULT', 'database_uri')
             self.LOG.info('database=%s' % self.database)
+
+        self.dont_replace = True
 
         if opts.use_deploy:
             self.use_deploy = opts.use_deploy
