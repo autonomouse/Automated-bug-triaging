@@ -160,8 +160,17 @@ class Build(Common):
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline):
         self.cli = cli
-        # Pull console and artifacts from jenkins:
-        path = os.path.join(self.cli.reportdir, jobname, build_number)
+        self.fetch_data_if_appropriate(jobname, build_number)
+        self.build_number = build_number
+        self.jobname = jobname
+        self.jenkins = jenkins
+        self.yaml_dict = yaml_dict
+        self.bugs = bugs
+        self.pipeline = pipeline
+
+    def fetch_data_if_appropriate(self, jobname, build_number):
+        """ Pull console and artifacts from jenkins """
+        path = os.path.join(self.cli.reportdir, jobname, build_number)        
         if self.cli.dont_replace:
             if not os.path.exists(path):
                 self.cli.LOG.info("{} missing - redownloading data"
@@ -173,13 +182,7 @@ class Build(Common):
         else:
             self.still_running = jenkins.\
                 get_triage_data(build_number, jobname, self.cli.reportdir)
-        self.build_number = build_number
-        self.jobname = jobname
-        self.jenkins = jenkins
-        self.yaml_dict = yaml_dict
-        self.bugs = bugs
-        self.pipeline = pipeline
-
+    
     def process_console_data(self, pipeline_path):
         """"""
         console_location = os.path.join(pipeline_path, 'console.txt')
@@ -289,8 +292,7 @@ class Build(Common):
                                         bug_unmatched, build_status,
                                         unfiled_xml_fails)
                                 for num, fail in enumerate(errors_and_fails):
-                                    pre_log = fail.get('message')  # \
-                                    #    .split("end captured logging")[0]
+                                    pre_log = fail.get('message')
                                     if not self.cli.reduced_output_text:
                                             info['text'] = pre_log
                                     info['target file'] = target

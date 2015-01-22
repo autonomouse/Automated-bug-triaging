@@ -73,8 +73,11 @@ class Refinery(CrudeAnalysis):
 
         self.generate_yamls()
 
-        self.plot = Plotting(self.bug_rankings, self.cli,
-                             self.unified_bugdict)
+        try:
+            self.plot = Plotting(self.bug_rankings, self.cli,
+                                 self.unified_bugdict)
+        except:
+            self.cli.LOG.info("Unable to generate plots.")
 
         if 'pipeline_ids' in self.__dict__:
             self.log_pipelines()
@@ -86,8 +89,9 @@ class Refinery(CrudeAnalysis):
         crude_folder = os.path.join(self.cli.reportdir, self.cli.crude_job)
 
         if not os.path.exists(self.cli.reportdir):
-            self.cli.LOG.error("Directory doesn't exist! {}"
-                .format(self.cli.reportdir))
+            emsg = "Directory doesn't exist! {}".format(self.cli.reportdir)
+            self.cli.LOG.error(emsg)
+            raise Exception(emsg)
         else:
             other_jobs = [j for j in self.cli.job_names if j !=
                           self.cli.crude_job]
@@ -480,14 +484,16 @@ class Refinery(CrudeAnalysis):
                 if 'unfiled' in bug_no:
                     unfiled_bugs[bug_no] = unified_bugdict[pipeline][bug_no]
 
-        if not unfiled_bugs:
-            self.cli.LOG.info("No unfiled bugs found!")
-            return ([], [])
-
-        unaccounted_bugs = unfiled_bugs.keys()
+        grouped_bugs = {}
         unique_bugs = {}
         all_scores = {}
         duplicates = {}
+        
+        if not unfiled_bugs:
+            self.cli.LOG.info("No unfiled bugs found!")
+            return (grouped_bugs, all_scores)
+
+        unaccounted_bugs = unfiled_bugs.keys()
 
         ujob = unfiled_bugs[unaccounted_bugs[0]].get('job')
 
@@ -550,7 +556,6 @@ class Refinery(CrudeAnalysis):
         self.cli.LOG.info("{} unique bugs detected".format(len(unique_bugs)))
 
         # Now group the duplicated bugs together...
-        grouped_bugs = {}
         for bug_key in unique_bugs:
             pline = unfiled_bugs[bug_key]['pipeline_id']
             uf_bug = unified_bugdict[pline][bug_key]

@@ -315,8 +315,6 @@ class CLI(Common):
             self.LOG.info('database=%s' % self.database)
 
         self.dont_replace = True
-        # self.dont_replace = (cfg.get('DEFAULT', 'use_deploy').lower() in
-        #                      ['true', 'yes'])
 
         if opts.use_deploy:
             self.use_deploy = opts.use_deploy

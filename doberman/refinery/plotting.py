@@ -1,11 +1,15 @@
 #! /usr/bin/env python2
 
 import os
-import matplotlib.pyplot as plt
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
-from pylab import xticks, gca, title
+
+# Matplotlib imports - The order is important to generate plots without X
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from pylab import xticks, gca, title
 
 
 class Plotting(CrudeAnalysis):
