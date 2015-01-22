@@ -259,7 +259,7 @@ class Build(Common):
                             if not (target in parse_as_xml):
                                 with open(target_location, 'r') as grep_me:
                                     text = grep_me.read()
-                                hit = self.rematch(and_dict, target_file, text)
+                                hit = self.rematch(and_dict, target, text)
                                 if hit:
                                     glob_hits.append(
                                         target_location.split('/')[-1])
@@ -417,8 +417,9 @@ class Build(Common):
 
     def rematch(self, bugs, target_file, text):
         """ Search files in bugs for multiple matching regexps. """
-        regexps = bugs[target_file]['regexp']
-
+        target_bugs = bugs.get(target_file, bugs.get('*'))
+        regexps = target_bugs.get('regexp')
+        
         if type(regexps) == list:
             if len(regexps) > 1:
                 regexp = '|'.join(regexps)

@@ -658,7 +658,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
     description: "keystone auth EndpointNotFound Endpoint not found"
     test_tempest_smoke:
       -
-        "*":
+        "tempest_xunit.xml":
             regexp:
             - "EndpointNotFound. Endpoint not found"
 
