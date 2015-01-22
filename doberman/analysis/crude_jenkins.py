@@ -160,7 +160,7 @@ class Build(Common):
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline):
         self.cli = cli
-        self.fetch_data_if_appropriate(jobname, build_number)
+        self.fetch_data_if_appropriate(jenkins, jobname, build_number)
         self.build_number = build_number
         self.jobname = jobname
         self.jenkins = jenkins
@@ -168,7 +168,7 @@ class Build(Common):
         self.bugs = bugs
         self.pipeline = pipeline
 
-    def fetch_data_if_appropriate(self, jobname, build_number):
+    def fetch_data_if_appropriate(self, jenkins, jobname, build_number):
         """ Pull console and artifacts from jenkins """
         path = os.path.join(self.cli.reportdir, jobname, build_number)
         if self.cli.dont_replace:
