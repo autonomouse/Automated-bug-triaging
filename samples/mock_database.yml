@@ -95,13 +95,9 @@ bugs:
     description:
     test_tempest_smoke:
       -
-        "tempest_xunit.xml":
+        "console.txt":
             regexp:
             - "failed to build and is in ERROR status"
-      -
-        "tempest_xunit.xml":
-            regexp:
-            - "failed to build and is in ERROR status.{1,2000}Details.{1,2000}failed to get to expected status.{1,2000}In ERROR state"
 
   "1372946":
     category: None
@@ -476,7 +472,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "juju_status.yaml":
             regexp:
-            - "agent-state. pending.{5}(containers|agent-version):"
+            - "agent-state. pending.{5}(containers|agent-version)."
 
   "1396657":
     category: None
@@ -640,15 +636,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "CalledProcessError. Command ...vgextend.....cinder-volumes.....dev.loop.....returned non-zero exit status 5"
 
-  "1372941":
-    category: None
-    description:
-    test_tempest_smoke:
-      -
-        "tempest_xunit.xml":
-            regexp:
-            - "failed to build and is in ERROR status"
-
   "1318786":
     category: None
     description: "keystone auth EndpointNotFound Endpoint not found"
@@ -658,4 +645,41 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "EndpointNotFound. Endpoint not found"
 
+  "1414644":
+    category: None
+    description: "[Prodstack] NeutronClientException: internal server error while processing your request (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "NeutronError....Request Failed. internal server error while processing your request"
 
+  "1414652":
+    category: None
+    description: "[Serverstack] Reached deployment timeout (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "importer.py.. line.{5,7} in check_timeout"
+
+
+  "1414656":
+    category: None
+    description: "[Serverstack] swift-storage fails to install (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "unit..swift-storage... machine... agent-state..error details..hook failed...install"
+
+
+  "1414659":
+    category: None
+    description: "[Serverstack] The server has either erred or is incapable of performing the requested operation (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "The server has either erred or is incapable of performing the requested operation"
+            
