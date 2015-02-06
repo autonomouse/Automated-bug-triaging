@@ -710,12 +710,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
 
   "1417049":
     category: None
-    description:"Request Failed. internal server error while processing your request"
+    description: "Request Failed. internal server error while processing your request"
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
             regexp:
-            - "Request Failed. internal server error while processing your request"
+            - "Request Failed. internal server error while processing your request"            
             
             
   "1417053":
@@ -727,4 +727,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "This server could not verify that you are authorized to access the document you requested. Either you supplied the wrong credentials (e.g., bad password), or your browser does not understand how to supply the credentials required"
 
-
+  "1416437":
+    category: None
+    description: "Prodstack oil_ci.deploy.oil_deployer Deployment failed ceilometer-agent - KeyError ceilometer-agent"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Deployment failed. 'ceilometer-agent'.{1,2000}KeyError. 'ceilometer-agent'"     
+            
+            
