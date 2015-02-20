@@ -47,6 +47,16 @@ class Refinery(CrudeAnalysis):
             self.remove_dirs(self.all_build_numbers)
         shutil.rmtree(self.tmpdir)
 
+    def merge_same_job_yamls(self, job, path):
+        """
+            Merge tempest yamls into 1 here?/now?
+        """
+        matching_bugs_dicts = [bdict for bdict in os.listdir(path) if 
+                               'bugs_dict_' in bdict and job in bdict]
+        if len(matching_bugs_dicts) > 1:
+            import pdb; pdb.set_trace()
+            # TODO
+        
     def analyse_crude_output(self):
         """ Get and analyse the crude output yamls.
         """
@@ -66,21 +76,25 @@ class Refinery(CrudeAnalysis):
                           .format(self.cli.reportdir))
 
         # Analyse the downloaded crude output yamls:
-        # other_jobs=[j for j in self.cli.job_names if j != self.cli.crude_job]
-        other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job
-                      and (j not in self.cli.multi_bugs_in_pl)]
-        # TODO: Processing XML jobs in this manner is too memory intensive, so
-        # ignoring these jobs for now until we can think of an alternative ^^
-
+        other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
+        # DEBUG:
+        #other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job 
+        #              and j not in self.cli.multi_bugs_in_pl]
         for job in other_jobs:
-            job_specific_bugs = \
-                self.unify_downloaded_triage_files(job, self.cli.crude_job,
-                                                   marker)
-            self.grouped_bugs, self.all_scores = \
-                self.group_similar_unfiled_bugs(job, job_specific_bugs)
-            self.pipelines_affected_by_bug = \
-                self.calculate_bug_prevalence(self.grouped_bugs,
-                                              job_specific_bugs)
+            self.unify_downloaded_triage_files(job, self.cli.crude_job, marker)
+            matching_bugs_dicts = [bdict for bdict in os.listdir(
+                                   self.cli.reportdir) if 'bugs_dict_' in bdict 
+                                   and job in bdict]
+            for fn in matching_bugs_dicts:
+                self.cli.LOG.info("Generating job specific bugs file: {}"
+                                  .format(fn))
+                job_specific_bugs = self.load_bugs_dict(fn)
+                self.grouped_bugs, self.all_scores = \
+                    self.group_similar_unfiled_bugs(job, job_specific_bugs)
+                self.pipelines_affected_by_bug = \
+                    self.calculate_bug_prevalence(self.grouped_bugs,
+                                                  job_specific_bugs)
+            self.merge_same_job_yamls(job, self.cli.reportdir)
             self.generate_yamls()
 
         self.report_top_ten_bugs(other_jobs, self.bug_rankings)
@@ -143,13 +157,13 @@ class Refinery(CrudeAnalysis):
             self.write_output_yaml(path, 'bug_ranking_{}.yml'.format(job),
                                    bug_rank)
 
-    def generate_bugs_yaml(self, data, job, number=0, path=None):
+    def generate_bugs_yaml(self, data, job, sfx=None, path=None):
         if not path:
             path = self.cli.reportdir
-        if number == 0:
+        if not sfx:
             suffix = job
         else:
-            suffix = "{}_{}".format(job, number)
+            suffix = "{}_{}".format(job, sfx)
         self.write_output_yaml(path, 'bugs_dict_{}.yml'.format(suffix),
                                {'pipelines': data})
 
@@ -162,7 +176,8 @@ class Refinery(CrudeAnalysis):
         artifact_found = False
 
         if build._data['duration'] == 0:
-            self.cli.LOG.info("Output unavailable (still running)")
+            msg = "Output from {} unavailable (build {}) - still running?"
+            self.cli.LOG.info(msg.format(pipeline_id))
             return
 
         self.mkdir(outdir)
@@ -248,11 +263,12 @@ class Refinery(CrudeAnalysis):
     def unify_downloaded_triage_files(self, job, crude_job, marker):
         """
         Unify the downloaded crude output yamls into a single dictionary.
+        
+        THIS STILL EATS MEMEORY IF RUN ON LOCALLY
 
         """
 
         bug_dict = {}
-        job_specific_bugs_dict = {}
         self.units = []
 
         if job in self.cli.multi_bugs_in_pl:
@@ -276,7 +292,7 @@ class Refinery(CrudeAnalysis):
 
                     bug_dict = self.join_dicts(bug_dict, new_bugs)
 
-                    job_specific_bugs_dict[job] = new_bugs
+                    job_specific_bugs = new_bugs
                 else:
                     scan_sub_folder = True
             elif filename in os.listdir(self.cli.reportdir):
@@ -286,7 +302,7 @@ class Refinery(CrudeAnalysis):
 
                 bug_dict = self.join_dicts(bug_dict, new_bugs)
 
-                job_specific_bugs_dict[job] = new_bugs
+                job_specific_bugs = new_bugs
             else:
                 skip = True
                 self.cli.LOG.error("Cannot find {} in {} - skipping"
@@ -295,27 +311,65 @@ class Refinery(CrudeAnalysis):
             if scan_sub_folder:
                 # ...otherwise, scan the sub-folders:
                 job_specific_bugs = {}
-                crude_dir = os.path.join(self.cli.reportdir, crude_job)
-                #number = 0
+                self.build_class_and_unit_list(filename, crude_folder, 
+                                               multi_bugs_per_pl)
                 for build_num in os.walk(crude_folder).next()[1]:
-                    new_bugs = self.unify(crude_job, marker, job, filename,
-                                          crude_dir, build_num)
-                    bug_dict = self.join_dicts(bug_dict, new_bugs)
-                    job_specific_bugs = self.join_dicts(job_specific_bugs,
-                                                        new_bugs)
-                    # TODO: Due to the large size of xml files we will need to 
-                    # batch process them them here...
+                    # For each save an output file...
+                    for xml_check in self.x_classes_and_units:
+                        new_bugs = self.unify(crude_job, marker, job, filename,
+                                              crude_folder, xml_check, 
+                                              build_num)
+                        bug_dict = self.join_dicts(bug_dict, new_bugs)
+                        job_specific_bugs = self.join_dicts(job_specific_bugs,
+                                                            new_bugs)
+                        if multi_bugs_per_pl:
+                            self.generate_bugs_yaml(job_specific_bugs, job, 
+                                                    xml_check)
 
                 if 'new_bugs' in locals():
-                    job_specific_bugs_dict[job] = new_bugs
+                    job_specific_bugs = new_bugs
 
+            if not multi_bugs_per_pl:
+                self.generate_bugs_yaml(job_specific_bugs, job)
+    
             if not skip:
                 self.cli.LOG.info("{} data unified.".format(job))
 
-            self.generate_bugs_yaml(job_specific_bugs, job)
-            return job_specific_bugs
-
-    def unify(self, crude_job, marker, job, filename, rdir, build_num=None):
+    def build_class_and_unit_list(self, filename, rdir, multi_bugs_per_pl):
+        """
+            Get list of classes and names for xml file or return false
+        """
+        
+        self.x_classes_and_units = []
+        if multi_bugs_per_pl:
+            for build_num in os.walk(rdir).next()[1]:
+                file_location = os.path.join(rdir, str(build_num), filename)
+                with open(file_location, "r") as f:
+                    yaml_content = yaml.load(f)
+                    content = yaml_content
+                output = content.get('pipeline')
+                
+                if output:
+                    for pipeline_id in output:
+                        x_class_unit = None
+                        for bug in output[pipeline_id]['bugs']:
+                            xcu = (output[pipeline_id]['bugs'][bug]
+                                   ['additional info'] if output[pipeline_id]
+                                   ['bugs'][bug].get('additional info') else 
+                                   None)
+                            if xcu:
+                                if (xcu.get('xunit class') and 
+                                    xcu.get('xunit name')):
+                                    x_class_unit = (xcu['xunit class'], 
+                                                    xcu['xunit name'])
+                        if x_class_unit:
+                            self.x_classes_and_units.append(x_class_unit)
+            self.x_classes_and_units = list(set(self.x_classes_and_units))            
+        else:
+            self.x_classes_and_units = [False]
+        
+    def unify(self, crude_job, marker, job, filename, rdir, xml_check=False, 
+              build_num=None):
         """
         Unify the downloaded crude output yamls into a single dictionary.
 
@@ -331,11 +385,32 @@ class Refinery(CrudeAnalysis):
                 output = yaml_content.get('pipeline')
         except:
             output = None
-
+        
         # Combine all yamls by pipeline:
         bug_dict = {}
         if output:
             for pipeline_id in output:
+                matching_class_unit = None
+                x_class_unit = None
+                if xml_check:
+                    x_class_unit = None
+                    for bug in output[pipeline_id]['bugs']:
+                        xcu = (output[pipeline_id]['bugs'][bug]
+                               ['additional info'] if output[pipeline_id] 
+                               ['bugs'][bug].get('additional info') else None)
+                        if xcu:
+                            if (xcu.get('xunit class') and xcu.get
+                                ('xunit name')):
+                                x_class_unit = (xcu['xunit class'], 
+                                                xcu['xunit name'])
+                        if x_class_unit != xml_check:
+                            x_class_unit = None
+                        else:
+                            matching_class_unit = x_class_unit
+                            break
+                    if not matching_class_unit:
+                        return bug_dict
+
                 if not bug_dict.get(pipeline_id):
                     bug_dict[pipeline_id] = {}
 
@@ -517,10 +592,9 @@ class Refinery(CrudeAnalysis):
         else:
             return bug_feedback
 
-    def load_bugs_dict(self, job, path=None):
+    def load_bugs_dict(self, filename, path=None):
         if not path:
             path = self.cli.reportdir
-        filename = "bugs_dict_{}.yml".format(job)
         file_location = os.path.join(path, filename)
         with open(file_location, "r") as f:
             return yaml.load(f).get('pipelines')
@@ -535,9 +609,6 @@ class Refinery(CrudeAnalysis):
             an error is close enough (i.e. greater than the given threshold
             value) to be considered a match.
         """
-
-        # if batch processing, load up self.job_specific_bugs_dict(s) in here
-        # ... but merge 2 by 2 if multiple... (TODO)
 
         self.cli.LOG.info("Grouping unfiled bugs by error similarity.")
         unfiled_bugs = {}
