@@ -85,23 +85,29 @@ class Common(object):
         current_items = list(new_dict.items())
         return dict(earlier_items + current_items)
 
-    def calc_when_to_report(self, prog_list):
+    def calc_when_to_report(self, prog_list=None, integer=None):
         """ Determine at what percentage completion to notify user of progress
             based on the number of entries in self.ids
 
         """
+        if prog_list:
+            total = len(prog_list)
+        elif integer:
+            total = int(integer)
+        else:
+            return
 
-        if len(prog_list) > 350:
+        if total > 350:
             report_at = range(5, 100, 5)  # Notify every 5 percent
-        elif len(prog_list) > 150:
+        elif total > 150:
             report_at = range(10, 100, 10)  # Notify every 10 percent
-        elif len(prog_list) > 50:
+        elif total > 50:
             report_at = range(25, 100, 25)  # Notify every 25 percent
         else:
             report_at = [50]  # Notify at 50 percent
         return report_at
 
-    def write_output_yaml(self, output_dir, filename, yaml_dict):
+    def write_output_yaml(self, output_dir, filename, yaml_dict, verbose=True):
         """
         """
         file_path = os.path.join(output_dir, filename)
@@ -109,8 +115,9 @@ class Common(object):
             os.makedirs(output_dir)
         with open(file_path, 'w') as outfile:
             outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
-            self.cli.LOG.info(filename + " written to "
-                              + os.path.abspath(output_dir))
+        if verbose:
+            self.cli.LOG.info("{} written to {}.".format(filename,
+                              os.path.abspath(output_dir)))
 
     def get_yaml(self, file_location, yaml_dict):
         return self.get_from_file(file_location, yaml_dict, ftype='yaml')

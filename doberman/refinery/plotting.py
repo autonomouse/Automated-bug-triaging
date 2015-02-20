@@ -1,6 +1,7 @@
 #! /usr/bin/env python2
 
 import os
+import yaml
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
 
@@ -16,11 +17,10 @@ class Plotting(CrudeAnalysis):
     """
     """
 
-    def __init__(self, bug_rankings, cli, unified_bugs_dict):
+    def __init__(self, bug_rankings, cli):
         """
         """
         self.bug_rankings = bug_rankings
-        self.unified_bugs_dict = unified_bugs_dict
         self.cli = cli
         self.plot_all()
 
@@ -83,21 +83,25 @@ class Plotting(CrudeAnalysis):
         opst_releases = {}
         charm_used = {}
         timestamp = {}
-
-        for pl in self.unified_bugs_dict:
-            pipeline = self.unified_bugs_dict[pl]
-            for bug in pipeline:
-                if bug in bug_ids:
-                    charm_used[bug] = pipeline[bug].get('charms')
-                    timestamp[bug] = pipeline[bug].get('Jenkins timestamp')
-                    info = pipeline[bug].get('additional info')
-                    if info:
-                        bs_node = info.get('bootstrap_node')
-                        try:
-                            opst_releases[bug] = \
-                                bs_node.get('openstack release')
-                        except:
-                            opst_releases[bug] = "Unknown"
+        bugs_dict_list = [jsb for jsb in os.listdir(self.cli.reportdir)
+                          if 'bugs_dict_' in jsb]
+        for bugs_dict in bugs_dict_list:
+            with open(os.path.join(self.cli.reportdir, bugs_dict), 'r') as f:
+                job_specific_bugs_dict = yaml.load(f).get('pipelines')
+            for pl in job_specific_bugs_dict:
+                pipeline = job_specific_bugs_dict[pl]
+                for bug in pipeline:
+                    if bug in bug_ids:
+                        charm_used[bug] = pipeline[bug].get('charms')
+                        timestamp[bug] = pipeline[bug].get('Jenkins timestamp')
+                        info = pipeline[bug].get('additional info')
+                        if info:
+                            bs_node = info.get('bootstrap_node')
+                            try:
+                                opst_releases[bug] = \
+                                    bs_node.get('openstack release')
+                            except:
+                                opst_releases[bug] = "Unknown"
 
         # This isn't worth doing until we start filing the tags for what the
         # bug affects, otherwise it's just a collection of machines used

@@ -5,6 +5,7 @@ import os
 import yaml
 import operator
 import re
+import tempfile
 import shutil
 import hashlib
 from jenkinsapi.custom_exceptions import *
@@ -32,8 +33,11 @@ class Refinery(CrudeAnalysis):
         """ Overwriting CrudeAnalysis' __init__ method """
 
         self.message = -1
+        self.tmpdir = tempfile.mkdtemp()
+
         self.cli = CLI()
         self.all_build_numbers = []
+        self.bug_rankings = {}
 
         # Download and analyse the crude output yamls:
         self.analyse_crude_output()
@@ -41,6 +45,7 @@ class Refinery(CrudeAnalysis):
         # Tidy Up:
         if not self.cli.keep_data:
             self.remove_dirs(self.all_build_numbers)
+        shutil.rmtree(self.tmpdir)
 
     def analyse_crude_output(self):
         """ Get and analyse the crude output yamls.
@@ -59,23 +64,29 @@ class Refinery(CrudeAnalysis):
             self.cli.op_dir_structure = self.determine_folder_structure()
         self.cli.LOG.info("Working on {0} as refinery input directory"
                           .format(self.cli.reportdir))
-        self.unified_bugdict, self.job_specific_bugs_dict = \
-            self.unify_downloaded_triage_files(self.cli.crude_job, marker)
 
         # Analyse the downloaded crude output yamls:
-        self.grouped_bugs, self.all_scores = \
-            self.group_similar_unfiled_bugs(self.unified_bugdict)
-        self.pipelines_affected_by_bug, self.bug_rankings = \
-            self.calculate_bug_prevalence(self.grouped_bugs,
-                                          self.unified_bugdict,
-                                          self.job_specific_bugs_dict)
-        self.report_top_ten_bugs(self.bug_rankings)
+        # other_jobs=[j for j in self.cli.job_names if j != self.cli.crude_job]
+        other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job
+                      and (j not in self.cli.multi_bugs_in_pl)]
+        # TODO: Processing XML jobs in this manner is too memory intensive, so
+        # ignoring these jobs for now until we can think of an alternative ^^
 
-        self.generate_yamls()
+        for job in other_jobs:
+            job_specific_bugs = \
+                self.unify_downloaded_triage_files(job, self.cli.crude_job,
+                                                   marker)
+            self.grouped_bugs, self.all_scores = \
+                self.group_similar_unfiled_bugs(job, job_specific_bugs)
+            self.pipelines_affected_by_bug = \
+                self.calculate_bug_prevalence(self.grouped_bugs,
+                                              job_specific_bugs)
+            self.generate_yamls()
+
+        self.report_top_ten_bugs(other_jobs, self.bug_rankings)
 
         try:
-            self.plot = Plotting(self.bug_rankings, self.cli,
-                                 self.unified_bugdict)
+            self.plot = Plotting(self.bug_rankings, self.cli)
         except:
             self.cli.LOG.info("Unable to generate plots.")
 
@@ -101,23 +112,46 @@ class Refinery(CrudeAnalysis):
                 else:
                     return os.path.join("{0}", "{1}", "{2}")
 
-    def generate_yamls(self):
-        """ Write data to output yaml files.
+    def generate_yamls(self, job=None, path=None):
         """
+            Write data to output yaml files.
+        """
+        if not path:
+            path = self.cli.reportdir
+        self.generate_pl_bug_fx_yaml(path)
+        self.generate_unfiled_bugs_yaml(path)
+        if job:
+            self.generate_bug_ranking_yaml(job, path)
 
-        self.write_output_yaml(self.cli.reportdir,
-                               'pipelines_affected_by_bug.yml',
+    def generate_pl_bug_fx_yaml(self, path):
+        self.write_output_yaml(path, 'pipelines_affected_by_bug.yml',
                                self.pipelines_affected_by_bug)
 
-        self.write_output_yaml(self.cli.reportdir,
-                               'auto-triaged_unfiled_bugs.yml',
+    def generate_unfiled_bugs_yaml(self, path):
+        self.write_output_yaml(path, 'auto-triaged_unfiled_bugs.yml',
                                {'pipelines': self.grouped_bugs})
 
-        for job in self.bug_rankings:
+    def generate_bug_ranking_yaml(self, path, job=None):
+        if job == 'all':
+            for job in self.bug_rankings:
+                self.generate_individual_bug_ranking_yaml(path, job)
+        else:
+                self.generate_individual_bug_ranking_yaml(path, job)
+
+    def generate_individual_bug_ranking_yaml(self, path, job):
             bug_rank = self.bug_rankings[job]
-            self.write_output_yaml(self.cli.reportdir,
-                                   job + '_bug_ranking.yml',
-                                   {'pipelines': bug_rank})
+            self.write_output_yaml(path, 'bug_ranking_{}.yml'.format(job),
+                                   bug_rank)
+
+    def generate_bugs_yaml(self, data, job, number=0, path=None):
+        if not path:
+            path = self.cli.reportdir
+        if number == 0:
+            suffix = job
+        else:
+            suffix = "{}_{}".format(job, number)
+        self.write_output_yaml(path, 'bugs_dict_{}.yml'.format(suffix),
+                               {'pipelines': data})
 
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
@@ -211,7 +245,7 @@ class Refinery(CrudeAnalysis):
         # TODO: Check if empty
         shutil.rmtree(path_to_crude_folder)
 
-    def unify_downloaded_triage_files(self, crude_job, marker):
+    def unify_downloaded_triage_files(self, job, crude_job, marker):
         """
         Unify the downloaded crude output yamls into a single dictionary.
 
@@ -219,56 +253,67 @@ class Refinery(CrudeAnalysis):
 
         bug_dict = {}
         job_specific_bugs_dict = {}
+        self.units = []
+
+        if job in self.cli.multi_bugs_in_pl:
+            multi_bugs_per_pl = True
+        else:
+            multi_bugs_per_pl = False
+
         crude_folder = os.path.join(self.cli.reportdir, crude_job)
         if not os.path.exists(self.cli.reportdir):
             self.cli.LOG.error("{0} doesn't exist!".format(crude_folder))
         else:
-            other_jobs = [j for j in self.cli.job_names if j != crude_job]
-            for job in other_jobs:
-                skip = False
-                filename = "{0}_{1}.yml".format(marker, job)
-                scan_sub_folder = False
+            filename = "{0}_{1}.yml".format(marker, job)
+            skip = False
+            scan_sub_folder = False
 
-                if os.path.exists(crude_folder):
-                    if filename in os.listdir(crude_folder):
-                        # If they're in the top level directory, just do this:
-                        new_bugs = self.unify(crude_job, marker, job, filename,
-                                              crude_folder)
-
-                        bug_dict = self.join_dicts(bug_dict, new_bugs)
-
-                        job_specific_bugs_dict[job] = new_bugs
-                    else:
-                        scan_sub_folder = True
-                elif filename in os.listdir(self.cli.reportdir):
-                    # If they're in the top level directory, just do this...:
+            if os.path.exists(crude_folder):
+                if filename in os.listdir(crude_folder):
+                    # If they're in the top level directory, just do this:
                     new_bugs = self.unify(crude_job, marker, job, filename,
-                                          self.cli.reportdir)
+                                          crude_folder)
 
                     bug_dict = self.join_dicts(bug_dict, new_bugs)
 
                     job_specific_bugs_dict[job] = new_bugs
                 else:
-                    skip = True
-                    self.cli.LOG.error("Cannot find {} in {} - skipping"
-                                       .format(filename, self.cli.reportdir))
+                    scan_sub_folder = True
+            elif filename in os.listdir(self.cli.reportdir):
+                # If they're in the top level directory, just do this...:
+                new_bugs = self.unify(crude_job, marker, job, filename,
+                                      self.cli.reportdir)
 
-                if scan_sub_folder:
-                    # ...otherwise, scan the sub-folders:
-                    job_specific_bugs = {}
-                    crude_dir = os.path.join(self.cli.reportdir, crude_job)
+                bug_dict = self.join_dicts(bug_dict, new_bugs)
 
-                    for build_num in os.walk(crude_folder).next()[1]:
-                        new_bugs = self.unify(crude_job, marker, job, filename,
-                                              crude_dir, build_num)
-                        bug_dict = self.join_dicts(bug_dict, new_bugs)
-                        job_specific_bugs = self.join_dicts(job_specific_bugs,
-                                                            new_bugs)
-                    if 'new_bugs' in locals():
-                        job_specific_bugs_dict[job] = new_bugs
-                if not skip:
-                    self.cli.LOG.info("{} data unified.".format(job))
-        return (bug_dict, job_specific_bugs_dict)
+                job_specific_bugs_dict[job] = new_bugs
+            else:
+                skip = True
+                self.cli.LOG.error("Cannot find {} in {} - skipping"
+                                   .format(filename, self.cli.reportdir))
+
+            if scan_sub_folder:
+                # ...otherwise, scan the sub-folders:
+                job_specific_bugs = {}
+                crude_dir = os.path.join(self.cli.reportdir, crude_job)
+                #number = 0
+                for build_num in os.walk(crude_folder).next()[1]:
+                    new_bugs = self.unify(crude_job, marker, job, filename,
+                                          crude_dir, build_num)
+                    bug_dict = self.join_dicts(bug_dict, new_bugs)
+                    job_specific_bugs = self.join_dicts(job_specific_bugs,
+                                                        new_bugs)
+                    # TODO: Due to the large size of xml files we will need to 
+                    # batch process them them here...
+
+                if 'new_bugs' in locals():
+                    job_specific_bugs_dict[job] = new_bugs
+
+            if not skip:
+                self.cli.LOG.info("{} data unified.".format(job))
+
+            self.generate_bugs_yaml(job_specific_bugs, job)
+            return job_specific_bugs
 
     def unify(self, crude_job, marker, job, filename, rdir, build_num=None):
         """
@@ -328,32 +373,39 @@ class Refinery(CrudeAnalysis):
                         # rename = "{0}_console.txt".format(job)
                         rename = "console.txt"
                         # Check to see if console is present. If not, download:
-                        if not os.path.isfile(os.path.join(op_dir, rename)):
-                            params = (job, pipeline_id, build, 'console.txt',
-                                      op_dir, rename)
+                        if bug_output['additional info']['target file'] != \
+                                'console.txt':
+                            bug_output['additional info']['target file'] = \
+                                'console.txt'
+
+                            a_file = os.path.join(op_dir, rename)
+                            if not os.path.isfile(a_file):
+                                params = (job, pipeline_id, build,
+                                          'console.txt', op_dir, rename)
+                                try:
+                                    self.download_specific_file(*params)
+                                except Exception, e:
+                                    err = "Problem fetching console data for "
+                                    err += "pl {} (bug {}). {}"
+                                    self.cli.LOG.info(err.format(pipeline_id,
+                                                      bug, e))
+                                    bug_output['additional info']['text'] = \
+                                        None
                             try:
-                                self.download_specific_file(*params)
+                                openme = os.path.join(op_dir, rename)
+                                with open(openme, 'r') as f:
+                                    bug_output['additional info']['text'] = \
+                                        f.read()
                             except Exception, e:
-                                err = "Problem fetching console data for "
-                                err += "pl {} (bug {}). {}"
-                                self.cli.LOG.info(err.format(pipeline_id, bug,
-                                                  e))
-                                bug_output['console'] = None
-                        try:
-                            openme = os.path.join(op_dir, rename)
-                            with open(openme, 'r') as f:
-                                bug_output['console'] = f.read()
-                        except Exception, e:
-                            err = "Could not open {} for pl {} (bug {}). {}"
-                            self.cli.LOG.info(err.format(openme, pipeline_id,
-                                              bug, e))
-                            bug_output['console'] = None
+                                err = "Couldn't open {} for pl {} (bug {}). {}"
+                                self.cli.LOG.info(err.format(openme,
+                                                  pipeline_id, bug, e))
+                                bug_output['additional info']['text'] = None
                     bug_dict[pipeline_id][bug] = bug_output
                     # TODO: end of would be else block
         return bug_dict
 
-    def calculate_bug_prevalence(self, unique_unfiled_bugs, unified_bugdict,
-                                 job_specific_bugs_dict):
+    def calculate_bug_prevalence(self, unique_unfiled_bugs, job_specific_bugs):
         """
         calculate_bug_prevalence
         Needs to make charts too...
@@ -371,10 +423,10 @@ class Refinery(CrudeAnalysis):
             pipelines_affected_by_bug[bug_no] = \
                 unique_unfiled_bugs[bug_no]['duplicates']
 
-        for pipeline in unified_bugdict:
-            for bug_no in unified_bugdict[pipeline]:
+        for pipeline in job_specific_bugs:
+            for bug_no in job_specific_bugs[pipeline]:
                 if 'unfiled' not in bug_no:
-                    job = unified_bugdict[pipeline][bug_no]['job']
+                    job = job_specific_bugs[pipeline][bug_no]['job']
                     if job not in bug_prevalence:
                         bug_prevalence[job] = {}
                     if bug_no not in bug_prevalence[job]:
@@ -389,7 +441,6 @@ class Refinery(CrudeAnalysis):
                         pipelines_affected_by_bug[bug_no] = []
                     pipelines_affected_by_bug[bug_no].append(pipeline)
 
-        bug_rankings = {}
         for job_or_all in bug_prevalence:
             try:
                 bug_rank = sorted(bug_prevalence[job_or_all].items(),
@@ -397,9 +448,9 @@ class Refinery(CrudeAnalysis):
                 bug_rank.reverse()
             except:
                 pass
-            bug_rankings[job_or_all] = bug_rank
+            self.bug_rankings[job_or_all] = bug_rank
 
-        return (pipelines_affected_by_bug, bug_rankings)
+        return (pipelines_affected_by_bug)
 
     def get_identifying_bug_details(self, bugs, bug_id, multi_bpp=False):
         """ """
@@ -466,7 +517,15 @@ class Refinery(CrudeAnalysis):
         else:
             return bug_feedback
 
-    def group_similar_unfiled_bugs(self, unified_bugdict,
+    def load_bugs_dict(self, job, path=None):
+        if not path:
+            path = self.cli.reportdir
+        filename = "bugs_dict_{}.yml".format(job)
+        file_location = os.path.join(path, filename)
+        with open(file_location, "r") as f:
+            return yaml.load(f).get('pipelines')
+
+    def group_similar_unfiled_bugs(self, job, unified_bugdict,
                                    max_sequence_size=10000):
         """
             Group unfiled bugs together by similarity of error message. If the
@@ -477,8 +536,12 @@ class Refinery(CrudeAnalysis):
             value) to be considered a match.
         """
 
+        # if batch processing, load up self.job_specific_bugs_dict(s) in here
+        # ... but merge 2 by 2 if multiple... (TODO)
+
         self.cli.LOG.info("Grouping unfiled bugs by error similarity.")
         unfiled_bugs = {}
+
         for pipeline in unified_bugdict:
             for bug_no in unified_bugdict[pipeline]:
                 if 'unfiled' in bug_no:
@@ -564,7 +627,7 @@ class Refinery(CrudeAnalysis):
                 if 'text' in uf_bug['additional info']:
                     del uf_bug['additional info']['text']
             if 'console' in uf_bug:
-                del uf_bug['console']
+                del uf_bug['additional info']['text']
             grouped_bugs[bug_key] = uf_bug
             grouped_bugs[bug_key]['duplicates'] = \
                 [unfiled_bugs[dup]['pipeline_id'] for dup in
@@ -573,22 +636,25 @@ class Refinery(CrudeAnalysis):
 
         return (grouped_bugs, all_scores)
 
-    def report_top_ten_bugs(self, bug_rankings):
+    def report_top_ten_bugs(self, job_names, bug_rankings):
         """ Print the top ten bugs for each job to the console. """
-        for job in self.cli.job_names:
-            if job != self.cli.crude_job:
-                print
-                print("Top bugs for job: {}".format(job))
-                print("-----------------------------------")
-                print
-                if bug_rankings.get(job):
-                    for count, bug in enumerate(bug_rankings.get(job)):
-                        if count < 10:
-                            msg = "{0} - {1} duplicates"
-                            print(msg.format(bug[0], bug[1]))
-                else:
-                    print("No bugs found.")
-                print
+        for job in job_names:
+            print
+            print("Top bugs for job: {}".format(job))
+            print("-----------------------------------")
+            print
+            if bug_rankings.get(job):
+                for count, bug in enumerate(bug_rankings.get(job)):
+                    if count < 10:
+                        msg = "{0} - {1} duplicates"
+                        print(msg.format(bug[0], bug[1]))
+            else:
+                print("No bugs found.")
+            print
+
+    def write_to_tmp_file(self, bug, bug_output):
+        self.write_output_yaml(self.tmpdir, '{}.yml'.format(bug), bug_output,
+                               False)
 
 
 def main():
