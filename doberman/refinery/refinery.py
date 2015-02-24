@@ -47,27 +47,6 @@ class Refinery(CrudeAnalysis):
             self.remove_dirs(self.all_build_numbers)
         shutil.rmtree(self.tmpdir)
 
-    def merge_same_job_yamls(self, job, path):
-        """
-            Merge tempest yamls into 1 here?/now?
-        """
-        matching_bugs_dicts = [bdict for bdict in os.listdir(path) if
-                               'bugs_dict_' in bdict and job in bdict]
-        if len(matching_bugs_dicts) > 0:
-            # Split by jobname and by suffix, then remove anything in between:
-            old_name = matching_bugs_dicts[0]
-            sfx = old_name.split('.')[-1]
-            new_name = "{}{}.{}".format(old_name.split(job)[0], job, sfx)
-            if len(matching_bugs_dicts) == 1:
-                if old_name != new_name:
-                    # Rename file:
-                    shutil.move(os.path.join(path, old_name),
-                                os.path.join(path, new_name))
-            else:
-                # TODO: Merge ymls together - can we do this a line at a time 
-                # so it doesn't eat memory like it did before?
-                import pdb; pdb.set_trace()
-
     def analyse_crude_output(self):
         """ Get and analyse the crude output yamls.
         """
@@ -88,15 +67,14 @@ class Refinery(CrudeAnalysis):
 
         # Analyse the downloaded crude output yamls:
         other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
-        # DEBUG:
-        #other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job
-        #              and j not in self.cli.multi_bugs_in_pl]
+
+        previous_pls_affected = {}
         for job in other_jobs:
             self.unify_downloaded_triage_files(job, self.cli.crude_job, marker)
             matching_bugs_dicts = [bdict for bdict in os.listdir(
                                    self.cli.reportdir) if 'bugs_dict_' in bdict
                                    and job in bdict]
-            for fn in matching_bugs_dicts:
+            for pos, fn in enumerate(matching_bugs_dicts):
                 self.cli.LOG.info("Generating job specific bugs file: {}"
                                   .format(fn))
                 # Load up the data from file:
@@ -104,12 +82,30 @@ class Refinery(CrudeAnalysis):
 
                 self.grouped_bugs, self.all_scores = \
                     self.group_similar_unfiled_bugs(job, job_specific_bugs)
-                self.pipelines_affected_by_bug = \
-                    self.calculate_bug_prevalence(self.grouped_bugs,
+                pls_affected = self.calculate_bug_prevalence(self.grouped_bugs,
                                                   job_specific_bugs)
 
-            self.merge_same_job_yamls(job, self.cli.reportdir)
+                # Keep previous for merging:
+                previous_pls_affected = self.pipelines_affected_by_bug
+                previous_grouped_bugs = self.grouped_bugs
+                previous_bug_rankings = self.bug_rankings
+                previous_all_scores = self.all_scores  # Is this even used?
+
+                self.pipelines_affected_by_bug = \
+                    self.join_dicts(previous_pls_affected, pls_affected)
+
+                if pos > 1:
+                    self.grouped_bugs = self.join_dicts(self.grouped_bugs,
+                                                        previous_grouped_bugs)
+                    self.bug_rankings = self.join_dicts(self.bug_rankings,
+                                                      previous_bug_rankings)
+                    # Is all_scores even used?
+                    self.all_scores = self.join_dicts(self.all_scores,
+                                                      previous_all_scores)
+
             self.generate_yamls(job)
+            #self.merge_same_job_yamls(job, self.cli.reportdir,
+            #                          matching_bugs_dicts)
 
         self.report_top_ten_bugs(other_jobs, self.bug_rankings)
 
@@ -164,17 +160,17 @@ class Refinery(CrudeAnalysis):
             for job in self.bug_rankings:
                 self.generate_individual_bug_ranking_yaml(path, job)
         else:
-                self.generate_individual_bug_ranking_yaml(path, job)
+            self.generate_individual_bug_ranking_yaml(path, job)
 
     def generate_individual_bug_ranking_yaml(self, path, job):
-            bug_rank = self.bug_rankings.get(job)
-            try:
-                fn = 'bug_ranking_{}.yml'.format(job)
-                self.write_output_yaml(path, fn, bug_rank)
-            except:
-                emsg = "No such file {} in {}".format(fn, path)
-                self.cli.LOG.error(emsg)
-                raise Exception(emsg)
+        bug_rank = self.bug_rankings.get(job)
+        try:
+            fn = 'bug_ranking_{}.yml'.format(job)
+            self.write_output_yaml(path, fn, bug_rank)
+        except:
+            emsg = "No such file {} in {}".format(fn, path)
+            self.cli.LOG.error(emsg)
+            raise Exception(emsg)
 
     def generate_bugs_yaml(self, data, job, sfx=None, path=None):
         if not path:
@@ -336,7 +332,8 @@ class Refinery(CrudeAnalysis):
                                               build_num)
                         bug_dict = self.join_dicts(bug_dict, new_bugs)
                         if multi_bugs_per_pl:
-                            self.generate_bugs_yaml(bug_dict, job, xml_check)
+                            suffix = xml_check[0].split('.')[-1] + xml_check[1]
+                            self.generate_bugs_yaml(bug_dict, job, suffix)
 
             if not multi_bugs_per_pl:
                 self.generate_bugs_yaml(bug_dict, job)
@@ -353,9 +350,14 @@ class Refinery(CrudeAnalysis):
         if multi_bugs_per_pl:
             for build_num in os.walk(rdir).next()[1]:
                 file_location = os.path.join(rdir, str(build_num), filename)
-                with open(file_location, "r") as f:
-                    yaml_content = yaml.load(f)
-                    content = yaml_content
+                try:
+                    with open(file_location, "r") as f:
+                        yaml_content = yaml.load(f)
+                        content = yaml_content
+                except:
+                    self.cli.LOG.error("Problem fetching data from {}"
+                                       .format(file_location))
+                    content = {}
                 output = content.get('pipeline')
 
                 if output:
@@ -380,7 +382,7 @@ class Refinery(CrudeAnalysis):
     def unify(self, crude_job, marker, job, filename, rdir, xml_check=False,
               build_num=None):
         """
-        Unify the downloaded crude output yamls into a single dictionary.
+            Unify the downloaded crude output yamls into a single dictionary.
 
         """
 
