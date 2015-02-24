@@ -89,8 +89,8 @@ class Refinery(CrudeAnalysis):
         # Analyse the downloaded crude output yamls:
         other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
         # DEBUG:
-        other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job
-                      and j not in self.cli.multi_bugs_in_pl]
+        #other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job
+        #              and j not in self.cli.multi_bugs_in_pl]
         for job in other_jobs:
             self.unify_downloaded_triage_files(job, self.cli.crude_job, marker)
             matching_bugs_dicts = [bdict for bdict in os.listdir(
