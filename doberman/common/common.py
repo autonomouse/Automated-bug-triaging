@@ -8,6 +8,7 @@ from dateutil.parser import parse
 from doberman.common import special_cases
 from datetime import datetime
 import yaml
+import json
 from jenkinsapi.custom_exceptions import *
 
 
@@ -84,7 +85,39 @@ class Common(object):
         earlier_items = list(old_dict.items())
         current_items = list(new_dict.items())
         return dict(earlier_items + current_items)
+        
+    def calculate_progress(self, current_position, prog_list, 
+                           percentage_to_report_at=None):
+        """ 
+            Calculates and returns a percentage to notify user of progress 
+            completion based on the number of entries in prog_list, or 
+            prog_list itself if it is an integer.
 
+        """
+        if type(prog_list) not in [list, set]:
+            total = int(prog_list)
+        else:
+            total = len(prog_list)
+        
+        if not percentage_to_report_at:
+            if total > 350:
+                report_at = range(5, 100, 5)  # Notify every 5 percent
+            elif total > 150:
+                report_at = range(10, 100, 10)  # Notify every 10 percent
+            elif total > 50:
+                report_at = range(25, 100, 25)  # Notify every 25 percent
+            else:
+                report_at = [50]  # Notify at 50 percent
+        else:
+            report_at = range(percentage_to_report_at, 100, 
+                              percentage_to_report_at)
+            
+        progress = [round((pc / 100.0) * total) for pc in report_at]
+        
+        if current_position in progress:
+            return str(report_at[progress.index(current_position)])
+
+    # THIS METHOD TO BE REPLACED BY calculate_progress ^^
     def calc_when_to_report(self, prog_list=None, integer=None):
         """ Determine at what percentage completion to notify user of progress
             based on the number of entries in self.ids
@@ -115,6 +148,18 @@ class Common(object):
             os.makedirs(output_dir)
         with open(file_path, 'w') as outfile:
             outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
+        if verbose:
+            self.cli.LOG.info("{} written to {}.".format(filename,
+                              os.path.abspath(output_dir)))
+
+    def write_output_json(self, output_dir, filename, json_dict, verbose=True):
+        """
+        """
+        file_path = os.path.join(output_dir, filename)
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
+        with open(file_path, 'w') as outfile:
+            outfile.write(json.dumps(json_dict))
         if verbose:
             self.cli.LOG.info("{} written to {}.".format(filename,
                               os.path.abspath(output_dir)))
