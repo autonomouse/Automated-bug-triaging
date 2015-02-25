@@ -152,6 +152,7 @@ class Refinery(CrudeAnalysis):
             path = self.cli.reportdir
         self.generate_pl_bug_fx_yaml(path)
         self.generate_unfiled_bugs_yaml(path)
+        self.generate_all_scores_yaml(path)
         if job:
             self.generate_bug_ranking_yaml(path, job)
 
@@ -162,6 +163,10 @@ class Refinery(CrudeAnalysis):
     def generate_unfiled_bugs_yaml(self, path):
         self.write_output_yaml(path, 'auto-triaged_unfiled_bugs.yml',
                                {'pipelines': self.grouped_bugs})
+
+    def generate_all_scores_yaml(self, path):
+        self.write_output_yaml(path, 'all_scores.yml',
+                               {'pipelines': self.all_scores})
 
     def generate_bug_ranking_yaml(self, path, job=None):
         if job == 'all':
@@ -597,8 +602,8 @@ class Refinery(CrudeAnalysis):
         pipeline id, date newlines, \ etc with blanks...
         """
         pipelines = [bugs[b].get('pipeline_id') for b in bugs]
-        if not info:
-            info = bugs[bug_id].get('console')
+        if not info and 'additional info' in bugs[bug_id]:
+            info = bugs[bug_id]['additional info'].get('text')
 
         # replace pipeline id(s) with placeholder:
         pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
@@ -734,8 +739,6 @@ class Refinery(CrudeAnalysis):
             if 'additional info' in uf_bug:
                 if 'text' in uf_bug['additional info']:
                     del uf_bug['additional info']['text']
-            if 'console' in uf_bug:
-                del uf_bug['additional info']['text']
             grouped_bugs[bug_key] = uf_bug
             grouped_bugs[bug_key]['duplicates'] = \
                 [unfiled_bugs[dup]['pipeline_id'] for dup in
