@@ -346,6 +346,7 @@ class Refinery(CrudeAnalysis):
                                                multi_bugs_per_pl)
 
                 n_folders = len(os.listdir(crude_folder))
+                done_this = []
                 if multi_bugs_per_pl:
                     msg = "Reprocessing XML data from {} discrete builds into "
                     msg += "{} new file(s)"
@@ -361,10 +362,12 @@ class Refinery(CrudeAnalysis):
                                     multi_bugs_per_pl, xml_check, build_num))
                         if multi_bugs_per_pl:
                             # Notify user of progress:
-                            prog = (self.calculate_progress(num, n_folders, 1))
+                            prog = (self.calculate_progress(num, n_folders, 5))
                             if prog:
-                                self.cli.LOG.info("Reprocessing {}% complete"
-                                                  .format(prog))
+                                if prog not in done_this:
+                                    done_this.append(prog)
+                                    msg = "Reprocessing {}% complete"
+                                    self.cli.LOG.info(msg.format(prog))
 
             if not multi_bugs_per_pl:
                 self.generate_bugs_json(bug_dict, job)
