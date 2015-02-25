@@ -85,12 +85,12 @@ class Common(object):
         earlier_items = list(old_dict.items())
         current_items = list(new_dict.items())
         return dict(earlier_items + current_items)
-        
-    def calculate_progress(self, current_position, prog_list, 
+
+    def calculate_progress(self, current_position, prog_list,
                            percentage_to_report_at=None):
-        """ 
-            Calculates and returns a percentage to notify user of progress 
-            completion based on the number of entries in prog_list, or 
+        """
+            Calculates and returns a percentage to notify user of progress
+            completion based on the number of entries in prog_list, or
             prog_list itself if it is an integer.
 
         """
@@ -98,7 +98,7 @@ class Common(object):
             total = int(prog_list)
         else:
             total = len(prog_list)
-        
+
         if not percentage_to_report_at:
             if total > 350:
                 report_at = range(5, 100, 5)  # Notify every 5 percent
@@ -109,11 +109,11 @@ class Common(object):
             else:
                 report_at = [50]  # Notify at 50 percent
         else:
-            report_at = range(percentage_to_report_at, 100, 
+            report_at = range(percentage_to_report_at, 100,
                               percentage_to_report_at)
-            
+
         progress = [round((pc / 100.0) * total) for pc in report_at]
-        
+
         if current_position in progress:
             return str(report_at[progress.index(current_position)])
 

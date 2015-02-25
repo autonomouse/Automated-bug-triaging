@@ -736,4 +736,21 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Deployment failed. 'ceilometer-agent'.{1,2000}KeyError. 'ceilometer-agent'"     
             
+  "1422732":
+    category: None
+    description: "[Prodstack] Internal server error while processing your request (tempest fail)"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "Failed..internal server error while processing your request.....type....HTTPInternalServerError"
             
+  "1425358":
+    category: None
+    description: "[Prodstack] Deployment failed 'NoneType' object is not iterable (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "oil_ci.deploy.oil_deployer. Deployment failed. .NoneType. object is not iterable"
+

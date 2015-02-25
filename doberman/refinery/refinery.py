@@ -50,7 +50,7 @@ class Refinery(CrudeAnalysis):
         # Tidy Up:
         if not self.cli.keep_data:
             self.remove_dirs(self.all_build_numbers)
-            [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in 
+            [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
         shutil.rmtree(self.tmpdir)
 
@@ -90,7 +90,7 @@ class Refinery(CrudeAnalysis):
                 self.grouped_bugs, self.all_scores = \
                     self.group_similar_unfiled_bugs(job, job_specific_bugs)
                 pls_affected = self.calculate_bug_prevalence(self.grouped_bugs,
-                                                  job_specific_bugs)
+                                                             job_specific_bugs)
 
                 # Keep previous for merging:
                 previous_pls_affected = pls_affected
@@ -105,7 +105,7 @@ class Refinery(CrudeAnalysis):
                     self.grouped_bugs = self.join_dicts(self.grouped_bugs,
                                                         previous_grouped_bugs)
                     self.bug_rankings = self.join_dicts(self.bug_rankings,
-                                                      previous_bug_rankings)
+                                                        previous_bug_rankings)
                     # Is all_scores even used?
                     self.all_scores = self.join_dicts(self.all_scores,
                                                       previous_all_scores)
@@ -114,7 +114,8 @@ class Refinery(CrudeAnalysis):
             # open a new file and stream each yaml dump of the bugs dict
             # into it. I'm not sure if this will get around the memory issue
             # or not. Need to investigate. This might help:
-            # http://stackoverflow.com/questions/1033424/how-to-remove-bad-path-characters-in-python
+            # http://stackoverflow.com/questions/1033424/how-to-remove-bad-path
+            # -characters-in-python
         self.report_top_ten_bugs(other_jobs, self.bug_rankings)
 
         try:
@@ -151,8 +152,8 @@ class Refinery(CrudeAnalysis):
         if not path:
             path = self.cli.reportdir
         self.generate_pl_bug_fx_yaml(path)
-        self.generate_unfiled_bugs_yaml(path)
-        self.generate_all_scores_yaml(path)
+        self.generate_unfiled_bugs_yaml(path, job)
+        #self.generate_all_scores_yaml(path)
         if job:
             self.generate_bug_ranking_yaml(path, job)
 
@@ -160,8 +161,12 @@ class Refinery(CrudeAnalysis):
         self.write_output_yaml(path, 'pipelines_affected_by_bug.yml',
                                self.pipelines_affected_by_bug)
 
-    def generate_unfiled_bugs_yaml(self, path):
-        self.write_output_yaml(path, 'auto-triaged_unfiled_bugs.yml',
+    def generate_unfiled_bugs_yaml(self, path, job):
+        if not job:
+            filename = 'auto-triaged_unfiled_bugs'
+        else:
+            filename = 'auto-triaged_{}_unfiled_bugs'.format(job)
+        self.write_output_yaml(path, "{}.yml".format(filename),
                                {'pipelines': self.grouped_bugs})
 
     def generate_all_scores_yaml(self, path):
@@ -185,7 +190,7 @@ class Refinery(CrudeAnalysis):
             self.cli.LOG.error(emsg)
             raise Exception(emsg)
 
-    def generate_bugs_json(self, data, job, sfx=None, path=None, 
+    def generate_bugs_json(self, data, job, sfx=None, path=None,
                            verbose=True):
         if not path:
             path = self.cli.reportdir
@@ -193,8 +198,14 @@ class Refinery(CrudeAnalysis):
             suffix = job
         else:
             suffix = "{}_{}".format(job, sfx)
-        self.write_output_json(path, 'bugs_dict_{}.json'.format(suffix),
-                               {'pipelines': data}, verbose=verbose)
+        try:
+            self.write_output_json(path, 'bugs_dict_{}.json'.format(suffix),
+                                   {'pipelines': data}, verbose=verbose)
+        except IOError:
+            # In case file name is too long (problem for encrypted disks):
+            suffix = "{}{}{}".format(suffix[0:60], "...", suffix[-10:])
+            self.write_output_json(path, 'bugs_dict_{}.json'.format(suffix),
+                                   {'pipelines': data}, verbose=verbose)
 
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
@@ -310,7 +321,7 @@ class Refinery(CrudeAnalysis):
             filename = "{0}_{1}.yml".format(marker, job)
             skip = False
             scan_sub_folder = False
-            
+
             if os.path.exists(crude_folder):
                 if filename in os.listdir(crude_folder):
                     # If they're in the top level directory, just do this:
@@ -334,22 +345,23 @@ class Refinery(CrudeAnalysis):
                 self.build_class_and_unit_list(filename, crude_folder,
                                                multi_bugs_per_pl)
 
+                n_folders = len(os.listdir(crude_folder))
                 if multi_bugs_per_pl:
                     msg = "Reprocessing XML data from {} discrete builds into "
                     msg += "{} new file(s)"
-                    self.cli.LOG.info(msg.format(len(os.listdir(crude_folder)),
+                    self.cli.LOG.info(msg.format(n_folders,
                                       len(self.x_classes_and_units)))
 
-                for build_num in os.walk(crude_folder).next()[1]:
+                for num, build_num in enumerate(os.walk(crude_folder)
+                                                .next()[1]):
                     # For each save an output file...
-                    for num, xml_check in enumerate(self.x_classes_and_units):
+                    for xml_check in self.x_classes_and_units:
                         bug_dict = (self.unify_and_join(bug_dict, crude_job,
                                     marker, job, filename, crude_folder,
                                     multi_bugs_per_pl, xml_check, build_num))
                         if multi_bugs_per_pl:
                             # Notify user of progress:
-                            prog = (self.calculate_progress(num,
-                                    self.x_classes_and_units, 5))
+                            prog = (self.calculate_progress(num, n_folders, 1))
                             if prog:
                                 self.cli.LOG.info("Reprocessing {}% complete"
                                                   .format(prog))
@@ -372,7 +384,6 @@ class Refinery(CrudeAnalysis):
         else:
             self.generate_bugs_json(bug_dict, job, verbose=False)
         return bug_dict
-
 
     def build_class_and_unit_list(self, filename, rdir, multi_bugs_per_pl):
         """
@@ -402,8 +413,9 @@ class Refinery(CrudeAnalysis):
                                    ['bugs'][bug].get('additional info') else
                                    None)
                             if xcu:
-                                if (xcu.get('xunit class') and
-                                    xcu.get('xunit name')):
+                                okay = (xcu.get('xunit class') and
+                                        xcu.get('xunit name'))
+                                if okay:
                                     x_class_unit = (xcu['xunit class'],
                                                     xcu['xunit name'])
                         if x_class_unit:
@@ -444,8 +456,9 @@ class Refinery(CrudeAnalysis):
                                ['additional info'] if output[pipeline_id]
                                ['bugs'][bug].get('additional info') else None)
                         if xcu:
-                            if (xcu.get('xunit class') and xcu.get
-                                ('xunit name')):
+                            okay = (xcu.get('xunit class') and
+                                    xcu.get('xunit name'))
+                            if okay:
                                 x_class_unit = (xcu['xunit class'],
                                                 xcu['xunit name'])
                         if x_class_unit != xml_check:
