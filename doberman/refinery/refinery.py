@@ -85,13 +85,14 @@ class Refinery(CrudeAnalysis):
                     grouped_bugs = {}
 
                     self.cli.LOG.info("Unifying {} data.".format(job))
-                    self.unify_downloaded_triage_files(job, self.cli.crude_job, marker)
+                    self.unify_downloaded_triage_files(job, self.cli.crude_job,
+                                                       marker)
 
                     matching_bugs_dicts = [bdict for bdict in os.listdir(
-                                           self.cli.reportdir) if 'bugs_dict_' in bdict
-                                           and job in bdict]
+                                           self.cli.reportdir) if 'bugs_dict_'
+                                           in bdict and job in bdict]
                     for pos, fn in enumerate(matching_bugs_dicts):
-                        self.cli.LOG.info("Generating job specific bugs file: {}"
+                        self.cli.LOG.info("Generating job spec. bugs file: {}"
                                           .format(fn))
                         # Load up the data from file:
                         job_specific_bugs = self.load_bugs_dict(fn)
@@ -125,21 +126,12 @@ class Refinery(CrudeAnalysis):
                         plfxbybug_f.writelines(json.dumps(
                                                self.pipelines_affected_by_bug)
                                                + "\n")
-
-                    # TODO: Merging multiple sub-jobs back into a single jobs file:
-                    # open a new file and stream each yaml dump of the bugs dict
-                    # into it. I'm not sure if this will get around the memory issue
-                    # or not. Need to investigate. This might help:
-                    # http://stackoverflow.com/questions/1033424/how-to-remove-bad-path
-                    # -characters-in-python
         self.report_top_ten_bugs(other_jobs, self.bug_rankings)
 
-        '''
         try:
             self.plot = Plotting(self.bug_rankings, self.cli)
         except:
             self.cli.LOG.info("Unable to generate plots.")
-        '''
 
         if 'pipeline_ids' in self.__dict__:
             self.log_pipelines()
@@ -205,39 +197,6 @@ class Refinery(CrudeAnalysis):
             suffix = "{}{}{}".format(suffix[0:60], "...", suffix[-10:])
             self.write_output_json(path, 'bugs_dict_{}.json'.format(suffix),
                                    {'pipelines': data}, verbose=verbose)
-
-    '''
-    def close_all_bugs_dict_files(self):
-        for file_path in self.bugs_dict_files:
-            self.bugs_dict_files[file_path].writelines("\n}\n}")
-            self.bugs_dict_files[file_path].close()
-
-    def generate_bugs_json(self, data, job, sfx=None, path=None,
-                           verbose=True):
-        if not path:
-            path = self.cli.reportdir
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        if not sfx:
-            suffix = job
-        else:
-            suffix = "{}_{}".format(job, sfx)
-
-        if 'bugs_dict_files' not in self.__dict__:
-            self.bugs_dict_files = {}
-
-        file_path = os.path.join(path, 'bugs_dict_{}.json'.format(suffix))
-
-        if data:
-            if file_path not in self.bugs_dict_files:
-                self.bugs_dict_files[file_path] = open(file_path, 'w')
-                self.bugs_dict_files[file_path].writelines("{\"pipelines\": {\n")
-            else:
-                self.bugs_dict_files[file_path].writelines(",\n")
-
-            self.bugs_dict_files[file_path].writelines(json.dumps(data))
-    '''
 
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
@@ -394,7 +353,7 @@ class Refinery(CrudeAnalysis):
                                     multi_bugs_per_pl, xml_check, build_num))
                         if multi_bugs_per_pl:
                             # Notify user of progress:
-                            prog = (self.calculate_progress(num, n_folders, 5))
+                            prog = (self.calculate_progress(num, n_folders))
                             if prog:
                                 if prog not in done_this:
                                     done_this.append(prog)
@@ -747,8 +706,8 @@ class Refinery(CrudeAnalysis):
                             msg = "{} and {} were over maximum sequence size "
                             msg += "and so were compared using md5 and found "
                             msg += "to be equivalent."
-                            self.cli.LOG.info(msg.format(already_seen,
-                                                         unfiled_bug))
+                            self.cli.LOG.debug(msg.format(already_seen,
+                                                          unfiled_bug))
                         else:
                             score = -1
                     else:
@@ -760,9 +719,6 @@ class Refinery(CrudeAnalysis):
                 else:
                     threshold = float(self.cli.match_threshold)
                 if score >= threshold:
-                    #if unfiled_bug not in all_scores:
-                    #    all_scores[unfiled_bug] = {}
-                    #all_scores[unfiled_bug][already_seen] = score
                     duplicates[already_seen].append(unfiled_bug)
                     break
             else:
