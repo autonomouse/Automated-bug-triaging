@@ -37,12 +37,7 @@ class Refinery(CrudeAnalysis):
         self.tmpdir = tempfile.mkdtemp()
 
         self.cli = CLI()
-        self.all_build_numbers = []
         self.bug_rankings = {}
-        self.pipelines_affected_by_bug = {}
-        self.grouped_bugs = {}
-        self.bug_rankings = {}
-        self.all_scores = {}
 
         # Download and analyse the crude output yamls:
         self.analyse_crude_output()
@@ -75,53 +70,76 @@ class Refinery(CrudeAnalysis):
         # Analyse the downloaded crude output yamls:
         other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
         previous_pls_affected = {}
-        for job in other_jobs:
-            self.cli.LOG.info("Unifying {} data.".format(job))
-            self.unify_downloaded_triage_files(job, self.cli.crude_job, marker)
-            matching_bugs_dicts = [bdict for bdict in os.listdir(
-                                   self.cli.reportdir) if 'bugs_dict_' in bdict
-                                   and job in bdict]
-            for pos, fn in enumerate(matching_bugs_dicts):
-                self.cli.LOG.info("Generating job specific bugs file: {}"
-                                  .format(fn))
-                # Load up the data from file:
-                job_specific_bugs = self.load_bugs_dict(fn)
 
-                self.grouped_bugs, self.all_scores = \
-                    self.group_similar_unfiled_bugs(job, job_specific_bugs)
-                pls_affected = self.calculate_bug_prevalence(self.grouped_bugs,
-                                                             job_specific_bugs)
+        if not os.path.isdir(self.cli.reportdir):
+            os.makedirs(self.cli.reportdir)
 
-                # Keep previous for merging:
-                previous_pls_affected = pls_affected
-                previous_grouped_bugs = self.grouped_bugs
-                previous_bug_rankings = self.bug_rankings
-                previous_all_scores = self.all_scores  # Is this even used?
+        with open(os.path.join(self.cli.reportdir,
+                  'pipelines_affected_by_bug.json'), 'w') as plfxbybug_f:
+            with open(os.path.join(self.cli.reportdir,
+                      'auto-triaged_unfiled_bugs.json'), 'w') as unfbug_f:
+                for job in other_jobs:
 
-                self.pipelines_affected_by_bug = \
-                    self.join_dicts(previous_pls_affected, pls_affected)
+                    self.all_build_numbers = []
+                    self.pipelines_affected_by_bug = {}
+                    grouped_bugs = {}
 
-                if pos > 1:
-                    self.grouped_bugs = self.join_dicts(self.grouped_bugs,
-                                                        previous_grouped_bugs)
-                    self.bug_rankings = self.join_dicts(self.bug_rankings,
-                                                        previous_bug_rankings)
-                    # Is all_scores even used?
-                    self.all_scores = self.join_dicts(self.all_scores,
-                                                      previous_all_scores)
-            self.generate_yamls(job)
-            # TODO: Merging multiple sub-jobs back into a single jobs file:
-            # open a new file and stream each yaml dump of the bugs dict
-            # into it. I'm not sure if this will get around the memory issue
-            # or not. Need to investigate. This might help:
-            # http://stackoverflow.com/questions/1033424/how-to-remove-bad-path
-            # -characters-in-python
+                    self.cli.LOG.info("Unifying {} data.".format(job))
+                    self.unify_downloaded_triage_files(job, self.cli.crude_job, marker)
+
+                    matching_bugs_dicts = [bdict for bdict in os.listdir(
+                                           self.cli.reportdir) if 'bugs_dict_' in bdict
+                                           and job in bdict]
+                    for pos, fn in enumerate(matching_bugs_dicts):
+                        self.cli.LOG.info("Generating job specific bugs file: {}"
+                                          .format(fn))
+                        # Load up the data from file:
+                        job_specific_bugs = self.load_bugs_dict(fn)
+
+                        grouped_bugs = \
+                            self.group_similar_unfiled_bugs(job,
+                                                            job_specific_bugs)
+                        pls_affected = \
+                            self.calculate_bug_prevalence(grouped_bugs,
+                                                          job_specific_bugs)
+
+                        # Keep previous for merging:
+                        previous_pls_affected = pls_affected
+                        previous_grouped_bugs = grouped_bugs
+
+                        self.pipelines_affected_by_bug = \
+                            self.join_dicts(previous_pls_affected,
+                                            pls_affected)
+
+                        if pos > 1:
+                            grouped_bugs = \
+                                self.join_dicts(grouped_bugs,
+                                                previous_grouped_bugs)
+
+                    # Write output files:
+                    if grouped_bugs:
+                        unfbug_f.writelines(json.dumps(grouped_bugs) + "\n")
+
+                    self.generate_yamls(job)
+                    if self.pipelines_affected_by_bug:
+                        plfxbybug_f.writelines(json.dumps(
+                                               self.pipelines_affected_by_bug)
+                                               + "\n")
+
+                    # TODO: Merging multiple sub-jobs back into a single jobs file:
+                    # open a new file and stream each yaml dump of the bugs dict
+                    # into it. I'm not sure if this will get around the memory issue
+                    # or not. Need to investigate. This might help:
+                    # http://stackoverflow.com/questions/1033424/how-to-remove-bad-path
+                    # -characters-in-python
         self.report_top_ten_bugs(other_jobs, self.bug_rankings)
 
+        '''
         try:
             self.plot = Plotting(self.bug_rankings, self.cli)
         except:
             self.cli.LOG.info("Unable to generate plots.")
+        '''
 
         if 'pipeline_ids' in self.__dict__:
             self.log_pipelines()
@@ -151,27 +169,8 @@ class Refinery(CrudeAnalysis):
         """
         if not path:
             path = self.cli.reportdir
-        self.generate_pl_bug_fx_yaml(path)
-        self.generate_unfiled_bugs_yaml(path, job)
-        #self.generate_all_scores_yaml(path)
         if job:
             self.generate_bug_ranking_yaml(path, job)
-
-    def generate_pl_bug_fx_yaml(self, path):
-        self.write_output_yaml(path, 'pipelines_affected_by_bug.yml',
-                               self.pipelines_affected_by_bug)
-
-    def generate_unfiled_bugs_yaml(self, path, job):
-        if not job:
-            filename = 'auto-triaged_unfiled_bugs'
-        else:
-            filename = 'auto-triaged_{}_unfiled_bugs'.format(job)
-        self.write_output_yaml(path, "{}.yml".format(filename),
-                               {'pipelines': self.grouped_bugs})
-
-    def generate_all_scores_yaml(self, path):
-        self.write_output_yaml(path, 'all_scores.yml',
-                               {'pipelines': self.all_scores})
 
     def generate_bug_ranking_yaml(self, path, job=None):
         if job == 'all':
@@ -206,6 +205,39 @@ class Refinery(CrudeAnalysis):
             suffix = "{}{}{}".format(suffix[0:60], "...", suffix[-10:])
             self.write_output_json(path, 'bugs_dict_{}.json'.format(suffix),
                                    {'pipelines': data}, verbose=verbose)
+
+    '''
+    def close_all_bugs_dict_files(self):
+        for file_path in self.bugs_dict_files:
+            self.bugs_dict_files[file_path].writelines("\n}\n}")
+            self.bugs_dict_files[file_path].close()
+
+    def generate_bugs_json(self, data, job, sfx=None, path=None,
+                           verbose=True):
+        if not path:
+            path = self.cli.reportdir
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        if not sfx:
+            suffix = job
+        else:
+            suffix = "{}_{}".format(job, sfx)
+
+        if 'bugs_dict_files' not in self.__dict__:
+            self.bugs_dict_files = {}
+
+        file_path = os.path.join(path, 'bugs_dict_{}.json'.format(suffix))
+
+        if data:
+            if file_path not in self.bugs_dict_files:
+                self.bugs_dict_files[file_path] = open(file_path, 'w')
+                self.bugs_dict_files[file_path].writelines("{\"pipelines\": {\n")
+            else:
+                self.bugs_dict_files[file_path].writelines(",\n")
+
+            self.bugs_dict_files[file_path].writelines(json.dumps(data))
+    '''
 
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
@@ -368,10 +400,8 @@ class Refinery(CrudeAnalysis):
                                     done_this.append(prog)
                                     msg = "Reprocessing {}% complete"
                                     self.cli.LOG.info(msg.format(prog))
-
-            if not multi_bugs_per_pl:
-                self.generate_bugs_json(bug_dict, job)
-
+                if multi_bugs_per_pl:
+                    self.cli.LOG.info("Reprocessing 100% complete")
             if not skip:
                 self.cli.LOG.info("{} data unified.".format(job))
 
@@ -682,12 +712,11 @@ class Refinery(CrudeAnalysis):
 
         grouped_bugs = {}
         unique_bugs = {}
-        all_scores = {}
         duplicates = {}
 
         if not unfiled_bugs:
             self.cli.LOG.info("No unfiled {} bugs found!".format(job))
-            return (grouped_bugs, all_scores)
+            return grouped_bugs
 
         unaccounted_bugs = unfiled_bugs.keys()
 
@@ -731,9 +760,9 @@ class Refinery(CrudeAnalysis):
                 else:
                     threshold = float(self.cli.match_threshold)
                 if score >= threshold:
-                    if unfiled_bug not in all_scores:
-                        all_scores[unfiled_bug] = {}
-                    all_scores[unfiled_bug][already_seen] = score
+                    #if unfiled_bug not in all_scores:
+                    #    all_scores[unfiled_bug] = {}
+                    #all_scores[unfiled_bug][already_seen] = score
                     duplicates[already_seen].append(unfiled_bug)
                     break
             else:
@@ -743,7 +772,8 @@ class Refinery(CrudeAnalysis):
             # Notify user of progress:
             progress = self.calculate_progress(pos, unaccounted_bugs)
             if progress:
-                self.cli.LOG.info("Bug grouping {}% complete".format(progress))
+                self.cli.LOG.info("Bug grouping for {} data {}% complete"
+                                  .format(job, progress))
 
         self.cli.LOG.info("{} unique bugs detected".format(len(unique_bugs)))
 
@@ -761,7 +791,7 @@ class Refinery(CrudeAnalysis):
                  duplicates[bug_key]]
             grouped_bugs[bug_key]['match text'] = unique_bugs[bug_key]
 
-        return (grouped_bugs, all_scores)
+        return grouped_bugs
 
     def report_top_ten_bugs(self, job_names, bug_rankings,
                             url='https://bugs.launchpad.net/oil/+bug/{}'):
