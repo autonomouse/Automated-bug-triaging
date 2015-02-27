@@ -118,7 +118,7 @@ class TestCatalog(Common):
         bstr = ", ".join(["{} ({})".format(val, key)
                           for key, val in build_numbers.items() if val])
         msg = 'Build numbers {1} associated with pipeline: {0}'
-        self.cli.LOG.info(msg.format(pipeline, bstr))
+        self.cli.LOG.debug(msg.format(pipeline, bstr))
         return build_numbers
 
     def pipeline_check(self, pipeline_id):

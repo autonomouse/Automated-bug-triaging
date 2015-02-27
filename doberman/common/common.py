@@ -54,6 +54,7 @@ class Common(object):
             yaml_dict['pipeline'] = pipeline_dict
         return yaml_dict
 
+    '''
     def non_db_bug(self, bug_id, existing_dict, err_msg):
         """ Make non-database bugs for special cases, such as missing files
             that cannot be, or are not yet, listed in the bugs database.
@@ -78,6 +79,7 @@ class Common(object):
                                          existing_dict)
         self.message = 0
         return yaml_dict
+    '''
 
     def join_dicts(self, old_dict, new_dict):
         """ Merge matching_bugs dictionaries. """

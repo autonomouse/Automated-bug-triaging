@@ -82,8 +82,8 @@ class Jenkins(Common):
 
     def write_console_to_file(self, build, outdir):
         with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
-            self.cli.LOG.info('Saving console @ {0} to {1}'.format(
-                              build.baseurl, outdir))
+            self.cli.LOG.debug('Saving console @ {0} to {1}'.format(
+                               build.baseurl, outdir))
             console = build.get_console()
             cnsl.write(console)
             cnsl.write('\n')
@@ -182,27 +182,6 @@ class Build(Common):
         else:
             self.still_running = jenkins.\
                 get_triage_data(build_number, jobname, self.cli.reportdir)
-
-    def process_console_data(self, pipeline_path):
-        """"""
-        console_location = os.path.join(pipeline_path, 'console.txt')
-        cons_txt, self.yaml_dict = self.get_txt(console_location,
-                                                self.yaml_dict)
-        try:
-            self.bsnode
-        except:
-            self.bsnode = {}
-        try:
-            self.bsnode['openstack release'] = \
-                cons_txt.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
-        except:
-            self.bsnode['openstack release'] = 'Unknown'
-
-        try:
-            self.bsnode['jenkins'] = \
-                cons_txt.split('\n')[1].split(' in workspace /var/lib/')[0]
-        except:
-            self.bsnode['jenkins'] = 'Unknown'
 
     def bug_hunt(self, path, announce=True):
         """ Using information from the bugs database, opens target file and
@@ -462,126 +441,27 @@ class Deploy(Build):
         self.oil_df = {}
         self.oil_nodes = {}
 
-        # Read console:
-        self.process_console_data(pipeline_deploy_path)
+        # Parse console:
+        console_parser = FileParser(pipeline_deploy_path, 'console.txt')
+        # for err in console_parser.status print err ?
+        self.bsnode =
 
-        # Read oil nodes file:
-        oil_node_location = os.path.join(pipeline_deploy_path, 'oil_nodes')
-        oil_nodes_yml, self.yaml_dict = self.get_yaml(oil_node_location,
-                                                      self.yaml_dict)
-        if oil_nodes_yml:
-            for key in oil_nodes_yml['oil_nodes'][0].keys():
-                [self.dictator(self.oil_nodes, key, node[key])
-                 for node in oil_nodes_yml['oil_nodes']]
 
-        # Read juju status file:
-        juju_status_location = os.path.join(pipeline_deploy_path,
-                                            'juju_status.yaml')
-        juju_status, self.yaml_dict = self.get_yaml(juju_status_location,
-                                                    self.yaml_dict)
-        if not juju_status:
-            return
+        # 1) MERGE BSNODE WITH THE LATTER ONE
+        # 2) PUT IN A FLAG FOR THAT FALLBACK MODE FOR use_alternative_hw_lookup
 
-        # Get info for bootstrap node (machine 0):
-        machine_info = juju_status['machines']['0']
-        m_name = machine_info.get('dns-name', 'Unknown')
-        m_os = machine_info.get('series', 'Unknown')
-        machine = m_os + " running " + m_name
-        state = machine_info.get('agent-state', 'Unknown')
-        self.bsnode['machine'] = machine
-        self.bsnode['state'] = state
+        # Parse oil_nodes:
+        oil_nodes_parser = FileParser(pipeline_deploy_path, 'oil_nodes')
+        # for err in oil_nodes_parser.status print err ?
+        self.oil_nodes =
 
-        row = 0
-        for service in juju_status['services']:
-            serv = juju_status['services'][service]
-            charm = serv['charm'] if 'charm' in serv else 'Unknown'
-            if 'units' in serv:
-                units = serv['units']
-            else:
-                units = {}
-                self.dictator(self.oil_df, 'node', 'N/A')
-                self.dictator(self.oil_df, 'service', 'N/A')
-                self.dictator(self.oil_df, 'vendor', 'N/A')
-                self.dictator(self.oil_df, 'charm', charm)
-                self.dictator(self.oil_df, 'ports', 'N/A')
-                self.dictator(self.oil_df, 'state', 'N/A')
-                self.dictator(self.oil_df, 'slaves', 'N/A')
+        # Parse juju_status:
+        juju_stat_parser = FileParser(pipeline_deploy_path, 'juju_status.yaml')
+        # for err in juju_stat_parser.status print err ?
 
-            for unit in units:
-                this_unit = units[unit]
-                ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
-                    in this_unit else "N/A"
-                machine_no = this_unit['machine'].split('/')[0]
-                host_name = (this_unit['public-address'] if 'public-address' in
-                             this_unit else 'Unknown')
-                machine_info = juju_status['machines'][machine_no]
-                use_alternative_hw_lookup = False
-                if self.oil_nodes:
-                    try:
-                        node_idx = self.oil_nodes['host'].index(host_name)
-                        hardware = [hw.split('hardware-')[1] for hw in
-                                    self.oil_nodes['tags'][node_idx]
-                                    if 'hardware-' in hw]
-                        slave = ", ".join([str(slv) for slv in
-                                          self.oil_nodes['tags'][node_idx]
-                                          if 'slave-' in slv])
-                    except:
-                        use_alternative_hw_lookup = True
-                else:
-                    use_alternative_hw_lookup = True
-                if use_alternative_hw_lookup:
-                    if 'hardware' in machine_info:
-                        hardware = [hw.split('hardware-')[1] for hw in
-                                    machine_info['hardware'].split('tags=')
-                                    [1].split(',') if 'hardware-' in hw]
-                        slave = ", ".join([str(slv) for slv in machine_info
-                                           ['hardware'].split('tags=')[1]
-                                           .split(',') if 'slave' in slv])
-                    else:
-                        hardware = ['Unknown']
-                        slave = 'Unknown'
+        self.bsnode = juju_stat_parser.bsnode
+        self.oil_df = juju_stat_parser.oil_df
 
-                if '/' in this_unit['machine']:
-                    container_name = this_unit['machine']
-                    container = machine_info['containers'][container_name]
-                elif 'containers' in machine_info:
-                    if len(machine_info['containers'].keys()) == 1:
-                        container_name = machine_info['containers'].keys()[0]
-                        container = machine_info['containers'][container_name]
-                    else:
-                        # TODO: Need to find a way to identify
-                        # which container is being used here:
-                        container = []
-                else:
-                    container = []
-
-                m_name = machine_info.get('dns-name', "")
-                state = machine_info.get('agent-state', '')
-                state = state + ". " if state else state + ""
-                state += container['agent-state-info'] + ". " \
-                    if 'agent-state-info' in container else ''
-                state += container['instance-id'] if 'instance-id' in \
-                    container else ''
-                m_ip = " (" + container['dns-name'] + ")" \
-                       if 'dns-name' in container else ""
-                machine_id = m_name + m_ip
-                machine = machine_id if machine_id else "Unknown"
-                self.dictator(self.oil_df, 'node', machine)
-                self.dictator(self.oil_df, 'service', unit)
-                self.dictator(self.oil_df, 'vendor', ', '.join(hardware))
-                self.dictator(self.oil_df, 'charm', charm)
-                self.dictator(self.oil_df, 'ports', ports)
-                self.dictator(self.oil_df, 'state', state)
-                self.dictator(self.oil_df, 'slaves', slave)
-                row += 1
-        else:  # Oh look, Python lets you put elses after for statements...
-            self.dictator(self.oil_df, 'node', 'N/A')
-            self.dictator(self.oil_df, 'service', 'N/A')
-            self.dictator(self.oil_df, 'vendor', 'N/A')
-            self.dictator(self.oil_df, 'charm', 'N/A')
-            self.dictator(self.oil_df, 'ports', 'N/A')
-            self.dictator(self.oil_df, 'state', 'N/A')
-            self.dictator(self.oil_df, 'slaves', 'N/A')
         matching_bugs, build_status = self.bug_hunt(pipeline_deploy_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status,
                                           self.yaml_dict)
