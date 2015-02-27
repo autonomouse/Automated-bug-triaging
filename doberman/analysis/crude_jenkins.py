@@ -11,6 +11,7 @@ from doberman.common import pycookiecheat
 from doberman.common.common import Common
 from jenkinsapi.custom_exceptions import *
 from glob import glob
+from file_parser import FileParser
 
 
 class Jenkins(Common):
@@ -443,23 +444,24 @@ class Deploy(Build):
 
         # Parse console:
         console_parser = FileParser(pipeline_deploy_path, 'console.txt')
-        # for err in console_parser.status print err ?
-        self.bsnode =
-
-
-        # 1) MERGE BSNODE WITH THE LATTER ONE
-        # 2) PUT IN A FLAG FOR THAT FALLBACK MODE FOR use_alternative_hw_lookup
-
+        for err in console_parser.status:
+            self.cli.LOG.error(err)
+        self.bsnode = console_parser.bsnode
+        
         # Parse oil_nodes:
         oil_nodes_parser = FileParser(pipeline_deploy_path, 'oil_nodes')
-        # for err in oil_nodes_parser.status print err ?
-        self.oil_nodes =
+        for err in oil_nodes_parser.status:
+            self.cli.LOG.error(err)
+        self.oil_nodes = oil_nodes_parser.oil_nodes
 
         # Parse juju_status:
         juju_stat_parser = FileParser(pipeline_deploy_path, 'juju_status.yaml')
-        # for err in juju_stat_parser.status print err ?
+        for err in juju_stat_parser.status:
+            self.cli.LOG.error(err)
 
-        self.bsnode = juju_stat_parser.bsnode
+        for key in juju_stat_parser.bsnode:
+            self.bsnode[key] = juju_stat_parser.bsnode[key]
+        
         self.oil_df = juju_stat_parser.oil_df
 
         matching_bugs, build_status = self.bug_hunt(pipeline_deploy_path)
