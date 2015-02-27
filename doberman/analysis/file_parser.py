@@ -68,7 +68,7 @@ class FileParser(Common):
             for key in self.data['oil_nodes'][0].keys():
                 [self.dictator(self.oil_nodes, key, node[key]) for node in
                  self.data['oil_nodes']]
-            
+
             '''
             if self.oil_nodes:
                 try:
@@ -141,7 +141,7 @@ class FileParser(Common):
                     host_name = (this_unit['public-address'] if 'public-address' in
                                  this_unit else 'Unknown')
                     machine_info = self.data['machines'][machine_no]
-                    
+
                     if 'hardware' in machine_info:
                         hardware = [hw.split('hardware-')[1] for hw in
                                     machine_info['hardware'].split('tags=')
@@ -194,71 +194,3 @@ class FileParser(Common):
                 self.dictator(self.oil_df, 'ports', 'N/A')
                 self.dictator(self.oil_df, 'state', 'N/A')
                 self.dictator(self.oil_df, 'slaves', 'N/A')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        #juju_status, self.yaml_dict = self.get_yaml(juju_status_location,
-        #                                            self.yaml_dict)
-
-'''
-
-parser = {'console.txt': {'url': 'https://sprint-rest.turnitin.com/',
-                          'find_user_by_email_url_suffix': "user/find_by_email?email=",
-                          'find_user_by_email_postprocessor':
-                          lambda r: int(json.loads(r.text)['user'][0]['id'].split('/')[-1]),
-                          'create_class_url_suffix': "class/",
-                          'create_class_postprocessor': lambda r: json.loads(r.text)['class'],
-                          'create_user_url_suffix': "user/",
-                          'create_user_postprocessor': lambda r: json.loads(r.text)['user'],
-                          'create_assignment_url_suffix': "assignment/",
-                          'create_assignment_postprocessor': lambda r: json.loads(r.text)['assignment'],
-                          'destroy_class_url_suffix': "class/",
-                          'get_assignment_details_url_suffix': "assignment/",
-                          'error_postprocessor':
-                          lambda r: (json.loads(r.text)['error'] if 'text' in r.__dict__.keys() else str(r.status_code) +
-                                     " error (" + r.reason + ") during " + r.request.method + " request to " + r.request.url),
-                          }
-         }
-
-'''
