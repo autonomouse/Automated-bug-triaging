@@ -94,7 +94,7 @@ class Common(object):
             prog_list itself if it is an integer.
 
         """
-        if type(prog_list) not in [list, set]:
+        if type(prog_list) not in [list, set, dict]:
             total = int(prog_list)
         else:
             total = len(prog_list)
