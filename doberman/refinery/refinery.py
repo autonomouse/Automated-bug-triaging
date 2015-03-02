@@ -8,7 +8,6 @@ import re
 import shutil
 import hashlib
 import tempfile
-import mmap
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
 from doberman.analysis.crude_jenkins import Jenkins
@@ -38,6 +37,8 @@ class Refinery(CrudeAnalysis):
         self.cli = CLI()
         self.bug_rankings = {}
         self.console_output = {}
+        self.info_file_cache = {}
+        self.max_sequence_size = 10000  # <- Put this in doberman.conf
 
         # Download and analyse the crude output yamls:
         self.analyse_crude_output()
@@ -275,21 +276,6 @@ class Refinery(CrudeAnalysis):
                     self.cli.LOG.info("{} data unified.".format(job))
         return (bug_dict, job_specific_bugs_dict)
 
-    def get_console_output(self, job, build, console_file):
-        """
-            Retrieve console's output.
-
-            Return's an mmap object of the console's output, and caches is so
-            only one mmap object is created per console file.
-        """
-        key = "{}-{}".format(job, build)
-        console_output = self.console_output.get(key)
-        if not console_output:
-            f = open(console_file, 'r')
-            console_output = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
-            self.console_output[key] = console_output
-        return console_output
-
     def unify(self, crude_job, marker, job, filename, rdir, build_num=None):
         """
         Unify the downloaded crude output yamls into a single dictionary.
@@ -373,8 +359,7 @@ class Refinery(CrudeAnalysis):
 
                         openme = os.path.join(op_dir, rename)
                         try:
-                            bug_output['additional info']['text'] = \
-                                self.get_console_output(job, build, openme)
+                            bug_output['additional info']['text'] = openme
                         except Exception, e:
                             err = "Could not open {} for pl {} (bug {}). {}"
                             self.cli.LOG.info(err.format(openme, pipeline_id,
@@ -467,7 +452,7 @@ class Refinery(CrudeAnalysis):
         except:
             return (None, None)
 
-    def normalise_bug_details(self, bugs, bug_id, mmap=None, info=None):
+    def normalise_bug_details(self, bugs, bug_id, info=None):
         """
             Get info on bug from additional info. Replace build number,
             pipeline id, date newlines, \ etc with blanks...
@@ -476,19 +461,30 @@ class Refinery(CrudeAnalysis):
 
         # Temporarily load up the whole output file into memory:
         if not info:
-            if not mmap and 'additional info' in bugs[bug_id]:
-                mmap = bugs[bug_id]['additional info'].get('text')
-            info = ''
-            while True:
-                line = mmap.readline()
-                if line == '':
-                    break
-                info += line
-
+            if 'additional info' in bugs[bug_id]:
+                info_file = bugs[bug_id]['additional info'].get('text')
+            else:
+                msg = "No console data or info provided for bug id: {}."
+                self.cli.LOG.debug(msg.format(bug_id))
+                return
+        
+        if self.info_file_cache.has_key(info_file):    
+            return self.info_file_cache[info_file]
+            
+        # No reason to read and normalize this big files that won't
+        # go through sequence matching anyhow. 
+        stat_result = os.stat(info_file)
+        if stat_result.st_size > self.max_sequence_size:
+            self.info_file_cache[info_file] = None
+            return
+        
+        with open(info_file, 'r') as f:
+            info = f.read()
+            
         # replace pipeline id(s) with placeholder:
         pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
         for pl in pipelines:
-            info.replace(pl, pl_placeholder) if info else ''
+            info = info.replace(pl, pl_placeholder) if info else ''
 
         # replace numbers with 'X'
         info = re.sub(r'\d', 'X', info) if info else ''
@@ -513,12 +509,13 @@ class Refinery(CrudeAnalysis):
 
         bug_feedback = " ".join([str(n) for n in (traceback, errs, fails)])
         if (bug_feedback == ' [] []') or not bug_feedback.strip(' '):
+            self.info_file_cache[info_file] = None
             return
         else:
+            self.info_file_cache[info_file] = bug_feedback
             return bug_feedback
 
-    def group_similar_unfiled_bugs(self, unified_bugdict,
-                                   max_sequence_size=10000):
+    def group_similar_unfiled_bugs(self, unified_bugdict):
         """
             Group unfiled bugs together by similarity of error message. If the
             string to compare is larger than the given max_sequence_size
@@ -562,7 +559,7 @@ class Refinery(CrudeAnalysis):
             for already_seen in unique_bugs:
                 info_b = unique_bugs[already_seen]
                 if info_a and info_b:
-                    if (len(info_a) + len(info_b)) > max_sequence_size:
+                    if (len(info_a) + len(info_b)) > self.max_sequence_size:
                         score = -1
                         a_md5 = hashlib.md5()
                         a_md5.update(info_a)
