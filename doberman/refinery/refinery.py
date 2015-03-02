@@ -451,7 +451,7 @@ class Refinery(CrudeAnalysis):
         except:
             return (None, None)
 
-    def normalise_bug_details(self, bugs, bug_id, info=None):
+    def normalise_bug_details(self, bugs, bug_id, info_file=None):
         """
             Get info on bug from additional info. Replace build number,
             pipeline id, date newlines, \ etc with blanks...
@@ -459,7 +459,7 @@ class Refinery(CrudeAnalysis):
         pipelines = [bugs[b].get('pipeline_id') for b in bugs]
 
         # Temporarily load up the whole output file into memory:
-        if not info:
+        if not info_file:
             if 'additional info' in bugs[bug_id]:
                 info_file = bugs[bug_id]['additional info'].get('text')
             else:
