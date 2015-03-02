@@ -594,10 +594,6 @@ class Refinery(CrudeAnalysis):
         for bug_key in unique_bugs:
             pline = unfiled_bugs[bug_key]['pipeline_id']
             uf_bug = unified_bugdict[pline][bug_key]
-            # Prob won't need this now:
-            if 'additional info' in uf_bug:
-                if 'text' in uf_bug['additional info']:
-                    del uf_bug['additional info']['text']
             if pline not in grouped_bugs:
                 grouped_bugs[pline] = {}
             grouped_bugs[pline][bug_key] = uf_bug
