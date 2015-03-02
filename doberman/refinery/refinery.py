@@ -569,10 +569,7 @@ class Refinery(CrudeAnalysis):
                         score = SequenceMatcher(None, info_a, info_b).ratio()
                 else:
                     score = -1
-                if multiple_bugs_per_pipeline:
-                    threshold = 1.0
-                else:
-                    threshold = float(self.cli.match_threshold)
+                threshold = float(self.cli.match_threshold)
                 if score >= threshold:
                     if unfiled_bug not in all_scores:
                         all_scores[unfiled_bug] = {}
