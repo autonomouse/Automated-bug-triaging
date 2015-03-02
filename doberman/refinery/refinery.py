@@ -6,7 +6,6 @@ import yaml
 import operator
 import re
 import shutil
-import hashlib
 import tempfile
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
@@ -519,8 +518,8 @@ class Refinery(CrudeAnalysis):
         """
             Group unfiled bugs together by similarity of error message. If the
             string to compare is larger than the given max_sequence_size
-            (default: 10000 characters) then a md5 hashlib is used to check for
-            an exact match, otherwise, SequenceMatcher is used to determine if
+            (default: 10000 characters), this strings are compared for an
+            exact match, otherwise, SequenceMatcher is used to determine if
             an error is close enough (i.e. greater than the given threshold
             value) to be considered a match.
         """
@@ -559,21 +558,13 @@ class Refinery(CrudeAnalysis):
             for already_seen in unique_bugs:
                 info_b = unique_bugs[already_seen]
                 if info_a and info_b:
-                    if (len(info_a) + len(info_b)) > self.max_sequence_size:
+                    if info_a == info_b:
+                        score = 1
+                        msg = "{} and {} are equivalent."
+                        self.cli.LOG.debug(msg.format(already_seen,
+                                                      unfiled_bug))
+                    elif (len(info_a) + len(info_b)) > self.max_sequence_size:
                         score = -1
-                        a_md5 = hashlib.md5()
-                        a_md5.update(info_a)
-                        b_md5 = hashlib.md5()
-                        b_md5.update(info_b)
-                        if a_md5.hexdigest() == b_md5.hexdigest():
-                            score = 1
-                            msg = "{} and {} were over maximum sequence size "
-                            msg += "and so were compared using md5 and found "
-                            msg += "to be equivalent."
-                            self.cli.LOG.debug(msg.format(already_seen,
-                                                          unfiled_bug))
-                        else:
-                            score = -1
                     else:
                         score = SequenceMatcher(None, info_a, info_b).ratio()
                 else:
