@@ -30,7 +30,7 @@ class Refinery(CrudeAnalysis):
 
     def __init__(self):
         """ Overwriting CrudeAnalysis' __init__ method """
-
+        
         self.message = -1
         self.tmpdir = tempfile.mkdtemp()
         self.cli = CLI()
@@ -469,13 +469,6 @@ class Refinery(CrudeAnalysis):
         
         if self.info_file_cache.has_key(info_file):    
             return self.info_file_cache[info_file]
-            
-        # No reason to read and normalize this big files that won't
-        # go through sequence matching anyhow. 
-        stat_result = os.stat(info_file)
-        if stat_result.st_size > self.max_sequence_size:
-            self.info_file_cache[info_file] = None
-            return
         
         with open(info_file, 'r') as f:
             info = f.read()
@@ -548,7 +541,7 @@ class Refinery(CrudeAnalysis):
             multiple_bugs_per_pipeline = True
         else:
             multiple_bugs_per_pipeline = False
-
+        
         for pos, unfiled_bug in enumerate(unaccounted_bugs):
             info_a = \
                 self.get_identifying_bug_details(unfiled_bugs, unfiled_bug,
@@ -570,7 +563,7 @@ class Refinery(CrudeAnalysis):
                 else:
                     score = -1
                 threshold = float(self.cli.match_threshold)
-                if score >= threshold:
+                if score >= threshold:                    
                     if unfiled_bug not in all_scores:
                         all_scores[unfiled_bug] = {}
                     all_scores[unfiled_bug][already_seen] = score
