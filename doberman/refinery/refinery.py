@@ -30,7 +30,7 @@ class Refinery(CrudeAnalysis):
 
     def __init__(self):
         """ Overwriting CrudeAnalysis' __init__ method """
-        
+
         self.message = -1
         self.tmpdir = tempfile.mkdtemp()
         self.cli = CLI()
@@ -466,13 +466,13 @@ class Refinery(CrudeAnalysis):
                 msg = "No console data or info provided for bug id: {}."
                 self.cli.LOG.debug(msg.format(bug_id))
                 return
-        
-        if self.info_file_cache.has_key(info_file):    
+
+        if info_file in self.info_file_cache:
             return self.info_file_cache[info_file]
-        
+
         with open(info_file, 'r') as f:
             info = f.read()
-            
+
         # replace pipeline id(s) with placeholder:
         pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
         for pl in pipelines:
@@ -541,7 +541,7 @@ class Refinery(CrudeAnalysis):
             multiple_bugs_per_pipeline = True
         else:
             multiple_bugs_per_pipeline = False
-        
+
         for pos, unfiled_bug in enumerate(unaccounted_bugs):
             info_a = \
                 self.get_identifying_bug_details(unfiled_bugs, unfiled_bug,
@@ -553,17 +553,19 @@ class Refinery(CrudeAnalysis):
                 if info_a and info_b:
                     if info_a == info_b:
                         score = 1
-                        msg = "{} and {} are equivalent."
+                        msg = "{} and {} are equivalent"
                         self.cli.LOG.debug(msg.format(already_seen,
                                                       unfiled_bug))
-                    elif (len(info_a) + len(info_b)) > self.max_sequence_size:
+                    elif (len(info_a) > self.max_sequence_size or
+                          len(info_b) > self.max_sequence_size):
                         score = -1
                     else:
-                        score = SequenceMatcher(None, info_a, info_b).ratio()
+                        score = SequenceMatcher(None, info_a,
+                                                info_b).ratio()
                 else:
                     score = -1
                 threshold = float(self.cli.match_threshold)
-                if score >= threshold:                    
+                if score >= threshold:
                     if unfiled_bug not in all_scores:
                         all_scores[unfiled_bug] = {}
                     all_scores[unfiled_bug][already_seen] = score
