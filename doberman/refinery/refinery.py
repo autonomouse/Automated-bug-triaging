@@ -28,7 +28,7 @@ class Refinery(CrudeAnalysis):
 
     """
 
-    def __init__(self):
+    def __init__(self, make_plots=False):
         """ Overwriting CrudeAnalysis' __init__ method """
 
         self.message = -1
@@ -40,7 +40,7 @@ class Refinery(CrudeAnalysis):
         self.max_sequence_size = 10000  # <- Put this in doberman.conf
 
         # Download and analyse the crude output yamls:
-        self.analyse_crude_output()
+        self.analyse_crude_output(make_plots)
 
         # Tidy Up:
         if not self.cli.keep_data:
@@ -49,7 +49,7 @@ class Refinery(CrudeAnalysis):
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
         shutil.rmtree(self.tmpdir)
 
-    def analyse_crude_output(self):
+    def analyse_crude_output(self, make_plots):
         """ Get and analyse the crude output yamls.
         """
         other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
@@ -85,10 +85,11 @@ class Refinery(CrudeAnalysis):
             self.log_pipelines()
         self.generate_yamls()
 
-        try:
-            self.plot = Plotting(self.cli)
-        except:
-            self.cli.LOG.info("Unable to generate plots.")
+        if make_plots:
+            try:
+                self.plot = Plotting(self.cli)
+            except:
+                self.cli.LOG.info("Unable to generate plots.")
 
     def determine_folder_structure(self, jobs):
         """
@@ -625,7 +626,7 @@ class Refinery(CrudeAnalysis):
 
 
 def main():
-    refined = Refinery()
+    refined = Refinery(make_plots=False)
     return refined.message
 
 
