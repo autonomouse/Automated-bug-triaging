@@ -70,10 +70,11 @@ class FilingStation(CrudeAnalysis):
     def create_lp_bugs(self, bugs_to_file):
         """
         """
-
-        for bug in bugs_to_file:
-            bug_to_file = bugs_to_file[bug]
-            num_dupes = str(len(bug_to_file.get('duplicates')))
+        
+        for pl in bugs_to_file:
+            for bug in bugs_to_file[pl]:
+                bug_to_file = bugs_to_file[pl][bug]
+                num_dupes = str(len(bug_to_file.get('duplicates')))
 
             environments = {'91.189.92.95': 'Prodstack',
                             '10.98.191.145:8080': 'Serverstack'}
@@ -184,4 +185,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
