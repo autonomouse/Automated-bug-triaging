@@ -1,8 +1,11 @@
 #! /usr/bin/env python2
 
+import sys
 import os
+import yaml
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
+from doberman.analysis.analysis import CLI
 
 # Matplotlib imports - The order is important to generate plots without X
 import matplotlib as mpl
@@ -16,13 +19,23 @@ class Plotting(CrudeAnalysis):
     """
     """
 
-    def __init__(self, bug_rankings, cli, unified_bugs_dict):
+    def __init__(self, cli=None):
         """
         """
-        self.bug_rankings = bug_rankings
-        self.unified_bugs_dict = unified_bugs_dict
+        if not cli:
+            cli = CLI()
         self.cli = cli
+
+        if 'inputdir' not in self.cli.__dict__:
+            self.cli.inputdir = self.cli.reportdir
+
+        unified_bugs_dict_loc = os.path.join(self.cli.inputdir,
+                                             'auto-triaged_unfiled_bugs.yml')
+        with open(unified_bugs_dict_loc, "r") as f_ubd:
+            self.unified_bugs_dict = yaml.load(f_ubd).get('pipelines')
+
         self.plot_all()
+        self.message = 0
 
     def plot_all(self):
         """
@@ -32,8 +45,16 @@ class Plotting(CrudeAnalysis):
         plot_data = {}
 
         # Data to plot for job specific bugs:
-        for job in self.bug_rankings.keys():
-            jsbugs = self.bug_rankings[job]
+        bug_rank_files = [bug_rank for bug_rank in
+                          os.listdir(self.cli.inputdir) if 'bug_ranking_' in
+                          bug_rank]
+
+        for fn in bug_rank_files:
+            file_location = os.path.join(self.cli.inputdir, fn)
+            with open(file_location, "r") as f:
+                jsbugs = yaml.load(f)
+            job = ("".join(fn.split('.')[0:-1]).replace('bug_ranking', '')
+                   .strip('_'))
             plot_data[job] = {'title': 'Bug_chart__{}.pdf'.format(job),
                               'bug_ids': [bug[0] for bug in jsbugs],
                               'totals': [int(bug[1]) for bug in jsbugs], }
@@ -277,3 +298,12 @@ class Plotting(CrudeAnalysis):
         # totals = plot_data['totals']
         pass
         # TODO
+
+
+def main():
+    plotting = Plotting()
+    return plotting.message
+
+
+if __name__ == "__main__":
+    sys.exit(main())
