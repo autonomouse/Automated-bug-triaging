@@ -6,7 +6,6 @@ import yaml
 import operator
 import re
 import shutil
-import tempfile
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
 from doberman.analysis.crude_jenkins import Jenkins
@@ -32,10 +31,8 @@ class Refinery(CrudeAnalysis):
         """ Overwriting CrudeAnalysis' __init__ method """
 
         self.message = -1
-        self.tmpdir = tempfile.mkdtemp()
         self.cli = CLI()
         self.bug_rankings = {}
-        self.console_output = {}
         self.info_file_cache = {}
         self.max_sequence_size = 10000  # <- Put this in doberman.conf
 
@@ -47,7 +44,6 @@ class Refinery(CrudeAnalysis):
             self.remove_dirs(self.all_build_numbers)
             [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
-        shutil.rmtree(self.tmpdir)
 
     def analyse_crude_output(self, make_plots):
         """ Get and analyse the crude output yamls.
@@ -327,44 +323,50 @@ class Refinery(CrudeAnalysis):
                     bug_output['job'] = job
                     if not build_num:
                         build_num = plop.get('build')
+
+                    op_dir = (self.cli.op_dir_structure.format(
+                              self.cli.reportdir, job, build_num, crude_job))
+
                     if ('unfiled' in bug):
-                        op_dir = \
-                            (self.cli.op_dir_structure.format(
-                             self.cli.reportdir, job, build_num, crude_job))
-                        rename = "{}_console.txt".format(job)
+                        # Unless If this unfiled bug has multiple bugs per
+                        # pipeline (e.g. an XML file):
+                        if job not in self.cli.multi_bugs_in_pl:
+                            # Provide the console as default:
+                            rename = "{}_console.txt".format(job)
+                            t_file = (bug_output['additional info']
+                                      .get('target file'))
+                            if t_file != 'console.txt':
+                                bug_output['additional info']['target file'] \
+                                    = 'console.txt'
+                            # TODO: this assumes there *is* a console file,
+                            # maybe specify a default file in doberman conf?
 
-                        # If a bug is unfiled, it should provide the console as
-                        # default:
-                        if bug_output['additional info'].get('target file') !=\
-                                'console.txt':
-                            bug_output['additional info']['target file'] = \
-                                'console.txt'
+                            # Check to see if console is present. If not,fetch:
+                            a_file = os.path.join(op_dir, rename)
+                            if not os.path.isfile(a_file):
+                                params = (job, pipeline_id, build,
+                                          'console.txt', op_dir, rename)
+                            try:
+                                # Check to see if the file is there already
+                                # first rename:
+                                if not (os.path.isfile(os.path.join(op_dir,
+                                        rename))):
+                                    self.download_specific_file(*params)
+                            except Exception, e:
+                                err = "Problem fetching console data for "
+                                err += "pl {} (bug {}). {}"
+                                self.cli.LOG.info(err.format(pipeline_id, bug,
+                                                  e))
+                                bug_output['additional info']['text'] = None
 
-                        # Check to see if console is present. If not, download:
-                        a_file = os.path.join(op_dir, rename)
-                        if not os.path.isfile(a_file):
-                            params = (job, pipeline_id, build, 'console.txt',
-                                      op_dir, rename)
-                        try:
-                            # Check to see if the file is there already first
-                            # rename:
-                            if not (os.path.isfile(os.path.join(op_dir,
-                                    rename))):
-                                self.download_specific_file(*params)
-                        except Exception, e:
-                            err = "Problem fetching console data for "
-                            err += "pl {} (bug {}). {}"
-                            self.cli.LOG.info(err.format(pipeline_id, bug, e))
-                            bug_output['additional info']['text'] = None
-
-                        openme = os.path.join(op_dir, rename)
-                        try:
-                            bug_output['additional info']['text'] = openme
-                        except Exception, e:
-                            err = "Could not open {} for pl {} (bug {}). {}"
-                            self.cli.LOG.info(err.format(openme, pipeline_id,
-                                              bug, e))
-                            bug_output['additional info']['text'] = None
+                            openme = os.path.join(op_dir, rename)
+                            try:
+                                bug_output['additional info']['text'] = openme
+                            except Exception, e:
+                                err = "Could not open {} for pl {} (bug{}). {}"
+                                self.cli.LOG.info(err.format(openme,
+                                                  pipeline_id, bug, e))
+                                bug_output['additional info']['text'] = None
                     bug_dict[pipeline_id][bug] = bug_output
                     # TODO: end of would be else block
 
@@ -408,10 +410,8 @@ class Refinery(CrudeAnalysis):
                         bug_prevalence['filed_bugs_only'][bug_no] = 1
                         bug_prevalence[job][bug_no] = 1
                     else:
-                        bug_prevalence['filed_bugs_only'][bug_no] = \
-                            bug_prevalence['filed_bugs_only'][bug_no] + 1
-                        bug_prevalence[job][bug_no] = \
-                            bug_prevalence[job][bug_no] + 1
+                        bug_prevalence['filed_bugs_only'][bug_no] += 1
+                        bug_prevalence[job][bug_no] += 1
                     if bug_no not in pipelines_affected_by_bug:
                         pipelines_affected_by_bug[bug_no] = []
                     pipelines_affected_by_bug[bug_no].append(pipeline)
@@ -454,23 +454,23 @@ class Refinery(CrudeAnalysis):
 
     def normalise_bug_details(self, bugs, bug_id, info_file=None):
         """
-            Get info on bug from additional info. Replace build number,
-            pipeline id, date newlines, \ etc with blanks...
+        Get info on bug from additional info. Replace build number,
+        pipeline id, date newlines, \ etc with blanks...
         """
         pipelines = [bugs[b].get('pipeline_id') for b in bugs]
 
-        # Temporarily load up the whole output file into memory:
         if not info_file:
-            if 'additional info' in bugs[bug_id]:
-                info_file = bugs[bug_id]['additional info'].get('text')
-            else:
+            additional_info = bugs[bug_id].get('additional info')
+            if not additional_info:
                 msg = "No console data or info provided for bug id: {}."
                 self.cli.LOG.debug(msg.format(bug_id))
                 return
+            info_file = additional_info.get('text')
 
         if info_file in self.info_file_cache:
             return self.info_file_cache[info_file]
 
+        # Temporarily load up the whole output file into memory:
         with open(info_file, 'r') as f:
             info = f.read()
 
@@ -600,9 +600,9 @@ class Refinery(CrudeAnalysis):
     def report_top_ten_bugs(self, job_names, bug_rankings,
                             url='https://bugs.launchpad.net/oil/+bug/{}'):
         """
-            Print the top ten bugs for each job to the console.
+        Print the top ten bugs for each job to the console.
 
-            TODO: put the default url in the conf file.
+        TODO: put the default url in the conf file.
 
         """
         for job in job_names:
@@ -612,14 +612,13 @@ class Refinery(CrudeAnalysis):
             print
             job_ranking = bug_rankings.get(job)
             if job_ranking:
-                for count, bug in enumerate(job_ranking):
-                    if count < 10:
-                        msg = "{0} - {1} pipelines hit"
-                        if 'unfiled' not in bug[0]:
-                            bug_tuple = (url.format(bug[0]), bug[1],)
-                        else:
-                            bug_tuple = bug
-                        print(msg.format(*bug_tuple))
+                for bug in job_ranking[:10]:
+                    msg = "{0} - {1} pipelines hit"
+                    if 'unfiled' not in bug[0]:
+                        bug_tuple = (url.format(bug[0]), bug[1],)
+                    else:
+                        bug_tuple = bug
+                    print(msg.format(*bug_tuple))
             else:
                 print("No bugs found.")
             print
