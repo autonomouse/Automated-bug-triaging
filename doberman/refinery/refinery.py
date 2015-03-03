@@ -441,7 +441,7 @@ class Refinery(CrudeAnalysis):
     def get_multiple_pipeline_bug_info(self, bugs, bug_id):
         xmlclass, xmlname = self.get_xunit_class_and_name(bugs, bug_id)
         info = bugs[bug_id]['additional info'].get('text')
-        bug_feedback = self.normalise_bug_details(bugs, bug_id, info)
+        bug_feedback = self.normalise_bug_details(bugs, bug_id, info=info)
         return bug_feedback
 
     def get_xunit_class_and_name(self, bugs, bug_id):
@@ -452,27 +452,32 @@ class Refinery(CrudeAnalysis):
         except:
             return (None, None)
 
-    def normalise_bug_details(self, bugs, bug_id, info_file=None):
+    def normalise_bug_details(self, bugs, bug_id, info_file=None, info=None):
         """
         Get info on bug from additional info. Replace build number,
         pipeline id, date newlines, \ etc with blanks...
         """
         pipelines = [bugs[b].get('pipeline_id') for b in bugs]
 
-        if not info_file:
-            additional_info = bugs[bug_id].get('additional info')
-            if not additional_info:
-                msg = "No console data or info provided for bug id: {}."
-                self.cli.LOG.debug(msg.format(bug_id))
-                return
-            info_file = additional_info.get('text')
+        if not info:
+            if not info_file:
+                additional_info = bugs[bug_id].get('additional info')
+                if not additional_info:
+                    msg = "No console data or info provided for bug id: {}."
+                    self.cli.LOG.debug(msg.format(bug_id))
+                    return
+                info_file = additional_info.get('text')
 
-        if info_file in self.info_file_cache:
-            return self.info_file_cache[info_file]
+            if info_file in self.info_file_cache:
+                return self.info_file_cache[info_file]
 
-        # Temporarily load up the whole output file into memory:
-        with open(info_file, 'r') as f:
-            info = f.read()
+            # Temporarily load up the whole output file into memory:
+            with open(info_file, 'r') as f:
+                info = f.read()
+        # TODO: It might be worth investigating something similar to the above 
+        # for xml files. Providing the xml filename as info_file and then using 
+        # lxml to load it up, then searching for the appropriate class and 
+        # unit. However, this does sound like it might slow things down a lot.
 
         # replace pipeline id(s) with placeholder:
         pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
