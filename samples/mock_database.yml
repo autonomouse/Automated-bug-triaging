@@ -753,3 +753,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "oil_ci.deploy.oil_deployer. Deployment failed. .NoneType. object is not iterable"
+
+  "1428128":
+    category: None
+    description: "[Prodstack] Invalid distro_series (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "400 BAD REQUEST....distro_series.{1,50} is not a valid distro_series.  It should be one of. .., .windows.win2012hvr2., .ubuntu"
