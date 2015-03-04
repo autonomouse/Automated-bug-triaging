@@ -5,10 +5,8 @@ import bisect
 import time
 import parsedatetime as pdt
 from dateutil.parser import parse
-from doberman.common import special_cases
 from datetime import datetime
 import yaml
-import json
 from jenkinsapi.custom_exceptions import *
 
 
@@ -54,33 +52,6 @@ class Common(object):
         else:
             yaml_dict['pipeline'] = pipeline_dict
         return yaml_dict
-
-    '''
-    def non_db_bug(self, bug_id, existing_dict, err_msg):
-        """ Make non-database bugs for special cases, such as missing files
-            that cannot be, or are not yet, listed in the bugs database.
-
-        """
-        jlink = '{0}/job/{1}/{2}/console'.format(self.cli.external_jenkins_url,
-                                                 self.jobname,
-                                                 self.build_number)
-        matching_bugs = {}
-        matching_bugs[bug_id] = {'regexps': err_msg, 'vendors': err_msg,
-                                 'machines': err_msg, 'units': err_msg,
-                                 'link to jenkins': jlink}
-        try:
-            self.cli.LOG.info("Special case bug found! '{0}' ({1}, bug #{2})"
-                              .format(err_msg, self.jobname, bug_id))
-            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE',
-                                         existing_dict)
-        except:
-            self.cli.LOG.info("Special case bug found! '{0}' (bug #{1})"
-                              .format(err_msg, bug_id))
-            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE', None,
-                                         existing_dict)
-        self.message = 0
-        return yaml_dict
-    '''
 
     def join_dicts(self, old_dict, new_dict):
         """ Merge matching_bugs dictionaries. """

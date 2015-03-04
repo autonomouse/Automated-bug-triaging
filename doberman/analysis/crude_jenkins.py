@@ -463,7 +463,7 @@ class Deploy(Build):
         for err in console_parser.status:
             self.cli.LOG.error(err)
         self.bsnode = console_parser.bsnode
-        
+
         # Parse oil_nodes:
         oil_nodes_parser = FileParser(pipeline_deploy_path, 'oil_nodes')
         for err in oil_nodes_parser.status:
@@ -477,7 +477,7 @@ class Deploy(Build):
 
         for key in juju_stat_parser.bsnode:
             self.bsnode[key] = juju_stat_parser.bsnode[key]
-        
+
         self.oil_df = juju_stat_parser.oil_df
 
         matching_bugs, build_status = self.bug_hunt(pipeline_deploy_path)
@@ -508,8 +508,11 @@ class Prepare(Build):
         prepare_path = os.path.join(self.cli.reportdir, 'pipeline_prepare',
                                     self.build_number)
 
-        # Read console:
-        self.process_console_data(prepare_path)
+        # Parse console:
+        console_parser = FileParser(prepare_path, 'console.txt')
+        for err in console_parser.status:
+            self.cli.LOG.error(err)
+        self.bsnode = console_parser.bsnode
 
         matching_bugs, build_status = self.bug_hunt(prepare_path)
         self.yaml_dict = self.add_to_yaml(matching_bugs, build_status,
@@ -532,16 +535,18 @@ class Tempest(Build):
         self.process_tempest_data()
 
     def process_tempest_data(self):
-        """
-        Parses the artifacts files from a single pipeline into data and
+        """ Parses the artifacts files from a single pipeline into data and
         metadata
 
         """
         tts_path = os.path.join(self.cli.reportdir, 'test_tempest_smoke',
                                 self.build_number)
 
-        # Read console:
-        self.process_console_data(tts_path)
+        # Parse console:
+        console_parser = FileParser(tts_path, 'console.txt')
+        for err in console_parser.status:
+            self.cli.LOG.error(err)
+        self.bsnode = console_parser.bsnode
 
         matching_bugs, build_status = \
             self.bug_hunt(tts_path)

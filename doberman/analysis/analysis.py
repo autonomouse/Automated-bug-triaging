@@ -11,7 +11,7 @@ import pytz
 import parsedatetime as pdt
 from dateutil.parser import parse
 from datetime import datetime
-from doberman.common import utils, special_cases
+from doberman.common import utils
 from jenkinsapi.custom_exceptions import *
 from doberman.common.common import Common
 from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
@@ -149,9 +149,6 @@ class CrudeAnalysis(Common):
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
                     msg += " (may be cookie related?)"
-                    deploy_dict = \
-                        self.non_db_bug(special_cases.bug_dict['pipeline_id'],
-                                        deploy_dict, msg)
                 else:
                     probmsg = "Problem with {} - skipping "
                     if deploy_build:

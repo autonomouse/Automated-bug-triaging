@@ -468,9 +468,9 @@ class Refinery(CrudeAnalysis):
             # Temporarily load up the whole output file into memory:
             with open(info_file, 'r') as f:
                 info = f.read()
-        # TODO: It might be worth investigating something similar to the above 
-        # for xml files. Providing the xml filename as info_file and then using 
-        # lxml to load it up, then searching for the appropriate class and 
+        # TODO: It might be worth investigating something similar to the above
+        # for xml files. Providing the xml filename as info_file and then using
+        # lxml to load it up, then searching for the appropriate class and
         # unit. However, this does sound like it might slow things down a lot.
 
         # replace pipeline id(s) with placeholder:
