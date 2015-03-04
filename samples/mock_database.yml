@@ -754,9 +754,9 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "oil_ci.deploy.oil_deployer. Deployment failed. .NoneType. object is not iterable"
 
-  "1428128":
+  "1419041":
     category: None
-    description: "[Prodstack] Invalid distro_series (deploy fail)"
+    description: "boostrap failing with gomaasapi 400"
     pipeline_deploy:
       -
         "console.txt":
