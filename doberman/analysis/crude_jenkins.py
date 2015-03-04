@@ -208,6 +208,7 @@ class Build(Common):
             raise Exception("No bugs in database!")
 
         unfiled_xml_fails = {}
+        failed_to_hit_any_flag = True
         for bug_id in self.bugs.keys():
             if self.jobname in self.bugs[bug_id]:
                 # Any dict in self.bugs[bug_id][self.jobname] can match (or):
@@ -241,14 +242,13 @@ class Build(Common):
                                     text = grep_me.read()
                                 hit = self.rematch(and_dict, target, text)
                                 if hit:
+                                    failed_to_hit_any_flag = False
                                     glob_hits.append(
                                         target_location.split('/')[-1])
                                     hit_dict = self.join_dicts(hit_dict, hit)
                                     self.message = 0
                                 else:
-                                    info['target file'] = target
-                                    if not self.cli.reduced_output_text:
-                                        info['text'] = text
+                                    failed_to_hit_any_flag = True
                             else:
                                 if target in xml_files_parsed:
                                     xml_unparsed = False
@@ -283,6 +283,7 @@ class Build(Common):
                                     hit = self.rematch(and_dict, target,
                                                        pre_log)
                                     if hit:
+                                        failed_to_hit_any_flag = False
                                         # Add to hit_dict:
                                         hit_dict = self.join_dicts(hit_dict,
                                                                    hit)
@@ -304,6 +305,21 @@ class Build(Common):
                                         unfiled_xml_fails = edited_uxfs.copy()
                                 # TODO: But if there are multiple globs, it'll
                                 # overwrite these in the xml - FIXME!!!
+
+                    if failed_to_hit_any_flag:
+                        # xml or not, if not hits return console in info:
+                        default_target = 'console.txt'
+                        info['target file'] = default_target
+                        target_location = os.path.join(path, default_target)
+
+                        current_target = target if 'target' in locals() else \
+                            None
+                        text = text if 'text' in locals() else None
+                        if not text or current_target != default_target:
+                            # reload the text:
+                            with open(target_location, 'r') as grep_me:
+                                text = grep_me.read()
+                        info['text'] = text
 
                     if and_dict == hit_dict:
                         links = []

@@ -85,8 +85,9 @@ class CrudeAnalysis(Common):
             if pos in progress:
                 pc = str(self.report_at[progress.index(pos)])
                 self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pc))
-        self.cli.LOG.info("All pipelines checked. Now polling jenkins " +
-                          "and processing data")
+        msg = "Pipeline lookup 100% complete: All pipelines checked. "
+        msg += "Now polling jenkins and processing data."
+        self.cli.LOG.info(msg)
         return self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
     def remove_dirs(self, folders_to_remove):
