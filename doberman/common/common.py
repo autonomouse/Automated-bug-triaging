@@ -118,29 +118,6 @@ class Common(object):
         if current_position in progress:
             return str(report_at[progress.index(current_position)])
 
-    # THIS METHOD TO BE REPLACED BY calculate_progress ^^
-    def calc_when_to_report(self, prog_list=None, integer=None):
-        """ Determine at what percentage completion to notify user of progress
-            based on the number of entries in self.ids
-
-        """
-        if prog_list:
-            total = len(prog_list)
-        elif integer:
-            total = int(integer)
-        else:
-            return
-
-        if total > 350:
-            report_at = range(5, 100, 5)  # Notify every 5 percent
-        elif total > 150:
-            report_at = range(10, 100, 10)  # Notify every 10 percent
-        elif total > 50:
-            report_at = range(25, 100, 25)  # Notify every 25 percent
-        else:
-            report_at = [50]  # Notify at 50 percent
-        return report_at
-
     def write_output_yaml(self, output_dir, filename, yaml_dict, verbose=True):
         """
         """
