@@ -46,13 +46,13 @@ class FileParser(Common):
             self.bsnode["jenkins"] = "Unknown"
         msg = "Unable to extract {} from {}."
 
-        if 'OPENSTACK_RELEASE=' in self.data:
+        if self.data and 'OPENSTACK_RELEASE=' in self.data:
             self.bsnode['openstack release'] = \
                 self.data.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
         else:
             self.status.append(msg.format('openstack release', 'console'))
 
-        if ' in workspace /var/lib/' in self.data:
+        if self.data and ' in workspace /var/lib/' in self.data:
             self.bsnode['jenkins'] = \
                 self.data.split('\n')[1].split(' in workspace /var/lib/')[0]
         else:
