@@ -99,7 +99,7 @@ class TestCatalog(Common):
 
         try:
             pl_tcat = TCCTestPipeline(self.client, pipeline)
-        except Exception, e:
+        except Exception as e:
             msg = "test-catalog error. Does pipeline exist? Is there a cookie-"
             msg += "related issue? (%s)" % e
             self.cli.LOG.error(msg)
