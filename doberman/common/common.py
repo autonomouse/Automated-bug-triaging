@@ -3,10 +3,10 @@
 import os
 import bisect
 import time
+import yaml
 import parsedatetime as pdt
 from dateutil.parser import parse
 from datetime import datetime
-import yaml
 from jenkinsapi.custom_exceptions import *
 
 
@@ -106,7 +106,7 @@ class Common(object):
                     return (yaml.load(f), yaml_dict)
                 else:
                     return (f.read(), yaml_dict)
-        except IOError, e:
+        except IOError as e:
             fname = file_location.split('/')[-1]
             self.cli.LOG.error("%s: %s is not in artifacts folder (%s)"
                                % (self.pipeline, fname, e[1]))

@@ -184,7 +184,7 @@ class Refinery(CrudeAnalysis):
                 else:
                     self.cli.LOG.info("No build number found: job {0} for {1}"
                                       .format(job, pipeline_id))
-            except Exception, e:
+            except Exception as e:
                 self.cli.LOG.error("Error downloading pipeline {0} ({1}) - {2}"
                                    .format(job, pipeline_id, e))
 
@@ -352,7 +352,7 @@ class Refinery(CrudeAnalysis):
                                 if not (os.path.isfile(os.path.join(op_dir,
                                         rename))):
                                     self.download_specific_file(*params)
-                            except Exception, e:
+                            except Exception as e:
                                 err = "Problem fetching console data for "
                                 err += "pl {} (bug {}). {}"
                                 self.cli.LOG.info(err.format(pipeline_id, bug,
@@ -362,7 +362,7 @@ class Refinery(CrudeAnalysis):
                             openme = os.path.join(op_dir, rename)
                             try:
                                 bug_output['additional info']['text'] = openme
-                            except Exception, e:
+                            except Exception as e:
                                 err = "Could not open {} for pl {} (bug{}). {}"
                                 self.cli.LOG.info(err.format(openme,
                                                   pipeline_id, bug, e))

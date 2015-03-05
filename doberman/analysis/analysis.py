@@ -145,7 +145,7 @@ class CrudeAnalysis(Common):
                     tempest_dict = tempest.yaml_dict
                     self.message = tempest.message
                     # TODO: self.message only reports back on last bug found
-            except Exception, e:
+            except Exception as e:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
                     msg += " (may be cookie related?)"

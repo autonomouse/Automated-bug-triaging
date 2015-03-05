@@ -5,6 +5,11 @@ from doberman.common.common import Common
 
 class FileParser(Common):
     """
+    An object to extract relevant information from the following file-types
+    currently used in OIL:
+       - console.txt
+       - oil_nodes
+       - juju_status.yaml
     """
 
     def __init__(self, path, filename):
@@ -21,7 +26,7 @@ class FileParser(Common):
                     return yaml.load(f)
                 else:
                     return f.read()
-        except IOError, e:
+        except IOError as e:
             msg = "Problem reading {} from {} ({})"
             self.status.append(msg.format(self.filename, self.path, e[1]))
             return
@@ -38,11 +43,11 @@ class FileParser(Common):
         self.data = self._extract_information('txt')
 
         # Set up defaults in case missing console.txt:
-        if 'bsnode' not in self.__dict__:
+        if not hasattr(self, 'bsnode'):
             self.bsnode = {}
-        if 'openstack release' not in self.bsnode:
+        if not hasattr(self.bsnode, 'openstack release'):
             self.bsnode["openstack release"] = "Unknown"
-        if 'jenkins' not in self.bsnode:
+        if not hasattr(self.bsnode, 'jenkins'):
             self.bsnode["jenkins"] = "Unknown"
         msg = "Unable to extract {} from {}."
 
@@ -79,7 +84,7 @@ class FileParser(Common):
         # Set up defaults in case missing juju_status.yaml:
         default_message = "Unknown"
 
-        if 'bsnode' not in self.__dict__:
+        if not hasattr(self, 'bsnode'):
             self.bsnode = {}
         if 'machine' not in self.bsnode:
             self.bsnode["machine"] = "Unknown"
@@ -123,8 +128,7 @@ class FileParser(Common):
                 self.dictator(self.oil_df, 'state', 'N/A')
                 self.dictator(self.oil_df, 'slaves', 'N/A')
 
-            for unit in units:
-                this_unit = units[unit]
+            for this_unit in units.values():
                 ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
                     in this_unit else "N/A"
                 machine_no = this_unit['machine'].split('/')[0]
@@ -177,17 +181,6 @@ class FileParser(Common):
                 self.dictator(self.oil_df, 'slaves', slave)
                 row += 1
 
-        if not self.oil_df["vendor"]:
-                self.dictator(self.oil_df, 'vendor', default_message)
-        if not self.oil_df["node"]:
-                self.dictator(self.oil_df, 'node', default_message)
-        if not self.oil_df["service"]:
-                self.dictator(self.oil_df, 'service', default_message)
-        if not self.oil_df["charm"]:
-                self.dictator(self.oil_df, 'charm', default_message)
-        if not self.oil_df["ports"]:
-                self.dictator(self.oil_df, 'ports', default_message)
-        if not self.oil_df["state"]:
-                self.dictator(self.oil_df, 'state', default_message)
-        if not self.oil_df["slaves"]:
-                self.dictator(self.oil_df, 'slaves', default_message)
+        for key in self.oil_df:
+            if not self.oil_df[key]:
+                self.dictator(self.oil_df, key, default_message)
