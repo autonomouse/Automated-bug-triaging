@@ -128,7 +128,8 @@ class FileParser(Common):
                 self.dictator(self.oil_df, 'state', 'N/A')
                 self.dictator(self.oil_df, 'slaves', 'N/A')
 
-            for this_unit in units.values():
+            for unit in units:
+                this_unit = units[unit]
                 ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
                     in this_unit else "N/A"
                 machine_no = this_unit['machine'].split('/')[0]
