@@ -116,6 +116,48 @@ def triage_report(triage, start, end, jenkins):
                 a.save_to_dir(outdir)
 
 
+def print_results(results, job):
+    job_dict = results['jobs'][job]
+
+    success_rate = round(job_dict.get('success rate'))
+
+    print
+    print("* {} success rate was {}%"
+          .format(job, success_rate))
+    print("    - Start Job: {} (Date: {})"
+          .format(job_dict.get('start job'),
+                  job_dict.get('start date')))
+    print("    - End Job: {} (Date: {})"
+          .format(job_dict.get('end job'),
+                  job_dict.get('end date')))
+    if job != "test_tempest_smoke":
+        print("    - {} jobs, {} active, {} pass, {} fail"
+              .format(job_dict.get('build objects'),
+                      job_dict.get('still running'),
+                      job_dict.get('passes'),
+                      job_dict.get('fails')))
+    else:
+        print("    - {} good / {} ({} total - {} skip)"
+              .format(job_dict.get('good builds'),
+                      job_dict.get('total'),
+                      job_dict.get('total without skipped'),
+                      job_dict.get('skipped')))
+    print
+
+
+def print_summary(results):
+    unrounded_success_rate = results['overall'].get('success rate')
+    success_rate = \
+        round(unrounded_success_rate) if unrounded_success_rate else 0
+
+    print
+    print("Overall Success Rate: {}%".format(success_rate))
+    print("    - {} tempest builds out of {} total jobs"
+          .format(results['overall'].get('tempest builds'),
+                  results['overall'].get('total jobs')))
+    print
+
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-c', '--config', action='store', dest='configfile',
@@ -217,7 +259,7 @@ def main():
     download_dir = os.path.abspath(opts.download_dir)
 
     # Set up output dict:
-    results = {}
+    results = {'jobs': {}, 'overall': {}}
 
     # Inform user of environment and jenkins host:
     print('Data for OIL Environment: {} (Jenkins host: {})'
@@ -228,7 +270,6 @@ def main():
 
     totals = {}
     triage = {}
-    results = {'jobs': {}, 'overall': {}}
 
     for job in opts.jobs.split(","):
         jenkins_job = j[job]
@@ -246,17 +287,25 @@ def main():
         if end_idx is None:
             end_idx = builds.index(builds[-1])
 
-        results['jobs'][job] = {'start job': builds[start_idx]['number']}
-        results['jobs'][job]['end job'] = builds[end_idx]['number']
-        results['jobs'][job]['start date'] = \
-            datetime.fromtimestamp(builds[start_idx]['timestamp'] / 1000)
-        results['jobs'][job]['end date'] = \
-            datetime.fromtimestamp(builds[end_idx]['timestamp'] / 1000)
+        start_num = builds[start_idx]['number']
+        end_num = builds[end_idx]['number']
+
+        start_in_ms = builds[start_idx]['timestamp'] / 1000
+        start_in_seconds = datetime.fromtimestamp(start_in_ms)
+
+        end_in_ms = builds[end_idx]['timestamp'] / 1000
+        end_in_seconds = datetime.fromtimestamp(end_in_ms)
+
+        job_dict = {}
+        job_dict['start job'] = start_num
+        job_dict['end job'] = end_num
+        job_dict['start date'] = start_in_seconds
+        job_dict['end date'] = end_in_seconds
 
         # from idx to end
         builds_to_check = [r['number'] for r in builds[start_idx:end_idx]]
         nr_builds = len(builds_to_check)
-        results['jobs'][job]['build objects'] = nr_builds
+        job_dict['build objects'] = nr_builds
         build_objs = [b for b in builds if b['number'] in builds_to_check]
 
         active = filter(lambda x: is_running(x) is True, build_objs)
@@ -300,11 +349,11 @@ def main():
             n_good = n_total - (sum(errors) + sum(failures))
             success_rate = (round((float(n_good) / n_total) * 100, 2)
                             if n_total else 0)
-            results['jobs'][job]['good builds'] = n_good
-            results['jobs'][job]['total'] = n_total
-            results['jobs'][job]['total without skipped'] = sum(tests)
-            results['jobs'][job]['skipped'] = sum(skip)
-            results['jobs'][job]['success rate'] = success_rate
+            job_dict['good builds'] = n_good
+            job_dict['total'] = n_total
+            job_dict['total without skipped'] = sum(tests)
+            job_dict['skipped'] = sum(skip)
+            job_dict['success rate'] = success_rate
 
             nr_nab = nr_builds - len(active)
         else:
@@ -319,11 +368,13 @@ def main():
             # Total: 31 builds, 12 active, 2 failed, 17 pass.
             # Success rate: 17 / (31 - 12) = 89%
 
-            results['jobs'][job]['still running'] = len(active)
-            results['jobs'][job]['passes'] = len(good)
-            results['jobs'][job]['fails'] = len(bad)
-            results['jobs'][job]['completed builds'] = nr_nab
-            results['jobs'][job]['success rate'] = success_rate
+            job_dict['still running'] = len(active)
+            job_dict['passes'] = len(good)
+            job_dict['fails'] = len(bad)
+            job_dict['completed builds'] = nr_nab
+            job_dict['success rate'] = success_rate
+
+        results['jobs'][job] = job_dict
 
         totals[job] = {'total_builds': nr_nab, 'passing': len(good)}
         triage[job] = bad
@@ -332,34 +383,10 @@ def main():
     for job in opts.jobs.split(","):
         # I wanted to do "for job in results.keys():" here, but then they
         # wouldn't be reported in the correct order.
-        success_rate = round(results['jobs'][job].get('success rate'))
-        print
-        print("* {} success rate was {}%"
-              .format(job, success_rate))
-        print("    - Start Job: {} (Date: {})"
-              .format(results['jobs'][job].get('start job'),
-                      results['jobs'][job].get('start date')))
-        print("    - End Job: {} (Date: {})"
-              .format(results['jobs'][job].get('end job'),
-                      results['jobs'][job].get('end date')))
-        if job != "test_tempest_smoke":
-            print("    - {} jobs, {} active, {} pass, {} fail"
-                  .format(results['jobs'][job].get('build objects'),
-                          results['jobs'][job].get('still running'),
-                          results['jobs'][job].get('passes'),
-                          results['jobs'][job].get('fails')))
-        else:
-            print("    - {} good / {} ({} total - {} skip)"
-                  .format(results['jobs'][job].get('good builds'),
-                          results['jobs'][job].get('total'),
-                          results['jobs'][job].get('total without skipped'),
-                          results['jobs'][job].get('skipped')))
-        print
+        print_results(results, job)
 
     # overall success
     if opts.summary:
-        success_rate = round(results['overall'].get('success rate'))
-
         tt = totals['test_tempest_smoke']['total_builds']
         td = totals['pipeline_deploy']['total_builds']
         overall = (float(tt) / float(td) * 100.0) if td else 0
@@ -368,13 +395,7 @@ def main():
         results['overall']['tempest builds'] = tt
         results['overall']['total jobs'] = td
 
-        print
-        print("Overall Success Rate: {}%".format(success_rate))
-        print("    - {} tempest builds out of {} total jobs"
-              .format(results['overall'].get('tempest builds'),
-                      results['overall'].get('total jobs')))
-        print
-
+        print_summary(results)
 
     # save results to file:
     with open("results.yaml", "w") as output:
