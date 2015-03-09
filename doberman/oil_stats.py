@@ -59,8 +59,6 @@ def find_build_newer_than(builds, start):
     i = bisect.bisect_left(keys, start_ts)
     if i != len(keys):
         return i
-
-    #print("No job newer than %s" % (start))
     return None
 
 
@@ -276,8 +274,6 @@ def main():
                     artifact_name = str(artifact).split('/')[-1].strip('>')
                     try:
                         os.makedirs(download_dir)
-                        print("Created download directory at {0}"
-                              .format(download_dir))
                     except OSError:
                         if not os.path.isdir(download_dir):
                             raise
