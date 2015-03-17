@@ -59,27 +59,37 @@ class Common(object):
         current_items = list(new_dict.items())
         return dict(earlier_items + current_items)
 
-    def calc_when_to_report(self, prog_list=None, integer=None):
-        """ Determine at what percentage completion to notify user of progress
-            based on the number of entries in self.ids
+                         
+    def calculate_progress(self, current_position, prog_list,
+                           percentage_to_report_at=None):
+        """
+            Calculates and returns a percentage to notify user of progress
+            completion based on the number of entries in prog_list, or
+            prog_list itself if it is an integer.
 
         """
-        if prog_list:
+        if type(prog_list) not in [list, set, dict]:
+            total = int(prog_list)
+        else:
             total = len(prog_list)
-        elif integer:
-            total = int(integer)
-        else:
-            return
 
-        if total > 350:
-            report_at = range(5, 100, 5)  # Notify every 5 percent
-        elif total > 150:
-            report_at = range(10, 100, 10)  # Notify every 10 percent
-        elif total > 50:
-            report_at = range(25, 100, 25)  # Notify every 25 percent
+        if not percentage_to_report_at:
+            if total > 350:
+                report_at = range(5, 100, 5)  # Notify every 5 percent
+            elif total > 150:
+                report_at = range(10, 100, 10)  # Notify every 10 percent
+            elif total > 50:
+                report_at = range(25, 100, 25)  # Notify every 25 percent
+            else:
+                report_at = [50]  # Notify at 50 percent
         else:
-            report_at = [50]  # Notify at 50 percent
-        return report_at
+            report_at = range(percentage_to_report_at, 100,
+                              percentage_to_report_at)
+
+        progress = [round((pc / 100.0) * total) for pc in report_at]
+
+        if current_position in progress:
+            return str(report_at[progress.index(current_position)])
 
     def write_output_yaml(self, output_dir, filename, yaml_dict, verbose=True):
         """

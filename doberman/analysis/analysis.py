@@ -66,7 +66,6 @@ class CrudeAnalysis(Common):
                                          self.cli.end.strftime('%c')))
             self.ids = self.test_catalog.get_pipelines_from_date_range()
 
-        self.report_at = self.calc_when_to_report(self.ids)
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
                 pipeline = self.jenkins.get_pipeline_from_deploy_build(idn)
@@ -79,12 +78,10 @@ class CrudeAnalysis(Common):
             else:
                 self.pipeline_ids.append(pipeline)
 
-            # Notify user/log of progress
-            progress = [round((pc / 100.0) * len(self.ids))
-                        for pc in self.report_at]
-            if pos in progress:
-                pc = str(self.report_at[progress.index(pos)])
-                self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pc))
+            # Notify user of progress:
+            pgr = self.calculate_progress(pos, self.ids)
+            if pgr:
+                self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pgr))
         msg = "Pipeline lookup 100% complete: All pipelines checked. "
         msg += "Now polling jenkins and processing data."
         self.cli.LOG.info(msg)
