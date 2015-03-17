@@ -260,12 +260,21 @@ class Refinery(CrudeAnalysis):
                     job_specific_bugs = {}
                     crude_dir = os.path.join(self.cli.reportdir, crude_job)
 
+                    # Use dictionary comprehension to only consider the
+                    # pipelines we're interested in (not other stuff in folder)
+                    these_build_numbers = {pl: self.build_numbers[pl]
+                                           for pl in self.pipeline_ids}
+
                     for build_num in os.walk(crude_folder).next()[1]:
-                        new_bugs = self.unify(crude_job, marker, job, filename,
-                                              crude_dir, build_num)
-                        bug_dict = self.join_dicts(bug_dict, new_bugs)
-                        job_specific_bugs = self.join_dicts(job_specific_bugs,
-                                                            new_bugs)
+                        for pl, bns in these_build_numbers.iteritems():
+                            if build_num == bns.get(crude_job):
+                                new_bugs = self.unify(crude_job, marker, job,
+                                                      filename, crude_dir,
+                                                      build_num)
+                                bug_dict = self.join_dicts(bug_dict, new_bugs)
+                                job_specific_bugs = \
+                                    self.join_dicts(job_specific_bugs,
+                                                    new_bugs)
                     if 'new_bugs' in locals():
                         job_specific_bugs_dict[job] = new_bugs
                 if not skip:
@@ -369,7 +378,7 @@ class Refinery(CrudeAnalysis):
                                 bug_output['additional info']['text'] = None
                     bug_dict[pipeline_id][bug] = bug_output
                     # TODO: end of would be else block
-                    
+
                 # Notify user of progress:
                 pl_prgrs = self.calculate_progress(pos, output)
                 if pl_prgrs:
@@ -584,7 +593,7 @@ class Refinery(CrudeAnalysis):
             # Notify user of progress:
             progress = self.calculate_progress(pos, unaccounted_bugs)
             if progress:
-                self.cli.LOG.info("Bug grouping {}% complete".format(progress))   
+                self.cli.LOG.info("Bug grouping {}% complete".format(progress))
 
         self.cli.LOG.info("{} unique bugs detected".format(len(unique_bugs)))
 
