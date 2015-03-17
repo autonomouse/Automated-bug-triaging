@@ -42,6 +42,7 @@ class Refinery(CrudeAnalysis):
         # Tidy Up:
         if not self.cli.keep_data:
             self.remove_dirs(self.all_build_numbers)
+            self.remove_dirs(self.cli.crude_job)
             [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
 
@@ -383,7 +384,7 @@ class Refinery(CrudeAnalysis):
                 pl_prgrs = self.calculate_progress(pos, output)
                 if pl_prgrs:
                     self.cli.LOG.info("Unification of {} data {}% complete."
-                                      .format(pl_prgrs, job))
+                                      .format(job, pl_prgrs))
         return bug_dict
 
     def calculate_bug_prevalence(self, unique_unfiled_bugs, unified_bugdict,
@@ -620,6 +621,10 @@ class Refinery(CrudeAnalysis):
 
         """
         for job in job_names:
+            if job in self.cli.multi_bugs_in_pl:
+                target_type = "tests"
+            else:
+                target_type = "pipelines"
             print
             print("Top bugs for job: {}".format(job))
             print("-----------------------------------")
@@ -627,16 +632,16 @@ class Refinery(CrudeAnalysis):
             job_ranking = bug_rankings.get(job)
             if job_ranking:
                 for bug in job_ranking[:10]:
-                    msg = "{0} - {1} pipelines hit"
+                    msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
-                        bug_tuple = (url.format(bug[0]), bug[1],)
+                        bug_tuple = list((url.format(bug[0]), bug[1]))
                     else:
-                        bug_tuple = bug
+                        bug_tuple = list(bug)
+                    bug_tuple.append(target_type)
                     print(msg.format(*bug_tuple))
             else:
                 print("No bugs found.")
             print
-
 
 def main():
     refined = Refinery(make_plots=False)
