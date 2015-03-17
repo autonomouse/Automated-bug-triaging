@@ -369,12 +369,12 @@ class Refinery(CrudeAnalysis):
                                 bug_output['additional info']['text'] = None
                     bug_dict[pipeline_id][bug] = bug_output
                     # TODO: end of would be else block
-                    
+
                 # Notify user of progress:
                 pl_prgrs = self.calculate_progress(pos, output)
                 if pl_prgrs:
                     self.cli.LOG.info("Unification of {} data {}% complete."
-                                      .format(pl_prgrs, job))
+                                      .format(job, pl_prgrs))
         return bug_dict
 
     def calculate_bug_prevalence(self, unique_unfiled_bugs, unified_bugdict,
@@ -584,7 +584,7 @@ class Refinery(CrudeAnalysis):
             # Notify user of progress:
             progress = self.calculate_progress(pos, unaccounted_bugs)
             if progress:
-                self.cli.LOG.info("Bug grouping {}% complete".format(progress))   
+                self.cli.LOG.info("Bug grouping {}% complete".format(progress))
 
         self.cli.LOG.info("{} unique bugs detected".format(len(unique_bugs)))
 
@@ -611,6 +611,10 @@ class Refinery(CrudeAnalysis):
 
         """
         for job in job_names:
+            if job in self.multi_bugs_in_pl:
+                target_type = "tests"
+            else:
+                target_type = "pipelines"
             print
             print("Top bugs for job: {}".format(job))
             print("-----------------------------------")

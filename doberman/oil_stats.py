@@ -119,7 +119,7 @@ def triage_report(triage, start, end, jenkins):
 def print_results(results, job):
     job_dict = results['jobs'][job]
 
-    success_rate = round(job_dict.get('success rate'))
+    success_rate = round(job_dict.get('success rate'), 2)
 
     print
     print("* {} success rate was {}%"
@@ -148,7 +148,7 @@ def print_results(results, job):
 def print_summary(results):
     unrounded_success_rate = results['overall'].get('success rate')
     success_rate = \
-        round(unrounded_success_rate) if unrounded_success_rate else 0
+        round(unrounded_success_rate, 2) if unrounded_success_rate else 0
 
     print
     print("Overall Success Rate: {}%".format(success_rate))
