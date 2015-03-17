@@ -11,7 +11,7 @@ import pytz
 import parsedatetime as pdt
 from dateutil.parser import parse
 from datetime import datetime
-from doberman.common import utils, special_cases
+from doberman.common import utils
 from jenkinsapi.custom_exceptions import *
 from doberman.common.common import Common
 from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
@@ -66,7 +66,6 @@ class CrudeAnalysis(Common):
                                          self.cli.end.strftime('%c')))
             self.ids = self.test_catalog.get_pipelines_from_date_range()
 
-        self.report_at = self.calc_when_to_report(self.ids)
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
                 pipeline = self.jenkins.get_pipeline_from_deploy_build(idn)
@@ -79,14 +78,13 @@ class CrudeAnalysis(Common):
             else:
                 self.pipeline_ids.append(pipeline)
 
-            # Notify user/log of progress
-            progress = [round((pc / 100.0) * len(self.ids))
-                        for pc in self.report_at]
-            if pos in progress:
-                pc = str(self.report_at[progress.index(pos)])
-                self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pc))
-        self.cli.LOG.info("All pipelines checked. Now polling jenkins " +
-                          "and processing data")
+            # Notify user of progress:
+            pgr = self.calculate_progress(pos, self.ids)
+            if pgr:
+                self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pgr))
+        msg = "Pipeline lookup 100% complete: All pipelines checked. "
+        msg += "Now polling jenkins and processing data."
+        self.cli.LOG.info(msg)
         return self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
     def remove_dirs(self, folders_to_remove):
@@ -144,13 +142,10 @@ class CrudeAnalysis(Common):
                     tempest_dict = tempest.yaml_dict
                     self.message = tempest.message
                     # TODO: self.message only reports back on last bug found
-            except Exception, e:
+            except Exception as e:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
                     msg += " (may be cookie related?)"
-                    deploy_dict = \
-                        self.non_db_bug(special_cases.bug_dict['pipeline_id'],
-                                        deploy_dict, msg)
                 else:
                     probmsg = "Problem with {} - skipping "
                     if deploy_build:

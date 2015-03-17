@@ -9,6 +9,7 @@ import urlparse
 import bisect
 import time
 import shutil
+import yaml
 import parsedatetime as pdt
 from dateutil.parser import parse
 from jenkinsapi.jenkins import Jenkins
@@ -20,6 +21,7 @@ LOG = utils.get_logger('doberman.oil_stats')
 _config = utils.get_config()
 
 JENKINS_URL = _config.get('DEFAULT', 'jenkins_url')
+ENVIRONMENT = _config.get('DEFAULT', 'environment')
 NETLOC = _config.get('DEFAULT', 'netloc')
 
 
@@ -57,8 +59,6 @@ def find_build_newer_than(builds, start):
     i = bisect.bisect_left(keys, start_ts)
     if i != len(keys):
         return i
-
-    print("No job newer than %s" % (start))
     return None
 
 
@@ -100,7 +100,6 @@ def triage_report(triage, start, end, jenkins):
         for b in triage[job]:
             build = jenkins_job.get_build(b['number'])
             outdir = os.path.join(reportdir, job, str(b['number']))
-            print('Downloading debug data to: %s' % (outdir))
             try:
                 os.makedirs(outdir)
             except OSError:
@@ -117,6 +116,48 @@ def triage_report(triage, start, end, jenkins):
                 a.save_to_dir(outdir)
 
 
+def print_results(results, job):
+    job_dict = results['jobs'][job]
+
+    success_rate = round(job_dict.get('success rate'))
+
+    print
+    print("* {} success rate was {}%"
+          .format(job, success_rate))
+    print("    - Start Job: {} (Date: {})"
+          .format(job_dict.get('start job'),
+                  job_dict.get('start date')))
+    print("    - End Job: {} (Date: {})"
+          .format(job_dict.get('end job'),
+                  job_dict.get('end date')))
+    if job != "test_tempest_smoke":
+        print("    - {} jobs, {} active, {} pass, {} fail"
+              .format(job_dict.get('build objects'),
+                      job_dict.get('still running'),
+                      job_dict.get('passes'),
+                      job_dict.get('fails')))
+    else:
+        print("    - {} good / {} ({} total - {} skip)"
+              .format(job_dict.get('good builds'),
+                      job_dict.get('total'),
+                      job_dict.get('total without skipped'),
+                      job_dict.get('skipped')))
+    print
+
+
+def print_summary(results):
+    unrounded_success_rate = results['overall'].get('success rate')
+    success_rate = \
+        round(unrounded_success_rate) if unrounded_success_rate else 0
+
+    print
+    print("Overall Success Rate: {}%".format(success_rate))
+    print("    - {} tempest builds out of {} total jobs"
+          .format(results['overall'].get('tempest builds'),
+                  results['overall'].get('total jobs')))
+    print
+
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-c', '--config', action='store', dest='configfile',
@@ -125,6 +166,10 @@ def main():
     parser.add_option('-e', '--end', action='store', dest='end',
                       default='now',
                       help='ending date string.  Default: \'now()\'')
+    parser.add_option('-E', '--environment', action='store',
+                      dest='environment', default=ENVIRONMENT,
+                      help='Environment in which OIL is running.' +
+                           'Default: ' + ENVIRONMENT)
     parser.add_option('-H', '--host', action='store', dest='host',
                       default=JENKINS_URL,
                       help='URL to Jenkins host.' +
@@ -167,6 +212,12 @@ def main():
     else:
         jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
+    environment = None
+    if opts.environment:
+        environment = opts.environment
+    else:
+        environment = ENVIRONMENT
+
     if jenkins_host is None:
         print('Invalid Jenkins Host: %s' % (jenkins_host))
         return 1
@@ -207,20 +258,24 @@ def main():
     keep_data = opts.keep_data
     download_dir = os.path.abspath(opts.download_dir)
 
+    # Set up output dict:
+    results = {'jobs': {}, 'overall': {}}
+
+    # Inform user of environment and jenkins host:
+    print('Data for OIL Environment: {} (Jenkins host: {})'
+          .format(environment, opts.host))
+
     # connect to Jenkins
-    print('Connecting to %s' % (opts.host))
     j = Jenkins(baseurl=jenkins_host, cookies=cookies, netloc=netloc)
 
     totals = {}
     triage = {}
+
     for job in opts.jobs.split(","):
-        print('Getting job %s' % (job))
         jenkins_job = j[job]
-        print("Polling jenkins for build data...")
         builds = jenkins_job._poll()['builds']
         builds.sort(key=lambda r: r.get('timestamp'))
 
-        print("Finding %s jobs newer than %s" % (job, start))
         start_idx = find_build_newer_than(builds, start)
         end_idx = find_build_newer_than(builds, end)
 
@@ -232,15 +287,25 @@ def main():
         if end_idx is None:
             end_idx = builds.index(builds[-1])
 
-        print("Start Job: %6s - %s" % (builds[start_idx]['number'],
-              datetime.fromtimestamp(builds[start_idx]['timestamp'] / 1000)))
-        print("End Job: %6s - %s" % (builds[end_idx]['number'],
-              datetime.fromtimestamp(builds[end_idx]['timestamp'] / 1000)))
+        start_num = builds[start_idx]['number']
+        end_num = builds[end_idx]['number']
+
+        start_in_ms = builds[start_idx]['timestamp'] / 1000
+        start_in_seconds = datetime.fromtimestamp(start_in_ms)
+
+        end_in_ms = builds[end_idx]['timestamp'] / 1000
+        end_in_seconds = datetime.fromtimestamp(end_in_ms)
+
+        job_dict = {}
+        job_dict['start job'] = start_num
+        job_dict['end job'] = end_num
+        job_dict['start date'] = start_in_seconds
+        job_dict['end date'] = end_in_seconds
 
         # from idx to end
         builds_to_check = [r['number'] for r in builds[start_idx:end_idx]]
         nr_builds = len(builds_to_check)
-        print("Fetching %s build objects" % (nr_builds))
+        job_dict['build objects'] = nr_builds
         build_objs = [b for b in builds if b['number'] in builds_to_check]
 
         active = filter(lambda x: is_running(x) is True, build_objs)
@@ -249,8 +314,6 @@ def main():
             errors = []
             failures = []
             skip = []
-            print("Downloading tempest_xunit.xml for builds {0} - {1} to '{2}'"
-                  .format(start_idx, end_idx, download_dir))
             for build in [bld['number'] for bld in builds[start_idx:end_idx]]:
                 this_build = jenkins_job.get_build(build)
                 artifacts = [b for b in this_build.get_artifacts()
@@ -260,8 +323,6 @@ def main():
                     artifact_name = str(artifact).split('/')[-1].strip('>')
                     try:
                         os.makedirs(download_dir)
-                        print("Created download directory at {0}"
-                              .format(download_dir))
                     except OSError:
                         if not os.path.isdir(download_dir):
                             raise
@@ -288,9 +349,12 @@ def main():
             n_good = n_total - (sum(errors) + sum(failures))
             success_rate = (round((float(n_good) / n_total) * 100, 2)
                             if n_total else 0)
-            print("  Success Rate: %s good / %s (%s total - %s skip) = %2.2f%%"
-                  % (n_good, n_total, sum(tests), sum(skip), success_rate))
-            print('')
+            job_dict['good builds'] = n_good
+            job_dict['total'] = n_total
+            job_dict['total without skipped'] = sum(tests)
+            job_dict['skipped'] = sum(skip)
+            job_dict['success rate'] = success_rate
+
             nr_nab = nr_builds - len(active)
         else:
             # TODO: handle case where we don't have active, good or bad builds
@@ -303,24 +367,40 @@ def main():
             # pipeline_deploy 11 active, 16/31 = 58.68% passing
             # Total: 31 builds, 12 active, 2 failed, 17 pass.
             # Success rate: 17 / (31 - 12) = 89%
-            print("  Totals: %s jobs, %s active, %s pass, %s fail  "
-                  % (nr_builds, len(active), len(good), len(bad),))
-            print("Success Rate: %s good / %s (%s total - %s active) = %2.2f%%"
-                  % (len(good), nr_nab, nr_builds, len(active), success_rate))
-            print('')
+
+            job_dict['still running'] = len(active)
+            job_dict['passes'] = len(good)
+            job_dict['fails'] = len(bad)
+            job_dict['completed builds'] = nr_nab
+            job_dict['success rate'] = success_rate
+
+        results['jobs'][job] = job_dict
+
         totals[job] = {'total_builds': nr_nab, 'passing': len(good)}
         triage[job] = bad
+
+    # report results:
+    for job in opts.jobs.split(","):
+        # I wanted to do "for job in results.keys():" here, but then they
+        # wouldn't be reported in the correct order.
+        print_results(results, job)
 
     # overall success
     if opts.summary:
         tt = totals['test_tempest_smoke']['total_builds']
         td = totals['pipeline_deploy']['total_builds']
         overall = (float(tt) / float(td) * 100.0) if td else 0
-        print('')
-        print("Overall Success Rate for [%s to %s] " % (start, end))
-        print("  %s tempest builds out of %s total jobs = %2.2f%%"
-              % (tt, td, overall))
-        print('')
+
+        results['overall']['success rate'] = overall
+        results['overall']['tempest builds'] = tt
+        results['overall']['total jobs'] = td
+
+        print_summary(results)
+
+    # save results to file:
+    with open("results.yaml", "w") as output:
+        # TODO: better output location than cwd needed!
+        output.write(yaml.safe_dump(results))
 
     # triage report
     if opts.triage:
@@ -329,7 +409,6 @@ def main():
 
     if os.path.isdir(download_dir) and not keep_data:
         shutil.rmtree(download_dir)
-        print("Removed '{0}'".format(download_dir))
 
 
 if __name__ == '__main__':

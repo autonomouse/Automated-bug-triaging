@@ -3,11 +3,10 @@
 import os
 import bisect
 import time
+import yaml
 import parsedatetime as pdt
 from dateutil.parser import parse
-from doberman.common import special_cases
 from datetime import datetime
-import yaml
 from jenkinsapi.custom_exceptions import *
 
 
@@ -54,54 +53,45 @@ class Common(object):
             yaml_dict['pipeline'] = pipeline_dict
         return yaml_dict
 
-    def non_db_bug(self, bug_id, existing_dict, err_msg):
-        """ Make non-database bugs for special cases, such as missing files
-            that cannot be, or are not yet, listed in the bugs database.
-
-        """
-        jlink = '{0}/job/{1}/{2}/console'.format(self.cli.external_jenkins_url,
-                                                 self.jobname,
-                                                 self.build_number)
-        matching_bugs = {}
-        matching_bugs[bug_id] = {'regexps': err_msg, 'vendors': err_msg,
-                                 'machines': err_msg, 'units': err_msg,
-                                 'link to jenkins': jlink}
-        try:
-            self.cli.LOG.info("Special case bug found! '{0}' ({1}, bug #{2})"
-                              .format(err_msg, self.jobname, bug_id))
-            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE',
-                                         existing_dict)
-        except:
-            self.cli.LOG.info("Special case bug found! '{0}' (bug #{1})"
-                              .format(err_msg, bug_id))
-            yaml_dict = self.add_to_yaml(matching_bugs, 'FAILURE', None,
-                                         existing_dict)
-        self.message = 0
-        return yaml_dict
-
     def join_dicts(self, old_dict, new_dict):
         """ Merge matching_bugs dictionaries. """
         earlier_items = list(old_dict.items())
         current_items = list(new_dict.items())
         return dict(earlier_items + current_items)
 
-    def calc_when_to_report(self, prog_list):
-        """ Determine at what percentage completion to notify user of progress
-            based on the number of entries in self.ids
+                         
+    def calculate_progress(self, current_position, prog_list,
+                           percentage_to_report_at=None):
+        """
+            Calculates and returns a percentage to notify user of progress
+            completion based on the number of entries in prog_list, or
+            prog_list itself if it is an integer.
 
         """
-
-        if len(prog_list) > 350:
-            report_at = range(5, 100, 5)  # Notify every 5 percent
-        elif len(prog_list) > 150:
-            report_at = range(10, 100, 10)  # Notify every 10 percent
-        elif len(prog_list) > 50:
-            report_at = range(25, 100, 25)  # Notify every 25 percent
+        if type(prog_list) not in [list, set, dict]:
+            total = int(prog_list)
         else:
-            report_at = [50]  # Notify at 50 percent
-        return report_at
+            total = len(prog_list)
 
-    def write_output_yaml(self, output_dir, filename, yaml_dict):
+        if not percentage_to_report_at:
+            if total > 350:
+                report_at = range(5, 100, 5)  # Notify every 5 percent
+            elif total > 150:
+                report_at = range(10, 100, 10)  # Notify every 10 percent
+            elif total > 50:
+                report_at = range(25, 100, 25)  # Notify every 25 percent
+            else:
+                report_at = [50]  # Notify at 50 percent
+        else:
+            report_at = range(percentage_to_report_at, 100,
+                              percentage_to_report_at)
+
+        progress = [round((pc / 100.0) * total) for pc in report_at]
+
+        if current_position in progress:
+            return str(report_at[progress.index(current_position)])
+
+    def write_output_yaml(self, output_dir, filename, yaml_dict, verbose=True):
         """
         """
         file_path = os.path.join(output_dir, filename)
@@ -109,8 +99,9 @@ class Common(object):
             os.makedirs(output_dir)
         with open(file_path, 'w') as outfile:
             outfile.write(yaml.safe_dump(yaml_dict, default_flow_style=False))
-            self.cli.LOG.info(filename + " written to "
-                              + os.path.abspath(output_dir))
+        if verbose:
+            self.cli.LOG.info("{} written to {}.".format(filename,
+                              os.path.abspath(output_dir)))
 
     def get_yaml(self, file_location, yaml_dict):
         return self.get_from_file(file_location, yaml_dict, ftype='yaml')
@@ -125,7 +116,7 @@ class Common(object):
                     return (yaml.load(f), yaml_dict)
                 else:
                     return (f.read(), yaml_dict)
-        except IOError, e:
+        except IOError as e:
             fname = file_location.split('/')[-1]
             self.cli.LOG.error("%s: %s is not in artifacts folder (%s)"
                                % (self.pipeline, fname, e[1]))

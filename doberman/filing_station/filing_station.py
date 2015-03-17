@@ -41,25 +41,29 @@ class FilingStation(CrudeAnalysis):
     def autofile(self):
         """ Get and analyse the crude output yamls.
         """
-        # Get refinery output
-        fname = 'auto-triaged_unfiled_bugs.yml'
-        #self.test_catalog = TestCatalog(self.cli)
-        #if not self.cli.offline_mode:
-        #    self.jenkins = Jenkins(self.cli)
-        #    self.build_pl_ids_and_check() # But should be pl_start uilds, not pl_deploy
-        #    output_folder = self.cli.reportdir
-        #    self.download_unfiled_bugs(fname, output_folder)
-        #    # TODO: Fetch from pipeline_start on jenkins...
-        #else:
-        #    self.cli.LOG.info("*** Offline mode is on. ***")
+        # Get refinery output        
         self.cli.LOG.info("Working on {0} as refinery output directory"
                           .format(self.cli.reportdir))
-        file_location = os.path.join(self.cli.reportdir, fname)
-        with open(file_location, "r") as f:
-            bugs_to_file = yaml.load(f).get('pipelines')
+        unfiled_bugs_yamls = [unf_bugs_file for unf_bugs_file in os.listdir(
+                              self.cli.reportdir) if 'auto-triaged_' in 
+                              unf_bugs_file]
+        for fname in unfiled_bugs_yamls:                    
+            #fname = 'auto-triaged_unfiled_bugs.yml'
+            #self.test_catalog = TestCatalog(self.cli)
+            #if not self.cli.offline_mode:
+            #    self.jenkins = Jenkins(self.cli)
+            #    self.build_pl_ids_and_check() # But should be pl_start uilds, not pl_deploy
+            #    output_folder = self.cli.reportdir
+            #    self.download_unfiled_bugs(fname, output_folder)
+            #    # TODO: Fetch from pipeline_start on jenkins...
+            #else:
+            #    self.cli.LOG.info("*** Offline mode is on. ***")
+            file_location = os.path.join(self.cli.reportdir, fname)
+            with open(file_location, "r") as f:
+                bugs_to_file = yaml.load(f).get('pipelines')
 
-        # File bug on launchpad:
-        self.create_lp_bugs(bugs_to_file)
+            # File bug on launchpad:
+            self.create_lp_bugs(bugs_to_file)
 
     def download_unfiled_bugs(self, fname, output_folder):
         # Also get info from pipeline_deploy? No, this should be in pipeline_start already!!!
