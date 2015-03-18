@@ -762,3 +762,32 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "400 BAD REQUEST....distro_series.{1,50} is not a valid distro_series.  It should be one of. .., .windows.win2012hvr2., .ubuntu"
+            
+  "1418235":
+    category: None
+    description: "contrail-configuration0 machine 5 agent-state error details hook failed identity-admin-relation-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Found unit contrail-configuration.{3,40} in error state. hook failed...identity-admin-relation-changed. for keystone.identity.admin"
+            
+  "1372407":
+    category: None
+    description: "Absent juju_status.yaml"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
+            
