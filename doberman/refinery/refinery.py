@@ -611,7 +611,7 @@ class Refinery(CrudeAnalysis):
 
         """
         for job in job_names:
-            if job in self.multi_bugs_in_pl:
+            if job in self.cli.multi_bugs_in_pl:
                 target_type = "tests"
             else:
                 target_type = "pipelines"
@@ -622,11 +622,12 @@ class Refinery(CrudeAnalysis):
             job_ranking = bug_rankings.get(job)
             if job_ranking:
                 for bug in job_ranking[:10]:
-                    msg = "{0} - {1} pipelines hit"
+                    msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
-                        bug_tuple = (url.format(bug[0]), bug[1],)
+                        bug_tuple = list((url.format(bug[0]), bug[1]))
                     else:
-                        bug_tuple = bug
+                        bug_tuple = list(bug)
+                    bug_tuple.append(target_type)
                     print(msg.format(*bug_tuple))
             else:
                 print("No bugs found.")
