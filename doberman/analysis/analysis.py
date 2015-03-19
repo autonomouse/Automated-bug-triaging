@@ -177,6 +177,7 @@ class CrudeAnalysis(Common):
         self.export_to_yaml(tempest_yamldict, 'test_tempest_smoke', rdir)
 
         # Write to file any pipelines (+ deploy build) that failed processing:
+        
         if not problem_pipelines == []:
             file_path = os.path.join(self.cli.reportdir,
                                      'problem_pipelines.yaml')

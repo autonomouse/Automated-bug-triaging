@@ -81,8 +81,9 @@ class Jenkins(Common):
         except:
             return False
 
-    def write_console_to_file(self, build, outdir):
-        with open(os.path.join(outdir, "console.txt"), "w") as cnsl:
+    def write_console_to_file(self, build, outdir, jobname):
+        with open(os.path.join(outdir, "{}_console.txt".format(jobname)), 
+                               "w") as cnsl:
             self.cli.LOG.debug('Saving console @ {0} to {1}'.format(
                                build.baseurl, outdir))
             console = build.get_console()
@@ -114,7 +115,7 @@ class Jenkins(Common):
         jenkins_job = self.jenkins_api[job]
         build = jenkins_job.get_build(int(build_num))
         outdir = os.path.join(self.cli.reportdir, job, str(build_num))
-
+        
         # Check to make sure it is not still running!:
         if build._data['duration'] == 0:
             return True  # Still running
@@ -123,12 +124,14 @@ class Jenkins(Common):
         except OSError:
             if not os.path.isdir(outdir):
                 raise
-        self.write_console_to_file(build, outdir)
+        self.write_console_to_file(build, outdir, job)
 
         if not console_only:
             for artifact in build.get_artifacts():
-                artifact.save_to_dir(outdir)
-                self.extract_and_delete_archive(outdir, artifact)
+                # No need to get console now:
+                if "/console.txt" not in str(artifact):
+                    artifact.save_to_dir(outdir)
+                    self.extract_and_delete_archive(outdir, artifact)
         return False  # Not still running
 
     def extract_and_delete_archive(self, outdir, artifact):
@@ -174,7 +177,7 @@ class Build(Common):
         path = os.path.join(self.cli.reportdir, jobname, build_number)
         if self.cli.dont_replace:
             if not os.path.exists(path):
-                self.cli.LOG.info("{} missing - redownloading data"
+                self.cli.LOG.info("{} missing - (re)downloading data"
                                   .format(path))
                 self.still_running = (jenkins.get_triage_data(build_number,
                                       jobname, self.cli.reportdir))
@@ -219,6 +222,8 @@ class Build(Common):
                     glob_hits = []
                     # Load up file for each target_file in the DB for this bug:
                     for target_file in and_dict.keys():
+                        if target_file == "console.txt":
+                            target_file = "{}_console.txt".format(self.jobname)
                         info = {}
                         try:
                             for bssub in self.bsnode:
@@ -308,7 +313,7 @@ class Build(Common):
 
                     if failed_to_hit_any_flag:
                         # xml or not, if not hits return console in info:
-                        default_target = 'console.txt'
+                        default_target = '{}_console.txt'.format(self.jobname)
                         info['target file'] = default_target
                         target_location = os.path.join(path, default_target)
 
@@ -327,7 +332,7 @@ class Build(Common):
                         if (not glob_hits) and (target_file in parse_as_xml):
                             glob_hits = [target_file]
                         for hit_file in glob_hits:
-                            if hit_file == "console.txt":
+                            if "console.txt" in hit_file:
                                 link = '{0}/job/{1}/{2}/console'
                                 links.append(link.format(url, self.jobname,
                                              self.build_number))
@@ -335,7 +340,7 @@ class Build(Common):
                                 link = '{0}/job/{1}/{2}/artifact/artifacts/{3}'
                                 links.append(link.format(url, self.jobname,
                                              self.build_number, hit_file))
-                        jlink = ", ".join(links)
+                        jlink = ", ".join(links)        
                         matching_bugs[bug_id] = \
                             {'regexps': hit_dict,
                              'vendors': self.oil_df['vendor'],
@@ -361,6 +366,7 @@ class Build(Common):
             bug_id = 'unfiled-' + str(uuid.uuid4())
             jlink = (self.cli.external_jenkins_url + '/job/{0}/{1}/console'
                      .format(self.jobname, self.build_number))
+        
             matching_bugs[bug_id] = {'regexps':
                                      'NO REGEX - UNFILED/UNMATCHED BUG',
                                      'vendors': self.oil_df['vendor'],
@@ -378,7 +384,7 @@ class Build(Common):
             matching_bugs[bug_id]['additional info'] = info
         else:
             if self.message != 1:
-                self.message = 0
+                self.message = 0         
         return (matching_bugs, build_status)
 
     def populate_uxfs(self, errors_and_fails, info, target, bug_unmatched,
@@ -398,6 +404,7 @@ class Build(Common):
             jlink = ('{0}/job/{1}/{2}/console'
                      .format(self.cli.external_jenkins_url, self.jobname,
                              self.build_number))
+                             
             uxf_dict[bug_id] = {'regexps': 'NO REGEX - UNFILED/UNMATCHED BUG',
                                 'vendors': self.oil_df['vendor'],
                                 'machines': self.oil_df['node'],
@@ -414,22 +421,23 @@ class Build(Common):
     def rematch(self, bugs, target_file, text):
         """ Search files in bugs for multiple matching regexps. """
         target_bugs = bugs.get(target_file, bugs.get('*'))
-        regexps = target_bugs.get('regexp')
+        if target_bugs:
+            regexps = target_bugs.get('regexp')
 
-        if type(regexps) == list:
-            if len(regexps) > 1:
-                regexp = '|'.join(regexps)
+            if type(regexps) == list:
+                if len(regexps) > 1:
+                    regexp = '|'.join(regexps)
+                else:
+                    regexp = regexps[0]
+                set_re = set(regexps)
             else:
-                regexp = regexps[0]
-            set_re = set(regexps)
-        else:
-            regexp = regexps
-            set_re = set([regexps])
-        if regexp not in ['None', None, '']:
-            matches = re.compile(regexp, re.DOTALL).findall(text)
-            if matches:
-                if len(set_re) == len(set(matches)):
-                    return {target_file: {'regexp': regexps}}
+                regexp = regexps
+                set_re = set([regexps])
+            if regexp not in ['None', None, '']:
+                matches = re.compile(regexp, re.DOTALL).findall(text)
+                if matches:
+                    if len(set_re) == len(set(matches)):
+                        return {target_file: {'regexp': regexps}}
 
 
 class Deploy(Build):
@@ -459,7 +467,8 @@ class Deploy(Build):
         self.oil_nodes = {}
 
         # Parse console:
-        console_parser = FileParser(pipeline_deploy_path, 'console.txt')
+        console_parser = FileParser(pipeline_deploy_path, '{}_console.txt'
+                                    .format(self.jobname))
         for err in console_parser.status:
             self.cli.LOG.error(err)
         self.bsnode = console_parser.bsnode
@@ -509,7 +518,8 @@ class Prepare(Build):
                                     self.build_number)
 
         # Parse console:
-        console_parser = FileParser(prepare_path, 'console.txt')
+        console_parser = FileParser(prepare_path, '{}_console.txt'
+                                    .format(self.jobname))
         for err in console_parser.status:
             self.cli.LOG.error(err)
         self.bsnode = console_parser.bsnode
@@ -543,7 +553,8 @@ class Tempest(Build):
                                 self.build_number)
 
         # Parse console:
-        console_parser = FileParser(tts_path, 'console.txt')
+        console_parser = FileParser(tts_path, 
+                                    '{}_console.txt'.format(self.jobname))
         for err in console_parser.status:
             self.cli.LOG.error(err)
         self.bsnode = console_parser.bsnode

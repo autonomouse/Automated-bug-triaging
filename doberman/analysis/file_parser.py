@@ -32,7 +32,7 @@ class FileParser(Common):
             return
 
     def _process_data(self):
-        if self.filename == 'console.txt':
+        if 'console.txt' in self.filename:
             self._process_console_data()
         if self.filename == 'oil_nodes':
             self._process_oil_nodes_data()
