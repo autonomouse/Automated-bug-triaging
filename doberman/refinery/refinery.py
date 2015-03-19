@@ -260,24 +260,25 @@ class Refinery(CrudeAnalysis):
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
                     crude_dir = os.path.join(self.cli.reportdir, crude_job)
-
-                    # Use dictionary comprehension to only consider the
-                    # pipelines we're interested in (not other stuff in folder)
-                    these_build_numbers = {pl: self.build_numbers[pl]
-                                           for pl in self.pipeline_ids}
-
+                    
+                     # Use a set to only consider the pipelines we're 
+                     # interested in (not other stuff in folder) 
+                     these_build_numbers = \
+                        {self.build_numbers[pl].get(crude_job) 
+                        for pl in self.pipeline_ids]} 
+                                            
                     for build_num in os.walk(crude_folder).next()[1]:
-                        for pl, bns in these_build_numbers.iteritems():
-                            if build_num == bns.get(crude_job):
-                                new_bugs = self.unify(crude_job, marker, job,
-                                                      filename, crude_dir,
-                                                      build_num)
-                                bug_dict = self.join_dicts(bug_dict, new_bugs)
-                                job_specific_bugs = \
-                                    self.join_dicts(job_specific_bugs,
-                                                    new_bugs)
+                        if build_num in these_build_numbers: 
+                            new_bugs = self.unify(crude_job, marker, job, 
+                                                  filename, crude_dir, 
+                                                  build_num) 
+                            bug_dict = self.join_dicts(bug_dict, new_bugs) 
+                            job_specific_bugs = \ 
+                                self.join_dicts(job_specific_bugs, new_bugs)
+                    
                     if 'new_bugs' in locals():
                         job_specific_bugs_dict[job] = new_bugs
+                        
                 if not skip:
                     self.cli.LOG.info("{} data unified.".format(job))
         return (bug_dict, job_specific_bugs_dict)
