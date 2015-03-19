@@ -260,25 +260,25 @@ class Refinery(CrudeAnalysis):
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
                     crude_dir = os.path.join(self.cli.reportdir, crude_job)
-                    
-                     # Use a set to only consider the pipelines we're 
-                     # interested in (not other stuff in folder) 
+
+                     # Use a set to only consider the pipelines we're
+                     # interested in (not other stuff in folder)
                      these_build_numbers = \
-                        {self.build_numbers[pl].get(crude_job) 
-                        for pl in self.pipeline_ids]} 
-                                            
+                        {self.build_numbers[pl].get(crude_job)
+                        for pl in self.pipeline_ids]}
+
                     for build_num in os.walk(crude_folder).next()[1]:
-                        if build_num in these_build_numbers: 
-                            new_bugs = self.unify(crude_job, marker, job, 
-                                                  filename, crude_dir, 
-                                                  build_num) 
-                            bug_dict = self.join_dicts(bug_dict, new_bugs) 
-                            job_specific_bugs = \ 
+                        if build_num in these_build_numbers:
+                            new_bugs = self.unify(crude_job, marker, job,
+                                                  filename, crude_dir,
+                                                  build_num)
+                            bug_dict = self.join_dicts(bug_dict, new_bugs)
+                            job_specific_bugs = \
                                 self.join_dicts(job_specific_bugs, new_bugs)
-                    
+
                     if 'new_bugs' in locals():
                         job_specific_bugs_dict[job] = new_bugs
-                        
+
                 if not skip:
                     self.cli.LOG.info("{} data unified.".format(job))
         return (bug_dict, job_specific_bugs_dict)
@@ -644,6 +644,19 @@ class Refinery(CrudeAnalysis):
                 print("No bugs found.")
             print
 
+            if hasattr(self.cli, 'genoilstats_build'):
+                paabn = 'pipelines_and_associated_build_numbers'
+                fx_pls = 'pipelines_affected_by_bug'
+                ext = '.yml'
+                jlink = "{2} data can be found at: {0}/job/gen_oil_stats/{1}/"
+                jlink += "artifact/artifacts/{2}{3}/*view*/"
+                print
+                print(jlink.format(self.cli.external_jenkins_url,
+                                   self.cli.genoilstats_build, paabn, ext))
+                print
+                print(jlink.format(self.cli.external_jenkins_url,
+                                   self.cli.genoilstats_build, fx_pls, ext))
+                print
 def main():
     refined = Refinery(make_plots=False)
     return refined.message
