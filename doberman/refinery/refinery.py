@@ -41,7 +41,8 @@ class Refinery(CrudeAnalysis):
 
         # Tidy Up:
         if not self.cli.keep_data:
-            self.remove_dirs(self.all_build_numbers)
+            if hasattr(self, all_build_numbers):
+                self.remove_dirs(self.all_build_numbers)
             self.remove_dirs(self.cli.crude_job)
             [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
@@ -139,7 +140,7 @@ class Refinery(CrudeAnalysis):
         self.mkdir(outdir)
 
         if marker == 'console.txt':
-            self.jenkins.write_console_to_file(build, outdir)
+            self.jenkins.write_console_to_file(build, outdir, job)
             artifact_found = True
             if rename:
                 rn_from = os.path.join(outdir, marker)
@@ -327,7 +328,7 @@ class Refinery(CrudeAnalysis):
                     bug_output['status'] = status
                     crude_ts = plop.get('Crude-Analysis timestamp')
                     bug_output['Crude-Analysis timestamp'] = crude_ts
-                    link_to_jkns = plop.get('link to jenkins')
+                    link_to_jkns = bug_output.get('link to jenkins')
                     bug_output['link to jenkins'] = link_to_jkns
                     link_to_tcat = plop.get('link to test-catalog')
                     bug_output['link to test-catalog'] = link_to_tcat
@@ -614,7 +615,7 @@ class Refinery(CrudeAnalysis):
         return (grouped_bugs, all_scores)
 
     def report_top_ten_bugs(self, job_names, bug_rankings,
-                            url='https://bugs.launchpad.net/oil/+bug/{}'):
+                            url='https://bugs.launchpad.net/bugs/{}'):
         """
         Print the top ten bugs for each job to the console.
 
