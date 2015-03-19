@@ -82,8 +82,8 @@ class Jenkins(Common):
             return False
 
     def write_console_to_file(self, build, outdir, jobname):
-        with open(os.path.join(outdir, "{}_console.txt".format(jobname)), 
-                               "w") as cnsl:
+        console_path = os.path.join(outdir, "{}_console.txt".format(jobname))
+        with open(console_path, "w") as cnsl:
             self.cli.LOG.debug('Saving console @ {0} to {1}'.format(
                                build.baseurl, outdir))
             console = build.get_console()
@@ -115,7 +115,7 @@ class Jenkins(Common):
         jenkins_job = self.jenkins_api[job]
         build = jenkins_job.get_build(int(build_num))
         outdir = os.path.join(self.cli.reportdir, job, str(build_num))
-        
+
         # Check to make sure it is not still running!:
         if build._data['duration'] == 0:
             return True  # Still running
@@ -340,7 +340,7 @@ class Build(Common):
                                 link = '{0}/job/{1}/{2}/artifact/artifacts/{3}'
                                 links.append(link.format(url, self.jobname,
                                              self.build_number, hit_file))
-                        jlink = ", ".join(links)        
+                        jlink = ", ".join(links)
                         matching_bugs[bug_id] = \
                             {'regexps': hit_dict,
                              'vendors': self.oil_df['vendor'],
@@ -366,7 +366,7 @@ class Build(Common):
             bug_id = 'unfiled-' + str(uuid.uuid4())
             jlink = (self.cli.external_jenkins_url + '/job/{0}/{1}/console'
                      .format(self.jobname, self.build_number))
-        
+
             matching_bugs[bug_id] = {'regexps':
                                      'NO REGEX - UNFILED/UNMATCHED BUG',
                                      'vendors': self.oil_df['vendor'],
@@ -384,7 +384,7 @@ class Build(Common):
             matching_bugs[bug_id]['additional info'] = info
         else:
             if self.message != 1:
-                self.message = 0         
+                self.message = 0
         return (matching_bugs, build_status)
 
     def populate_uxfs(self, errors_and_fails, info, target, bug_unmatched,
@@ -404,7 +404,7 @@ class Build(Common):
             jlink = ('{0}/job/{1}/{2}/console'
                      .format(self.cli.external_jenkins_url, self.jobname,
                              self.build_number))
-                             
+
             uxf_dict[bug_id] = {'regexps': 'NO REGEX - UNFILED/UNMATCHED BUG',
                                 'vendors': self.oil_df['vendor'],
                                 'machines': self.oil_df['node'],
@@ -421,23 +421,25 @@ class Build(Common):
     def rematch(self, bugs, target_file, text):
         """ Search files in bugs for multiple matching regexps. """
         target_bugs = bugs.get(target_file, bugs.get('*'))
-        if target_bugs:
-            regexps = target_bugs.get('regexp')
+        if not target_bugs:
+            return
 
-            if type(regexps) == list:
-                if len(regexps) > 1:
-                    regexp = '|'.join(regexps)
-                else:
-                    regexp = regexps[0]
-                set_re = set(regexps)
+        regexps = target_bugs.get('regexp')
+
+        if type(regexps) == list:
+            if len(regexps) > 1:
+                regexp = '|'.join(regexps)
             else:
-                regexp = regexps
-                set_re = set([regexps])
-            if regexp not in ['None', None, '']:
-                matches = re.compile(regexp, re.DOTALL).findall(text)
-                if matches:
-                    if len(set_re) == len(set(matches)):
-                        return {target_file: {'regexp': regexps}}
+                regexp = regexps[0]
+            set_re = set(regexps)
+        else:
+            regexp = regexps
+            set_re = set([regexps])
+        if regexp not in ['None', None, '']:
+            matches = re.compile(regexp, re.DOTALL).findall(text)
+            if matches:
+                if len(set_re) == len(set(matches)):
+                    return {target_file: {'regexp': regexps}}
 
 
 class Deploy(Build):
@@ -553,7 +555,7 @@ class Tempest(Build):
                                 self.build_number)
 
         # Parse console:
-        console_parser = FileParser(tts_path, 
+        console_parser = FileParser(tts_path,
                                     '{}_console.txt'.format(self.jobname))
         for err in console_parser.status:
             self.cli.LOG.error(err)

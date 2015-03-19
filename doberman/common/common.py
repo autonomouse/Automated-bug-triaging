@@ -59,7 +59,6 @@ class Common(object):
         current_items = list(new_dict.items())
         return dict(earlier_items + current_items)
 
-                         
     def calculate_progress(self, current_position, prog_list,
                            percentage_to_report_at=None):
         """

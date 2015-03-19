@@ -16,8 +16,8 @@ class CLI(CLI):
                         default=None, help=('jenkins job names with multiple' +
                                             ' jobs per pipeline (must be in ' +
                                             'quotes, seperated by spaces)'))
-        prsr.add_option('-g', '--genoilstats_build', action='store', 
-                        dest='genoilstats_build', default=None, 
+        prsr.add_option('-g', '--genoilstats_build', action='store',
+                        dest='genoilstats_build', default=None,
                         help=('the jenkins build number of gen_oil_stats'))
         (opts, args) = self.parser.parse_args()
 

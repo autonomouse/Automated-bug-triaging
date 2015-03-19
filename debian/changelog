@@ -1,3 +1,15 @@
+doberman (1.1.0-0ubuntu1) utopic; urgency=medium
+
+  * Fix for refinery working on too many pipelines, not just the ones specified
+  * Missing jenkins link bug fixed
+  * Now reports progress as a percentage value printed to the console
+  * Better, more readable output for oil-stats and refinery - useful for emailing out results
+  * Filing-station fixed
+  * Updates to (mock) database
+  * Also now contains a file for interacting with Launchpad 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 19 Mar 2015 17:41:44 +0000
+
 doberman (1.0.12-0ubuntu1) trusty; urgency=medium
 
   * Added new bugs to the mock_database yaml
