@@ -814,6 +814,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
     description: "[Prodstack] OperationalError - Unknown error occurred (tempest fail)"
     test_tempest_smoke:
       -
-        "console.txt":
+        "tempest_xunit.xml":
             regexp:
             - "OperationalError..Code..Message.Unknown error occurred...Message...Error...Errors."
