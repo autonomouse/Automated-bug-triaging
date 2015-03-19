@@ -262,11 +262,11 @@ class Refinery(CrudeAnalysis):
                     job_specific_bugs = {}
                     crude_dir = os.path.join(self.cli.reportdir, crude_job)
 
-                     # Use a set to only consider the pipelines we're
-                     # interested in (not other stuff in folder)
-                     these_build_numbers = \
+                    # Use a set to only consider the pipelines we're
+                    # interested in (not other stuff in folder)
+                    these_build_numbers = \
                         {self.build_numbers[pl].get(crude_job)
-                        for pl in self.pipeline_ids]}
+                         for pl in self.pipeline_ids}
 
                     for build_num in os.walk(crude_folder).next()[1]:
                         if build_num in these_build_numbers:
