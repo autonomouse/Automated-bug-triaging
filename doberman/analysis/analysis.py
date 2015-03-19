@@ -92,6 +92,9 @@ class CrudeAnalysis(Common):
             yaml files).
 
         """
+        
+        if type(folders_to_remove) not in [list, tuple, dict]:
+            folders_to_remove = [folders_to_remove]
 
         if not self.cli.keep_data:
             for folder in folders_to_remove:

@@ -42,6 +42,7 @@ class Refinery(CrudeAnalysis):
         # Tidy Up:
         if not self.cli.keep_data:
             self.remove_dirs(self.all_build_numbers)
+            self.remove_dirs(self.cli.crude_job)
             [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
 
@@ -259,15 +260,25 @@ class Refinery(CrudeAnalysis):
                     # ...otherwise, scan the sub-folders:
                     job_specific_bugs = {}
                     crude_dir = os.path.join(self.cli.reportdir, crude_job)
-
+                    
+                     # Use a set to only consider the pipelines we're 
+                     # interested in (not other stuff in folder) 
+                     these_build_numbers = \
+                        {self.build_numbers[pl].get(crude_job) 
+                        for pl in self.pipeline_ids]} 
+                                            
                     for build_num in os.walk(crude_folder).next()[1]:
-                        new_bugs = self.unify(crude_job, marker, job, filename,
-                                              crude_dir, build_num)
-                        bug_dict = self.join_dicts(bug_dict, new_bugs)
-                        job_specific_bugs = self.join_dicts(job_specific_bugs,
-                                                            new_bugs)
+                        if build_num in these_build_numbers: 
+                            new_bugs = self.unify(crude_job, marker, job, 
+                                                  filename, crude_dir, 
+                                                  build_num) 
+                            bug_dict = self.join_dicts(bug_dict, new_bugs) 
+                            job_specific_bugs = \ 
+                                self.join_dicts(job_specific_bugs, new_bugs)
+                    
                     if 'new_bugs' in locals():
                         job_specific_bugs_dict[job] = new_bugs
+                        
                 if not skip:
                     self.cli.LOG.info("{} data unified.".format(job))
         return (bug_dict, job_specific_bugs_dict)
@@ -632,7 +643,6 @@ class Refinery(CrudeAnalysis):
             else:
                 print("No bugs found.")
             print
-
 
 def main():
     refined = Refinery(make_plots=False)
