@@ -553,14 +553,14 @@ class Refinery(CrudeAnalysis):
 
         unaccounted_bugs = unfiled_bugs.keys()
 
-        ujob = unfiled_bugs[unaccounted_bugs[0]].get('job')
-
-        if ujob in self.cli.multi_bugs_in_pl:
-            multiple_bugs_per_pipeline = True
-        else:
-            multiple_bugs_per_pipeline = False
-
         for pos, unfiled_bug in enumerate(unaccounted_bugs):
+            ujob = unfiled_bugs[unfiled_bug].get('job')
+
+            if ujob in self.cli.multi_bugs_in_pl:
+                multiple_bugs_per_pipeline = True
+            else:
+                multiple_bugs_per_pipeline = False
+
             info_a = \
                 self.get_identifying_bug_details(unfiled_bugs, unfiled_bug,
                                                  multiple_bugs_per_pipeline)
