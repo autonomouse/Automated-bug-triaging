@@ -41,7 +41,7 @@ class Refinery(CrudeAnalysis):
 
         # Tidy Up:
         if not self.cli.keep_data:
-            if hasattr(self, all_build_numbers):
+            if hasattr(self, 'all_build_numbers'):
                 self.remove_dirs(self.all_build_numbers)
             self.remove_dirs(self.cli.crude_job)
             [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
@@ -333,8 +333,7 @@ class Refinery(CrudeAnalysis):
                     link_to_tcat = plop.get('link to test-catalog')
                     bug_output['link to test-catalog'] = link_to_tcat
                     bug_output['job'] = job
-                    if not build_num:
-                        build_num = plop.get('build')
+                    build_num = plop.get('build')
 
                     op_dir = (self.cli.op_dir_structure.format(
                               self.cli.reportdir, job, build_num, crude_job))
