@@ -33,7 +33,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "unit. nova-compute.+agent-state. error details. hook failed...ceph-relation-changed"
+            - "unit. nova-compute.*agent-state. error details. hook failed...ceph-relation-changed"
 
   "1358326":
     category: None
@@ -695,7 +695,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "identity-admin-relation-changed. for keystone.identity-admin"
+            - "contrail-configuration.*agent-state: error details: hook failed: .identity-admin-relation-change"
 
 
   "1417045":
@@ -817,3 +817,31 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "tempest_xunit.xml":
             regexp:
             - "OperationalError..Code..Message.Unknown error occurred...Message...Error...Errors."
+
+  "1430834":
+    category: None
+    description: "Prodstack: no workspace from node hudson.slaves.* Build Aborted"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
+
+  "1437056":
+    category: None
+    description: "Prodstack: bootstrap instance started but did not change to Deployed state"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
