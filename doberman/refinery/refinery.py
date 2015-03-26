@@ -647,18 +647,17 @@ class Refinery(CrudeAnalysis):
                 print("No bugs found.")
             print
 
-            if hasattr(self.cli, 'genoilstats_build'):
-                paabn = 'pipelines_and_associated_build_numbers'
-                fx_pls = 'pipelines_affected_by_bug'
-                ext = '.yml'
-                print
-                print(jlink.format(self.cli.external_jenkins_url,
-                                   self.cli.genoilstats_build, paabn, ext))
-                print
-                print(jlink.format(self.cli.external_jenkins_url,
-                                   self.cli.genoilstats_build, fx_pls, ext))
-                print
-
+        if hasattr(self.cli, 'genoilstats_build'):
+            paabn = 'pipelines_and_associated_build_numbers'
+            fx_pls = 'pipelines_affected_by_bug'
+            ext = '.yml'
+            print
+            print(jlink.format(self.cli.external_jenkins_url,
+                               self.cli.genoilstats_build, paabn, ext))
+            print
+            print(jlink.format(self.cli.external_jenkins_url,
+                               self.cli.genoilstats_build, fx_pls, ext))
+            print
 
 def main():
     refined = Refinery(make_plots=False)
