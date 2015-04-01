@@ -762,7 +762,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "400 BAD REQUEST....distro_series.{1,50} is not a valid distro_series.  It should be one of. .., .windows.win2012hvr2., .ubuntu"
-            
+
   "1418235":
     category: None
     description: "contrail-configuration0 machine 5 agent-state error details hook failed identity-admin-relation-changed"
@@ -771,7 +771,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Found unit contrail-configuration.{3,40} in error state. hook failed...identity-admin-relation-changed. for keystone.identity.admin"
-            
+
   "1372407":
     category: None
     description: "Absent juju_status.yaml"
@@ -808,7 +808,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "unit. glance... machine. .{1,3}lxc.{1,3} agent-state. error details. hook failed...install"
-            
+
   "1434008":
     category: None
     description: "[Prodstack] OperationalError - Unknown error occurred (tempest fail)"
@@ -817,3 +817,23 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "tempest_xunit.xml":
             regexp:
             - "OperationalError..Code..Message.Unknown error occurred...Message...Error...Errors."
+
+
+  "1436496":
+    category: None
+    description: "[n1kv] pipeline-prepare: network profile not found"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "Network Profile default_network_profile could not be found"
+
+
+  "1436436":
+    category: None
+    description: "[metaswitch] nova-compute unable to locate package calico-compute"
+    pipeline_prepare:
+      -
+        "juju_debug_log.txt":
+            regexp:
+            - "Unable to locate package calico-compute"
