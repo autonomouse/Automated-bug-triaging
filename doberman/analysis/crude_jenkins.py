@@ -1,4 +1,3 @@
-
 import os
 import re
 import tarfile
@@ -328,15 +327,15 @@ class Build(Common):
                                 text = grep_me.read()
                         info['text'] = text
 
-                    # Recreate original_hit_dict (i.e. with keys as 
-                    # 'console.txt' rather than 'pipeline_deploy_console.txt' 
+                    # Recreate original_hit_dict (i.e. with keys as
+                    # 'console.txt' rather than 'pipeline_deploy_console.txt'
                     # as I changed it to):
-                    d1 = [("console.txt", v) for k, v in hit_dict.items() 
+                    d1 = [("console.txt", v) for k, v in hit_dict.items()
                           if "_console.txt" in k]
-                    d2 = [(k, v) for k, v in hit_dict.items() 
+                    d2 = [(k, v) for k, v in hit_dict.items()
                           if "_console.txt" not in k]
                     original_hit_dict = dict(d1 + d2)
-                    
+
                     if and_dict == original_hit_dict:
                         links = []
                         url = self.cli.external_jenkins_url
