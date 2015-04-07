@@ -1,14 +1,14 @@
 pipeline:
-  ec832ce3-4393-4d4f-ab06-06836ea47e08:
-    Crude-Analysis timestamp: 2015-April-07 11:56:16.182190
+  aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:
+    Crude-Analysis timestamp: 2015-April-07 17:03:08.886059
     bugs:
-      unfiled-ab3a78a4-9249-4399-9963-6cfe1ced3202:
+      unfiled-c0bd8808-2bd9-4542-a56f-ed246dd860c6:
         additional info:
           bootstrap_node:
             jenkins: Building remotely on ci-oil-slave4-1
-            machine: precise running hayward-22.oil
+            machine: Unknown
             openstack release: icehouse
-            state: started
+            state: Unknown
           target file: pipeline_deploy_console.txt
           text: "Started by command line by admin\nBuilding remotely on ci-oil-slave4-1\
             \ in workspace /var/lib/jenkins/workspace/pipeline_deploy\nCopying file\
@@ -645,155 +645,15 @@ pipeline:
             ++ NETWORKING=neutron-nsx\n++ export UBUNTU_RELEASE=precise\n++ UBUNTU_RELEASE=precise\n\
             Exiting with: 0\n+ rm -rf /var/lib/jenkins/.juju/environments\nPOST BUILD\
             \ TASK : SUCCESS\nEND OF POST BUILD TASK : 2\nFinished: FAILURE\n\n"
-        charms:
-        - local:precise/mongodb-30
-        - local:precise/nova-cloud-controller-501
-        - local:precise/swift-proxy-147
-        - local:precise/heat-12
-        - local:precise/mysql-326
-        - local:precise/glance-150
-        - local:precise/ceilometer-44
-        - local:precise/nova-compute-132
-        - local:precise/nova-compute-132
-        - local:precise/nova-compute-132
-        - local:precise/nvp-transport-node-2
-        - local:precise/ceilometer-agent-20
-        - local:precise/swift-storage-90
-        - local:precise/swift-storage-90
-        - local:precise/swift-storage-90
-        - local:precise/rabbitmq-server-128
-        - local:precise/keystone-0
-        - local:precise/openstack-dashboard-32
-        - local:precise/cinder-136
-        - local:precise/quantum-gateway-64
+        charms: []
         link to jenkins: http://oil-jenkins.canonical.com/job/pipeline_deploy/00000/console
-        machines:
-        - hayward-7.oil (10.245.45.203)
-        - hayward-44.oil (10.245.45.194)
-        - glover.oil (10.245.45.205)
-        - glover.oil (10.245.45.204)
-        - hayward-44.oil (10.245.45.194)
-        - skookum.oil (10.245.45.198)
-        - pullman-02.oil (10.245.45.17)
-        - skookum.oil
-        - pullman-02.oil
-        - glover.oil
-        - N/A
-        - N/A
-        - glover.oil
-        - skookum.oil
-        - pullman-02.oil
-        - skookum.oil (10.245.45.200)
-        - Unknown
-        - pullman-02.oil (10.245.45.193)
-        - Unknown
-        - hayward-7.oil (10.245.45.203)
-        ports:
-        - 27017/tcp, 27019/tcp, 27021/tcp, 28017/tcp
-        - 3333/tcp, 8773/tcp, 8774/tcp, 9696/tcp
-        - 8080/tcp
-        - 8000/tcp, 8004/tcp
-        - N/A
-        - 9292/tcp
-        - 8777/tcp
-        - N/A
-        - N/A
-        - N/A
-        - N/A
-        - N/A
-        - N/A
-        - N/A
-        - N/A
-        - 5672/tcp
-        - N/A
-        - 80/tcp, 443/tcp
-        - N/A
-        - N/A
+        machines: []
+        ports: []
         regexps: NO REGEX - UNFILED/UNMATCHED BUG
-        slaves:
-        - oil-slave-1
-        - oil-slave-4
-        - oil-slave-2
-        - oil-slave-2
-        - oil-slave-4
-        - ''
-        - ''
-        - ''
-        - ''
-        - oil-slave-2
-        - N/A
-        - N/A
-        - oil-slave-2
-        - ''
-        - ''
-        - ''
-        - Unknown
-        - ''
-        - Unknown
-        - oil-slave-1
-        states:
-        - started. juju-machine-2-lxc-0
-        - started. juju-machine-3-lxc-0
-        - started. juju-machine-6-lxc-1
-        - started. juju-machine-6-lxc-0
-        - started. juju-machine-3-lxc-0
-        - started. juju-machine-5-lxc-0
-        - started. juju-machine-4-lxc-0
-        - 'started. '
-        - 'started. '
-        - 'started. '
-        - N/A
-        - N/A
-        - 'started. '
-        - 'started. '
-        - 'started. '
-        - started. juju-machine-5-lxc-1
-        - pending
-        - started. juju-machine-4-lxc-1
-        - pending
-        - started. juju-machine-2-lxc-0
-        units:
-        - mongodb/0
-        - nova-cloud-controller/0
-        - swift-proxy/0
-        - heat/0
-        - mysql/0
-        - glance/0
-        - ceilometer/0
-        - nova-compute/1
-        - nova-compute/0
-        - nova-compute/2
-        - N/A
-        - N/A
-        - swift-storage/2
-        - swift-storage/1
-        - swift-storage/0
-        - rabbitmq-server/0
-        - keystone/0
-        - openstack-dashboard/0
-        - cinder/0
-        - neutron-gateway/0
-        vendors:
-        - ''
-        - ''
-        - ''
-        - ''
-        - ''
-        - ''
-        - ''
-        - ''
-        - ''
-        - ''
-        - N/A
-        - N/A
-        - ''
-        - ''
-        - ''
-        - ''
-        - Unknown
-        - ''
-        - Unknown
-        - ''
+        slaves: []
+        states: []
+        units: []
+        vendors: []
     build: '00000'
-    link to test-catalog: https://oil.canonical.com/pipeline/ec832ce3-4393-4d4f-ab06-06836ea47e08
+    link to test-catalog: https://oil.canonical.com/pipeline/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
     status: Unknown

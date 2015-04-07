@@ -100,6 +100,10 @@ class FileParser(Common):
                        "slaves": []}
 
         # Get info for bootstrap node (machine 0):
+
+        if not hasattr(self.data, 'machines'):
+            return
+
         machine_info = self.data['machines'].get('0') if self.data else None
 
         if not machine_info:

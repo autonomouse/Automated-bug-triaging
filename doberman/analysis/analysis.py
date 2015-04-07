@@ -24,7 +24,7 @@ class CrudeAnalysis(Common):
 
     """
 
-    def __init__(self, cli=None):
+    def __init__(self, cli=False):
         self.cli = CLI() if not cli else cli
         self.jenkins = Jenkins(self.cli)
         self.test_catalog = TestCatalog(self.cli)
@@ -116,6 +116,7 @@ class CrudeAnalysis(Common):
             prepare_dict = {}
             tempest_dict = {}
             self.pipeline = pipeline_id
+
             try:
                 # Get pipeline data then process each:
                 deploy_build = build_numbers[pipeline_id]['pipeline_deploy']
