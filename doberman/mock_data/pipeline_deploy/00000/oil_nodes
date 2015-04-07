@@ -1,0 +1,458 @@
+oil_nodes:
+- host: baubas.oil
+  system_id: node-3fea91d2-ae0b-11e3-b194-00163efc5068
+  tags:
+  - hardware-fake_hardware_0000
+  - oil-slave-2
+  - hw-ok
+- host: reading.oil
+  system_id: node-f64f188e-ae16-11e3-b194-00163efc5068
+  tags:
+  - oil-slave-4
+  - hw-ok
+  - hardware-fake_hardware_0001
+- host: varaha.oil
+  system_id: node-f67d24e0-ae16-11e3-b194-00163efc5068
+  tags:
+  - oil-slave-2
+  - hw-ok
+  - hardware-fake_hardware_0001
+- host: glover.oil
+  system_id: node-4cb16f16-ae98-11e3-b194-00163efc5068
+  tags:
+  - oil-slave-2
+  - hardware-fake_hardware_0001
+  - hw-ok
+- host: apsaras.oil
+  system_id: node-5f9c14e6-ae98-11e3-b194-00163efc5068
+  tags:
+  - oil-slave-1
+  - hw-ok
+  - hardware-fake_hardware_0002
+- host: skookum.oil
+  system_id: node-600e169a-ae98-11e3-b194-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0002
+- host: apkallu.oil
+  system_id: node-601eca8a-ae98-11e3-9074-00163efc5068
+  tags:
+  - oil-slave-4
+  - hw-ok
+  - hardware-fake_hardware_0002
+- host: undine.oil
+  system_id: node-a5224922-ae98-11e3-b194-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0002
+- host: shahbaz.oil
+  system_id: node-4951e5e6-ae9b-11e3-9074-00163efc5068
+  tags:
+  - oil-slave-2
+  - hw-ok
+  - hardware-fake_hardware_0003
+- host: erchitu.oil
+  system_id: node-49653d80-ae9b-11e3-b194-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0003
+- host: bakhtak.oil
+  system_id: node-94afcdc8-aea0-11e3-9074-00163efc5068
+  tags:
+  - oil-slave-3
+  - hw-ok
+  - hardware-fake_hardware_0003
+- host: hayward-37.oil
+  system_id: node-9d30e4e4-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-18.oil
+  system_id: node-9d4e6a5a-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-45.oil
+  system_id: node-9d847d52-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-41.oil
+  system_id: node-9d9cdafa-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-29.oil
+  system_id: node-9db5ca7e-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-27.oil
+  system_id: node-9dd8bed0-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-43.oil
+  system_id: node-9df8a42a-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-19.oil
+  system_id: node-9e0f7d44-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-13.oil
+  system_id: node-9e308d0e-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-26.oil
+  system_id: node-9e496b8a-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-20.oil
+  system_id: node-9e5f6976-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-42.oil
+  system_id: node-9e7a2a18-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-28.oil
+  system_id: node-9e9e2eb8-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-63.oil
+  system_id: node-9eb864f4-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-59.oil
+  system_id: node-9ed45f60-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - debug
+  - hardware-fake_hardware_0004
+- host: hayward-25.oil
+  system_id: node-9eee5bae-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-57.oil
+  system_id: node-9f0983ac-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-62.oil
+  system_id: node-9f22e392-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-55.oil
+  system_id: node-9f40d3ca-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-24.oil
+  system_id: node-9f580cca-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-31.oil
+  system_id: node-9f70a10e-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-23.oil
+  system_id: node-9faae724-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-35.oil
+  system_id: node-9fc3db80-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-61.oil
+  system_id: node-9fd976c0-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-49.oil
+  system_id: node-9ff3a32e-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-58.oil
+  system_id: node-a00d6a0c-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-22.oil
+  system_id: node-a0223dec-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-54.oil
+  system_id: node-a036d91e-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-60.oil
+  system_id: node-a04d5ba8-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-56.oil
+  system_id: node-a0620c92-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-30.oil
+  system_id: node-a08c25d6-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-52.oil
+  system_id: node-a0acdb1e-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-34.oil
+  system_id: node-a0cc9b34-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-00.oil
+  system_id: node-a0e8a1d0-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-38.oil
+  system_id: node-a106a612-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-50.oil
+  system_id: node-a1386abc-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-06.oil
+  system_id: node-a16c90a8-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-39.oil
+  system_id: node-a1c9a9c8-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-51.oil
+  system_id: node-a1e793ca-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-48.oil
+  system_id: node-a2040fe6-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-14.oil
+  system_id: node-a2198236-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-33.oil
+  system_id: node-a24e4bb0-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-05.oil
+  system_id: node-a266eb66-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-08.oil
+  system_id: node-a2821602-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-10.oil
+  system_id: node-a2a09df2-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-04.oil
+  system_id: node-a2ba2f88-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - hardware-fake_hardware_0004
+- host: hayward-7.oil
+  system_id: node-a2d37d80-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-11.oil
+  system_id: node-a2ed9f80-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-44.oil
+  system_id: node-a308b0c2-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: hayward-36.oil
+  system_id: node-a3208c24-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-3
+  - hardware-fake_hardware_0004
+- host: hayward-16.oil
+  system_id: node-a336d312-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-2
+  - debug
+  - hardware-fake_hardware_0004
+- host: hayward-32.oil
+  system_id: node-a35076c8-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-1
+  - hardware-fake_hardware_0004
+- host: hayward-40.oil
+  system_id: node-a36cbdce-c4cd-11e3-824b-00163efc5068
+  tags:
+  - hw-ok
+  - oil
+  - hardware-fake_hardware_0004
+- host: hayward-21.oil
+  system_id: node-a38685ec-c4cd-11e3-8102-00163efc5068
+  tags:
+  - hw-ok
+  - oil-slave-4
+  - hardware-fake_hardware_0004
+- host: pomeroy.oil
+  system_id: node-a66d0b4a-24b4-11e4-8a6a-00163eca07b6
+  tags:
+  - hw-ok
+  - RT-76090
+  - RT-64665
+  - RT-74457
+  - bug1359986
+  - hardware-fake_hardware_0005
+  - hp-owned
+- host: bailey.oil
+  system_id: node-c22fde32-35ff-11e4-ba8f-00163eca07b6
+  tags:
+  - hw-ok
+  - hardware-fake_hardware_0006
+- host: euclid.oil
+  system_id: node-7918406a-3dfa-11e4-b38a-00163eca07b6
+  tags:
+  - hw-ok
+  - HP-SL
+  - hardware-fake_hardware_0007
+- host: marmon.oil
+  system_id: node-08d6458c-3f4d-11e4-b38a-00163eca07b6
+  tags:
+  - hw-ok
+  - HP-SL
+  - hardware-fake_hardware_0009
+- host: elgin.oil
+  system_id: node-1b1a5dca-3f50-11e4-b38a-00163eca07b6
+  tags:
+  - hw-ok
+  - HP-SL
+  - hardware-fake_hardware_0008
+- host: holyoke.oil
+  system_id: node-3b1d36ea-3f57-11e4-b38a-00163eca07b6
+  tags:
+  - hw-ok
+  - HP-SL
+  - hardware-fake_hardware_0010
+- host: signet.oil
+  system_id: node-fe57742c-3f57-11e4-8217-00163eca07b6
+  tags:
+  - hw-ok
+  - HP-SL
+  - hardware-fake_hardware_0010
+- host: gurley.oil
+  system_id: node-cb79abaa-3f58-11e4-b38a-00163eca07b6
+  tags:
+  - hw-ok
+  - HP-SL
+  - hardware-fake_hardware_0008
+- host: pullman-02.oil
+  system_id: node-e751a8dc-5eb6-11e4-880f-00163eca07b6
+  tags:
+  - hw-ok
+  - cisco-owned
+  - hardware-fake_hardware_0011
+- host: ghent.oil
+  system_id: node-5959d5f6-6071-11e4-b050-00163eca07b6
+  tags:
+  - hw-ok
+  - hardware-fake_hardware_0012
+  - RT-76162
+  - hp-owned
+  - hardware-fake_hardware_0013

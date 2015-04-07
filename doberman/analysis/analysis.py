@@ -30,7 +30,8 @@ class CrudeAnalysis(Common):
         self.test_catalog = TestCatalog(self.cli)
         self.build_numbers = self.build_pl_ids_and_check()
         self.pipeline_processor(self.build_numbers)
-        self.remove_dirs(self.cli.job_names)
+        if not self.cli.offline_mode:
+            self.remove_dirs(self.cli.job_names)
 
     def build_pl_ids_and_check(self):
         self.pipeline_ids = []
@@ -404,13 +405,14 @@ class CLI(Common):
 
         # Cookie for test-catalog:
         tc_auth = cfg.get('DEFAULT', 'tc_auth')
-        try:
-            self.tc_auth = json.load(open(tc_auth))
-        except:
-            msg = "Cannot find cookie for test-catalog: %s" % tc_auth
-            self.LOG.error(msg)
-            raise Exception(msg)
-        self.LOG.debug('tc_auth token=%s' % self.tc_auth)
+        if not self.offline_mode:
+            try:
+                self.tc_auth = json.load(open(tc_auth))
+            except:
+                msg = "Cannot find cookie for test-catalog: %s" % tc_auth
+                self.LOG.error(msg)
+                raise Exception(msg)
+            self.LOG.debug('tc_auth token=%s' % self.tc_auth)
 
         if (not opts.start) and (not opts.end):
             if not set(args):

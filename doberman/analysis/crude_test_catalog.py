@@ -14,18 +14,25 @@ class TestCatalog(Common):
 
     def __init__(self, cli):
         self.cli = cli
-        self.cookie = self.cli.tc_auth
         self.verify = self.cli.verify
         self.tc_client = TCClient
         self._tc_client = []
         self.bugs = None
-        self.get_tc_client()
+        if not self.cli.offline_mode:
+            self.cookie = self.cli.tc_auth
+            self.get_tc_client()
         self.open_bug_database()  # Connect to bugs DB
 
     def open_bug_database(self):
         if self.cli.database in [None, 'None', 'none', '']:
-            self.cli.LOG.info("Connecting to test-catalog bug/regex database")
-            self.bugs = self.client.get_bug_info(force_refresh=True)['bugs']
+            if not self.cli.offline_mode:
+                self.cli.LOG.info("Connecting to test-catalog bug database")
+                self.bugs = \
+                    self.client.get_bug_info(force_refresh=True)['bugs']
+            else:
+                emsg = "In offline mode, but no local database file provided!!"
+                self.cli.LOG.error(emsg)
+                raise Exception(emsg)
         elif len(self.cli.database):
             self.cli.LOG.info("Connecting to database file: %s"
                               % (self.cli.database))

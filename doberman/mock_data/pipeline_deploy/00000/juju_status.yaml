@@ -1,0 +1,322 @@
+environment: ci-oil-slave4
+machines:
+  '0':
+    agent-state: started
+    agent-version: 1.20.11
+    dns-name: hayward-22.oil
+    hardware: arch=amd64 cpu-cores=8 mem=16384M tags=hw-ok,oil-slave-4
+    instance-id: /MAAS/api/1.0/nodes/node-a0223dec-c4cd-11e3-824b-00163efc5068/
+    series: precise
+    state-server-member-status: has-vote
+  '1':
+    agent-state-info: 'gomaasapi: got error back from server: 503 SERVICE UNAVAILABLE
+      (Unable to change power state to ''on'' for node hayward-7: another action is
+      already in progress for that node.)'
+    containers:
+      1/lxc/0:
+        instance-id: pending
+        series: precise
+    instance-id: pending
+    series: precise
+  '2':
+    agent-state: started
+    agent-version: 1.20.11
+    containers:
+      2/lxc/0:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.203
+        hardware: arch=amd64
+        instance-id: juju-machine-2-lxc-0
+        series: precise
+    dns-name: hayward-7.oil
+    hardware: arch=amd64 cpu-cores=8 mem=16384M tags=hw-ok,oil-slave-1
+    instance-id: /MAAS/api/1.0/nodes/node-a2d37d80-c4cd-11e3-824b-00163efc5068/
+    series: precise
+  '3':
+    agent-state: started
+    agent-version: 1.20.11
+    containers:
+      3/lxc/0:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.194
+        hardware: arch=amd64
+        instance-id: juju-machine-3-lxc-0
+        series: precise
+    dns-name: hayward-44.oil
+    hardware: arch=amd64 cpu-cores=8 mem=16384M tags=hw-ok,oil-slave-4
+    instance-id: /MAAS/api/1.0/nodes/node-a308b0c2-c4cd-11e3-824b-00163efc5068/
+    series: precise
+  '4':
+    agent-state: started
+    agent-version: 1.20.11
+    containers:
+      4/lxc/0:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.17
+        hardware: arch=amd64
+        instance-id: juju-machine-4-lxc-0
+        series: precise
+      4/lxc/1:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.193
+        hardware: arch=amd64
+        instance-id: juju-machine-4-lxc-1
+        series: precise
+    dns-name: pullman-02.oil
+    hardware: arch=amd64 cpu-cores=40 mem=196608M tags=hw-ok
+    instance-id: /MAAS/api/1.0/nodes/node-e751a8dc-5eb6-11e4-880f-00163eca07b6/
+    series: precise
+  '5':
+    agent-state: started
+    agent-version: 1.20.11
+    containers:
+      5/lxc/0:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.198
+        hardware: arch=amd64
+        instance-id: juju-machine-5-lxc-0
+        series: precise
+      5/lxc/1:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.200
+        hardware: arch=amd64
+        instance-id: juju-machine-5-lxc-1
+        series: precise
+    dns-name: skookum.oil
+    hardware: arch=amd64 cpu-cores=4 mem=32768M tags=hw-ok,oil
+    instance-id: /MAAS/api/1.0/nodes/node-600e169a-ae98-11e3-b194-00163efc5068/
+    series: precise
+  '6':
+    agent-state: started
+    agent-version: 1.20.11
+    containers:
+      6/lxc/0:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.204
+        hardware: arch=amd64
+        instance-id: juju-machine-6-lxc-0
+        series: precise
+      6/lxc/1:
+        agent-state: started
+        agent-version: 1.20.11
+        dns-name: 10.245.45.205
+        hardware: arch=amd64
+        instance-id: juju-machine-6-lxc-1
+        series: precise
+    dns-name: glover.oil
+    hardware: arch=amd64 cpu-cores=8 mem=32768M tags=hw-ok,oil-slave-2
+    instance-id: /MAAS/api/1.0/nodes/node-4cb16f16-ae98-11e3-b194-00163efc5068/
+    series: precise
+services:
+  ceilometer:
+    charm: local:precise/ceilometer-44
+    exposed: false
+    units:
+      ceilometer/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 4/lxc/0
+        open-ports:
+        - 8777/tcp
+        public-address: 10.245.45.17
+  ceilometer-agent:
+    charm: local:precise/ceilometer-agent-20
+    exposed: false
+  cinder:
+    charm: local:precise/cinder-136
+    exposed: false
+    relations:
+      cluster:
+      - cinder
+    units:
+      cinder/0:
+        agent-state: pending
+        machine: '1'
+  glance:
+    charm: local:precise/glance-150
+    exposed: false
+    relations:
+      cluster:
+      - glance
+    units:
+      glance/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 5/lxc/0
+        open-ports:
+        - 9292/tcp
+        public-address: 10.245.45.198
+  heat:
+    charm: local:precise/heat-12
+    exposed: false
+    units:
+      heat/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 6/lxc/0
+        open-ports:
+        - 8000/tcp
+        - 8004/tcp
+        public-address: 10.245.45.204
+  keystone:
+    charm: local:precise/keystone-0
+    exposed: false
+    relations:
+      cluster:
+      - keystone
+    units:
+      keystone/0:
+        agent-state: pending
+        machine: 1/lxc/0
+  mongodb:
+    charm: local:precise/mongodb-30
+    exposed: false
+    relations:
+      replica-set:
+      - mongodb
+    units:
+      mongodb/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 2/lxc/0
+        open-ports:
+        - 27017/tcp
+        - 27019/tcp
+        - 27021/tcp
+        - 28017/tcp
+        public-address: 10.245.45.203
+  mysql:
+    charm: local:precise/mysql-326
+    exposed: false
+    relations:
+      cluster:
+      - mysql
+    units:
+      mysql/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 3/lxc/0
+        public-address: 10.245.45.194
+  neutron-gateway:
+    charm: local:precise/quantum-gateway-64
+    exposed: false
+    relations:
+      cluster:
+      - neutron-gateway
+    units:
+      neutron-gateway/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '2'
+        public-address: hayward-7.oil
+  nova-cloud-controller:
+    charm: local:precise/nova-cloud-controller-501
+    exposed: false
+    relations:
+      cluster:
+      - nova-cloud-controller
+    units:
+      nova-cloud-controller/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '3'
+        open-ports:
+        - 3333/tcp
+        - 8773/tcp
+        - 8774/tcp
+        - 9696/tcp
+        public-address: hayward-44.oil
+  nova-compute:
+    charm: local:precise/nova-compute-132
+    exposed: false
+    relations:
+      compute-peer:
+      - nova-compute
+    units:
+      nova-compute/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '4'
+        public-address: pullman-02.oil
+      nova-compute/1:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '5'
+        public-address: skookum.oil
+      nova-compute/2:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '6'
+        public-address: glover.oil
+  nvp-transport-node:
+    charm: local:precise/nvp-transport-node-2
+    exposed: false
+  openstack-dashboard:
+    charm: local:precise/openstack-dashboard-32
+    exposed: false
+    relations:
+      cluster:
+      - openstack-dashboard
+    units:
+      openstack-dashboard/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 4/lxc/1
+        open-ports:
+        - 80/tcp
+        - 443/tcp
+        public-address: 10.245.45.193
+  rabbitmq-server:
+    charm: local:precise/rabbitmq-server-128
+    exposed: false
+    relations:
+      cluster:
+      - rabbitmq-server
+    units:
+      rabbitmq-server/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 5/lxc/1
+        open-ports:
+        - 5672/tcp
+        public-address: 10.245.45.200
+  swift-proxy:
+    charm: local:precise/swift-proxy-147
+    exposed: false
+    relations:
+      cluster:
+      - swift-proxy
+    units:
+      swift-proxy/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: 6/lxc/1
+        open-ports:
+        - 8080/tcp
+        public-address: 10.245.45.205
+  swift-storage:
+    charm: local:precise/swift-storage-90
+    exposed: false
+    units:
+      swift-storage/0:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '4'
+        public-address: pullman-02.oil
+      swift-storage/1:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '5'
+        public-address: skookum.oil
+      swift-storage/2:
+        agent-state: started
+        agent-version: 1.20.11
+        machine: '6'
+        public-address: glover.oil

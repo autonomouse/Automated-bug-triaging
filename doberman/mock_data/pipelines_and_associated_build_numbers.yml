@@ -1,0 +1,5 @@
+ec832ce3-4393-4d4f-ab06-06836ea47e08:
+  pipeline_deploy: '00000'
+  pipeline_prepare: null
+  pipeline_start: '0000'
+  test_tempest_smoke: null
