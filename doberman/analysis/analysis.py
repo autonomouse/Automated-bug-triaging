@@ -24,8 +24,8 @@ class CrudeAnalysis(Common):
 
     """
 
-    def __init__(self):
-        self.cli = CLI()
+    def __init__(self, cli=None):
+        self.cli = CLI() if not cli else cli
         self.jenkins = Jenkins(self.cli)
         self.test_catalog = TestCatalog(self.cli)
         self.build_numbers = self.build_pl_ids_and_check()

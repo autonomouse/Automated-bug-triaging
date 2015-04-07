@@ -1,0 +1,29 @@
+bugs:
+  "0000000":
+    category: None
+    description: "test bug"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "this line of text really shouldn't be in there"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "this line of text really shouldn't be in there"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "this line of text really shouldn't be in there"
+            
+  "fake_bug_02":
+    category: None
+    description: "A fake bug for testing purposes"
+    pipeline_deploy:
+      -
+        "juju_status*":
+            regexp:
+            - "gomaasapi"
+

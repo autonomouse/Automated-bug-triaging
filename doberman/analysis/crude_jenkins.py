@@ -201,11 +201,12 @@ class Build(Common):
         xml_files_parsed = []
 
         if not self.cli.offline_mode:
-            build_details = [build_info for build_info in self.jenkins.jenkins_api
-                             [self.jobname]._poll()['builds'] if build_info
-                             ['number'] == int(self.build_number)][0]
-            build_status = (build_details['result'] if 'result' in build_details
-                            else 'Unknown')
+            build_details =\
+                [build_info for build_info in self.jenkins.jenkins_api
+                 [self.jobname]._poll()['builds']
+                 if build_info['number'] == int(self.build_number)][0]
+            build_status = (build_details['result'] if 'result' in
+                            build_details else 'Unknown')
         else:
             build_status = 'Unknown'
         matching_bugs = {}
