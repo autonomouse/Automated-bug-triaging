@@ -1,4 +1,3 @@
-
 import os
 import re
 import tarfile
@@ -237,6 +236,7 @@ class Build(Common):
                         if len(globs) == 0:
                             info['error'] = target_file + " not present"
                             break
+
                         for target_location in globs:
                             try:
                                 target = target_location.split(os.sep)[-1]
@@ -254,6 +254,7 @@ class Build(Common):
                                     self.message = 0
                                 else:
                                     failed_to_hit_any_flag = True
+
                             else:
                                 if target in xml_files_parsed:
                                     xml_unparsed = False
@@ -326,7 +327,16 @@ class Build(Common):
                                 text = grep_me.read()
                         info['text'] = text
 
-                    if and_dict == hit_dict:
+                    # Recreate original_hit_dict (i.e. with keys as
+                    # 'console.txt' rather than 'pipeline_deploy_console.txt'
+                    # as I changed it to):
+                    d1 = [("console.txt", v) for k, v in hit_dict.items()
+                          if "_console.txt" in k]
+                    d2 = [(k, v) for k, v in hit_dict.items()
+                          if "_console.txt" not in k]
+                    original_hit_dict = dict(d1 + d2)
+
+                    if and_dict == original_hit_dict:
                         links = []
                         url = self.cli.external_jenkins_url
                         if (not glob_hits) and (target_file in parse_as_xml):
@@ -380,7 +390,7 @@ class Build(Common):
             if announce:
                 self.cli.LOG.info("Unfiled bug found! ({0})"
                                   .format(self.jobname))
-            self.message = 1
+            self.message = 0
             matching_bugs[bug_id]['additional info'] = info
         else:
             if self.message != 1:
@@ -420,7 +430,10 @@ class Build(Common):
 
     def rematch(self, bugs, target_file, text):
         """ Search files in bugs for multiple matching regexps. """
-        target_bugs = bugs.get(target_file, bugs.get('*'))
+        original_target_file = target_file if target_file != \
+            "{}_console.txt".format(self.jobname) else "console.txt"
+        target_bugs = bugs.get(original_target_file, bugs.get('*'))
+
         if not target_bugs:
             return
 

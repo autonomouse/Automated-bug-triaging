@@ -104,7 +104,7 @@ class CrudeAnalysis(Common):
 
     def pipeline_processor(self, build_numbers):
 
-        self.message = -1
+        self.message = 1
         deploy_yamldict = {}
         prepare_yamldict = {}
         tempest_yamldict = {}
@@ -135,7 +135,8 @@ class CrudeAnalysis(Common):
                                       self.cli, self.test_catalog.bugs,
                                       pipeline_id, deploy)
                     prepare_dict = prepare.yaml_dict
-                    self.message = prepare.message
+                    if self.message != 1:
+                        self.message = prepare.message
 
                 if tempest_build:
                     tempest = Tempest(tempest_build, 'test_tempest_smoke',
@@ -143,8 +144,9 @@ class CrudeAnalysis(Common):
                                       self.cli, self.test_catalog.bugs,
                                       pipeline_id, prepare)
                     tempest_dict = tempest.yaml_dict
-                    self.message = tempest.message
-                    # TODO: self.message only reports back on last bug found
+                    if self.message != 1:
+                        self.message = tempest.message
+
             except Exception as e:
                 if 'deploy_build' not in locals():
                     msg = "Cannot acquire pipeline deploy build number"
