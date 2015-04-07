@@ -1,3 +1,12 @@
+doberman (1.2.0-0ubuntu1) utopic; urgency=medium
+
+  * Fixed a huge bug where it wasn't looking for bugs in console.txt files
+  * Output message tidied up - now gives 0 for filed or unfiled bug and only gives something else on error
+  * Added some long-overdue unit tests
+  * New bugs added to bugs database 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Tue, 07 Apr 2015 21:18:07 +0100
+
 doberman (1.1.2-0ubuntu1) utopic; urgency=medium
 
   * Refinery output will now only list the links to jenkins once at the end 

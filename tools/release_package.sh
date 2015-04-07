@@ -18,4 +18,4 @@ bzr uncommit --force
 bzr revert
 rm -rf *.egg-info
 [[ ! $rc ]] && echo "Build failed" && exit 1
-echo "Run: dput ppa:oil-ci/oil-ci ../doberman*bzr${bzr_rev}*.changes"
+echo "Run: dput ppa:canonical-ci/oil-ci ../doberman*bzr${bzr_rev}*.changes"
