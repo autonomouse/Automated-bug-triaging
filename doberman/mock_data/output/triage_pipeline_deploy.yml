@@ -1,0 +1,659 @@
+pipeline:
+  aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:
+    Crude-Analysis timestamp: 2015-April-07 17:03:08.886059
+    bugs:
+      unfiled-c0bd8808-2bd9-4542-a56f-ed246dd860c6:
+        additional info:
+          bootstrap_node:
+            jenkins: Building remotely on ci-oil-slave4-1
+            machine: Unknown
+            openstack release: icehouse
+            state: Unknown
+          target file: pipeline_deploy_console.txt
+          text: "Started by command line by admin\nBuilding remotely on ci-oil-slave4-1\
+            \ in workspace /var/lib/jenkins/workspace/pipeline_deploy\nCopying file\
+            \ to run_config\nCopying file to oil_nodes\nCopying file to pipeline_parameters\n\
+            [pipeline_deploy] $ /bin/bash -x /tmp/hudson2435321521162673920.sh\n+\
+            \ ls\n+ xargs rm -rf\n+ grep -Ev 'pipeline_parameters|env_yaml|resources_yaml|run_config|oil_nodes'\n\
+            + mkdir artifacts\n[pipeline_deploy] $ /bin/bash -x /tmp/hudson5920422065492240651.sh\n\
+            + . ./pipeline_parameters\n++ export OPENSTACK_RELEASE=icehouse\n++ OPENSTACK_RELEASE=icehouse\n\
+            ++ export COMPUTE=nova-kvm\n++ COMPUTE=nova-kvm\n++ export BLOCK_STORAGE=cinder-iscsi\n\
+            ++ BLOCK_STORAGE=cinder-iscsi\n++ export IMAGE_STORAGE=glance-swift\n\
+            ++ IMAGE_STORAGE=glance-swift\n++ export PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n\
+            ++ PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n++ export NETWORKING=neutron-nsx\n\
+            ++ NETWORKING=neutron-nsx\n++ export UBUNTU_RELEASE=precise\n++ UBUNTU_RELEASE=precise\n\
+            + test-catalog -A -t /etc/oil-ci/test-catalog-auth.json\n2014-11-06 05:23:16\
+            \ [INFO] test-catalog.: Loading system wide config: /etc/test-catalog/test-catalog.conf\n\
+            +------------------+----------------------------------------------------+\n\
+            |   Job Metadata   |                                                 \
+            \   |\n+------------------+----------------------------------------------------+\n\
+            |      status      |                        None                     \
+            \   |\n|    build_tag     |           jenkins-pipeline_deploy-21048  \
+            \          |\n|   pipeline_id    |        ec832ce3-4393-4d4f-ab06-06836ea47e08\
+            \        |\n|      extra       |                        None         \
+            \               |\n|    timestamp     |             2014-11-06 05:23:16.841222\
+            \             |\n|    build_url     | http://10.33.16.17:8080/job/pipeline_deploy/21048/\
+            \ |\n| parent_build_tag |            jenkins-pipeline_start-2105     \
+            \        |\n+------------------+----------------------------------------------------+\n\
+            [pipeline_deploy] $ /bin/bash -x /tmp/hudson7454474109343599816.sh\n+\
+            \ . ./pipeline_parameters\n++ export OPENSTACK_RELEASE=icehouse\n++ OPENSTACK_RELEASE=icehouse\n\
+            ++ export COMPUTE=nova-kvm\n++ COMPUTE=nova-kvm\n++ export BLOCK_STORAGE=cinder-iscsi\n\
+            ++ BLOCK_STORAGE=cinder-iscsi\n++ export IMAGE_STORAGE=glance-swift\n\
+            ++ IMAGE_STORAGE=glance-swift\n++ export PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n\
+            ++ PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n++ export NETWORKING=neutron-nsx\n\
+            ++ NETWORKING=neutron-nsx\n++ export UBUNTU_RELEASE=precise\n++ UBUNTU_RELEASE=precise\n\
+            + echo ci-oil-slave4 ci-oil-slave4-1\n+ grep -q master\n++ echo ci-oil-slave4\
+            \ ci-oil-slave4-1\n++ grep -v ci-oil-slave4-1\n++ fmt -w 1\n+ label=ci-oil-slave4\n\
+            + env_arg='--environment ci-oil-slave4'\n+ env=ci-oil-slave4\n+ tags='--constraints\
+            \ ci-oil-slave4'\n+ unset tags\n+ STOPNODE=/var/lib/jenkins/juju-stop-nodes.py\n\
+            + /var/lib/jenkins/juju-stop-nodes.py ci-oil-slave4\n2014-11-06 05:23:17,237330:\
+            \ maas-cli login ci-oil-slave4 http://10.245.0.10/MAAS\n2014-11-06 05:23:17,818936:\
+            \ Base MAAS tag: hw-ok\n2014-11-06 05:23:17,819016: converted slave label\
+            \ ci-oil-slave4 to maas user oil-slave-4\n  WARNING: The maas-cli command\
+            \ is deprecated and will be removed in a future\n  version.  From now\
+            \ on please use 'maas' instead.\n2014-11-06 05:23:20,483004: found 75\
+            \ nodes with tag=hw-ok\n2014-11-06 05:23:20,484211: restricting to 0 nodes\
+            \ owned by oil-slave-4\n2014-11-06 05:23:20,484708: no nodes owned by\
+            \ oil-slave-4 in tag hw-ok\nExiting with: 0\n+ rm -rf /var/lib/jenkins/.juju/environments\n\
+            + mv run_config artifacts/run_config.parameter\n+ oil-ci generate run_config\
+            \ --out run_config --environment ci-oil-slave4\n2014-11-06 05:23:20,699\
+            \ [DEBUG] oil_ci: Loaded config from: /etc/oil-ci/oil-ci.conf\n2014-11-06\
+            \ 05:23:20,913 [DEBUG] oil_ci.deploy.deployment: Creating loggers for\
+            \ deployer: ['', 'deploy.cli', 'deploy.env', 'deployer', 'deploy.deploy',\
+            \ 'deploy.charm', 'deploy.importer']\n2014-11-06 05:23:20,948 [INFO] oil_ci.cli:\
+            \ Constructing parameters from jenkins job environment\n2014-11-06 05:23:20,949\
+            \ [DEBUG] oil_ci.cli: Searching for env value: BLOCK_STORAGE\n2014-11-06\
+            \ 05:23:20,950 [DEBUG] oil_ci.cli: found block-storage=cinder-iscsi\n\
+            2014-11-06 05:23:20,950 [DEBUG] oil_ci.cli: Searching for env value: COMPUTE\n\
+            2014-11-06 05:23:20,951 [DEBUG] oil_ci.cli: found compute=nova-kvm\n2014-11-06\
+            \ 05:23:20,952 [DEBUG] oil_ci.cli: Searching for env value: IMAGE_STORAGE\n\
+            2014-11-06 05:23:20,953 [DEBUG] oil_ci.cli: found image-storage=glance-swift\n\
+            2014-11-06 05:23:20,954 [DEBUG] oil_ci.cli: Searching for env value: NETWORKING\n\
+            2014-11-06 05:23:20,955 [DEBUG] oil_ci.cli: found networking=neutron-nsx\n\
+            2014-11-06 05:23:20,956 [DEBUG] oil_ci.cli: Searching for env value: UBUNTU_RELEASE\n\
+            2014-11-06 05:23:20,957 [DEBUG] oil_ci.cli: found ubuntu-release=precise\n\
+            2014-11-06 05:23:20,957 [DEBUG] oil_ci.cli: Searching for env value: OPENSTACK_RELEASE\n\
+            2014-11-06 05:23:20,958 [DEBUG] oil_ci.cli: found openstack-release=icehouse\n\
+            2014-11-06 05:23:20,958 [INFO] oil_ci.cli: Generating run config with\
+            \ deploy parameters: {'block-storage': 'cinder-iscsi', 'networking': 'neutron-nsx',\
+            \ 'openstack-release': 'icehouse', 'image-storage': 'glance-swift', 'ubuntu-release':\
+            \ 'precise', 'compute': 'nova-kvm'}\n2014-11-06 05:23:20,959 [INFO] oil_ci.cli:\
+            \ Generating run_config networking for env: ci-oil-slave4 \n2014-11-06\
+            \ 05:23:20,959 [INFO] oil_ci.cli: Allocating networks for env: ci-oil-slave4\n\
+            2014-11-06 05:23:21,045 [DEBUG] oil_ci.cli: OIL Network: 10.245.0.0/18\n\
+            2014-11-06 05:23:21,046 [DEBUG] oil_ci.cli: OIL Network Starting IP: 10.245.49.0\n\
+            2014-11-06 05:23:21,046 [DEBUG] oil_ci.cli: OIL Network Ending IP: 10.245.63.255\n\
+            2014-11-06 05:23:21,046 [INFO] oil_ci.cli: OIL Network Allocating 2 ranges\
+            \ of 32 IPs per environment\n2014-11-06 05:23:21,066 [DEBUG] oil_ci.cli:\
+            \ OIL Network has 3840 ip address available\n2014-11-06 05:23:21,066 [DEBUG]\
+            \ oil_ci.cli: RENAME: environment: ci-oil-slave4 -> oil-slave-4\n2014-11-06\
+            \ 05:23:21,067 [DEBUG] oil_ci.cli: environment ci-oil-slave4 offset: 4\n\
+            2014-11-06 05:23:21,073 [DEBUG] oil_ci.cli: offset=4 range1=10.245.49.128/27\
+            \ range2=10.245.49.160/27\n2014-11-06 05:23:21,073 [DEBUG] oil_ci.oil_tests:\
+            \ Discovered OIL test: tempest_smoke\n2014-11-06 05:23:21,074 [DEBUG]\
+            \ oil_ci.oil_tests: Discovered OIL test: cloudbox_storage\n2014-11-06\
+            \ 05:23:21,074 [INFO] oil_ci.cli: Calculating deployment cost\n2014-11-06\
+            \ 05:23:21,074 [DEBUG] oil_ci.deploy.deployment: from_params: deployment_params:\
+            \ {'block-storage': 'cinder-iscsi', 'compute': 'nova-kvm', 'openstack-release':\
+            \ 'icehouse', 'image-storage': 'glance-swift', 'ubuntu-release': 'precise',\
+            \ 'networking': 'neutron-nsx'} \n2014-11-06 05:23:21,147 [DEBUG] oil_ci.deploy.deployment:\
+            \ Set backend for block-storage: cinder-iscsi\n2014-11-06 05:23:21,147\
+            \ [DEBUG] oil_ci.deploy.deployment: Set backend for compute: nova-kvm\n\
+            2014-11-06 05:23:21,147 [DEBUG] oil_ci.deploy.deployment: Set backend\
+            \ for image-storage: glance-swift\n2014-11-06 05:23:21,148 [DEBUG] oil_ci.deploy.deployment:\
+            \ Set backend for networking: neutron-nsx\n2014-11-06 05:23:21,148 [DEBUG]\
+            \ oil_ci.deploy.deployment: Detected neutron choice, adding neutron-$ubuntu_release\
+            \ (precise)\n2014-11-06 05:23:21,319 [INFO] oil_ci.placement.density:\
+            \ nova-compute units of 3 to machines: [1, 2, 3]\n2014-11-06 05:23:21,319\
+            \ [INFO] oil_ci.placement.density: Base services:\n2014-11-06 05:23:21,319\
+            \ [INFO] oil_ci.placement.density: 3 units of swift-storage to: ['nova-compute=0',\
+            \ 'nova-compute=1', 'nova-compute=2']\n2014-11-06 05:23:21,320 [INFO]\
+            \ oil_ci.placement.density: LXCed services:\n2014-11-06 05:23:21,320 [INFO]\
+            \ oil_ci.placement.density: 1 units of ceilometer to: ['lxc:nova-compute=0']\n\
+            2014-11-06 05:23:21,320 [INFO] oil_ci.placement.density: 1 units of glance\
+            \ to: ['lxc:nova-compute=1']\n2014-11-06 05:23:21,320 [INFO] oil_ci.placement.density:\
+            \ 1 units of heat to: ['lxc:nova-compute=2']\n2014-11-06 05:23:21,320\
+            \ [INFO] oil_ci.placement.density: 1 units of keystone to: ['lxc:cinder=0']\n\
+            2014-11-06 05:23:21,320 [INFO] oil_ci.placement.density: 1 units of mongodb\
+            \ to: ['lxc:neutron-gateway=0']\n2014-11-06 05:23:21,321 [INFO] oil_ci.placement.density:\
+            \ 1 units of mysql to: ['lxc:nova-cloud-controller=0']\n2014-11-06 05:23:21,321\
+            \ [INFO] oil_ci.placement.density: 1 units of openstack-dashboard to:\
+            \ ['lxc:nova-compute=0']\n2014-11-06 05:23:21,321 [INFO] oil_ci.placement.density:\
+            \ 1 units of rabbitmq-server to: ['lxc:nova-compute=1']\n2014-11-06 05:23:21,321\
+            \ [INFO] oil_ci.placement.density: 1 units of swift-proxy to: ['lxc:nova-compute=2']\n\
+            2014-11-06 05:23:21,325 [DEBUG] oil_ci.placement.density: cinder needs\
+            \ 1 machine(s)\n2014-11-06 05:23:21,325 [DEBUG] oil_ci.placement.density:\
+            \ neutron-gateway needs 1 machine(s)\n2014-11-06 05:23:21,325 [DEBUG]\
+            \ oil_ci.placement.density: nova-cloud-controller needs 1 machine(s)\n\
+            2014-11-06 05:23:21,325 [DEBUG] oil_ci.placement.density: nova-compute\
+            \ needs 3 machine(s)\n2014-11-06 05:23:21,325 [INFO] oil_ci.placement.density:\
+            \ Deployment will require 7 machines (6 + bootstrap)\n2014-11-06 05:23:21,344\
+            \ [DEBUG] oil_ci.deploy.deployment: deployment_yaml: oil_deployment:\n\
+            \  default: true\n  overrides:\n    openstack-origin: cloud:precise-icehouse\n\
+            \    source: cloud:precise-updates/icehouse\n  relations:\n  - - keystone\n\
+            \    - mysql\n  - - nova-cloud-controller\n    - glance\n  - - nova-cloud-controller\n\
+            \    - keystone\n  - - nova-cloud-controller\n    - mysql\n  - - nova-cloud-controller\n\
+            \    - rabbitmq-server\n  - - glance\n    - keystone\n  - - glance\n \
+            \   - mysql\n  - - cinder\n    - glance\n  - - cinder\n    - keystone\n\
+            \  - - cinder\n    - nova-cloud-controller\n  - - cinder\n    - mysql\n\
+            \  - - cinder\n    - rabbitmq-server\n  - - openstack-dashboard\n    -\
+            \ keystone\n  - - heat\n    - mysql\n  - - heat\n    - rabbitmq-server\n\
+            \  - - heat\n    - keystone\n  - - ceilometer\n    - keystone\n  - - ceilometer\n\
+            \    - rabbitmq-server\n  - - ceilometer\n    - mongodb\n  - - ceilometer-agent\n\
+            \    - nova-compute\n  - - ceilometer-agent\n    - ceilometer\n  - - neutron-gateway\n\
+            \    - mysql\n  - - neutron-gateway\n    - nova-cloud-controller\n  -\
+            \ - nova-compute:amqp\n    - rabbitmq-server:amqp\n  - - nova-compute\n\
+            \    - nova-cloud-controller\n  - - nova-compute\n    - glance\n  - -\
+            \ neutron-gateway:amqp\n    - rabbitmq-server\n  - - swift-proxy\n   \
+            \ - keystone\n  - - swift-proxy\n    - swift-storage\n  - - swift-proxy\n\
+            \    - glance\n  - - nvp-transport-node\n    - neutron-gateway\n  series:\
+            \ precise\n  services:\n    ceilometer:\n      branch: lp:charms/ceilometer\n\
+            \      to:\n      - lxc:nova-compute=0\n    ceilometer-agent:\n      branch:\
+            \ lp:charms/ceilometer-agent\n    cinder:\n      branch: lp:~openstack-charmers/charms/trusty/cinder/next\n\
+            \      options:\n        block-device: /dev/sdb /srv/cinder.img|10G\n\
+            \        glance-api-version: 2\n        overwrite: 'true'\n        remove-missing:\
+            \ true\n    glance:\n      branch: lp:~openstack-charmers/charms/trusty/glance/next\n\
+            \      to:\n      - lxc:nova-compute=1\n    heat:\n      branch: lp:~openstack-charmers/charms/trusty/heat/next\n\
+            \      to:\n      - lxc:nova-compute=2\n    keystone:\n      branch: lp:~gnuoy/charms/trusty/keystone/next-1385105\n\
+            \      options:\n        admin-password: openstack\n        admin-token:\
+            \ ubuntutesting\n      to:\n      - lxc:cinder=0\n    mongodb:\n     \
+            \ branch: lp:charms/mongodb\n      to:\n      - lxc:neutron-gateway=0\n\
+            \    mysql:\n      branch: lp:charms/trusty/mysql\n      to:\n      -\
+            \ lxc:nova-cloud-controller=0\n    neutron-gateway:\n      branch: lp:charms/quantum-gateway\n\
+            \      options:\n        plugin: nsx\n    nova-cloud-controller:\n   \
+            \   branch: lp:~openstack-charmers/charms/trusty/nova-cloud-controller/next\n\
+            \      options:\n        network-manager: Neutron\n        nvp-controllers:\
+            \ 10.245.0.20\n        nvp-l3-uuid: edcfd1ed-6462-44ef-afff-df8f751b76b1\n\
+            \        nvp-tz-uuid: 7ffcd31a-c2bc-48d9-926d-9d0df9d30d20\n        quantum-plugin:\
+            \ nsx\n        quantum-security-groups: 'yes'\n    nova-compute:\n   \
+            \   branch: lp:~openstack-charmers/charms/trusty/nova-compute/next\n \
+            \     num_units: 3\n      options:\n        virt-type: kvm\n    nvp-transport-node:\n\
+            \      branch: lp:~james-page/charms/precise/nvp-transport-node/tarball-url\n\
+            \      options:\n        cluster-controllers: 10.245.0.20\n        ovs-tarball-url:\
+            \ http://10.245.0.10/cloud_images/vmware/nsx-ovs-2.1.0-build34867-ubuntu_precise_amd64.tar.gz\n\
+            \        tz-uuid: 7ffcd31a-c2bc-48d9-926d-9d0df9d30d20\n    openstack-dashboard:\n\
+            \      branch: lp:charms/openstack-dashboard\n      to:\n      - lxc:nova-compute=0\n\
+            \    rabbitmq-server:\n      branch: lp:charms/rabbitmq-server\n     \
+            \ to:\n      - lxc:nova-compute=1\n    swift-proxy:\n      branch: lp:~openstack-charmers/charms/trusty/swift-proxy/next\n\
+            \      options:\n        replicas: 3\n        swift-hash: fdfef9d4-8b06-11e2-8ac0-531c923c8fae\n\
+            \        zone-assignment: auto\n      to:\n      - lxc:nova-compute=2\n\
+            \    swift-storage:\n      branch: lp:~openstack-charmers/charms/trusty/swift-storage/next\n\
+            \      num_units: 3\n      options:\n        block-device: /srv/swift.img|10G\n\
+            \        overwrite: 'true'\n        zone: 1\n      to:\n      - nova-compute=0\n\
+            \      - nova-compute=1\n      - nova-compute=2\n  total_machines: 7\n\
+            \n+ cp -av run_config artifacts/run_config\n`run_config' -> `artifacts/run_config'\n\
+            + cp -av oil_nodes artifacts/oil_nodes\n`oil_nodes' -> `artifacts/oil_nodes'\n\
+            + oil-ci do deploy --environment ci-oil-slave4 --run_config artifacts/run_config\
+            \ --artifacts_dir ./artifacts\n2014-11-06 05:23:21,608 [DEBUG] oil_ci:\
+            \ Loaded config from: /etc/oil-ci/oil-ci.conf\n2014-11-06 05:23:21,824\
+            \ [DEBUG] oil_ci.deploy.deployment: Creating loggers for deployer: ['',\
+            \ 'deploy.cli', 'deploy.env', 'deployer', 'deploy.deploy', 'deploy.charm',\
+            \ 'deploy.importer']\n2014-11-06 05:23:21,875 [DEBUG] oil_ci.deploy.deployment:\
+            \ from_params: deployment_params: {'block-storage': 'cinder-iscsi', 'networking':\
+            \ 'neutron-nsx', 'openstack-release': 'icehouse', 'image-storage': 'glance-swift',\
+            \ 'ubuntu-release': 'precise', 'compute': 'nova-kvm'} \n2014-11-06 05:23:21,912\
+            \ [DEBUG] oil_ci.deploy.deployment: Set backend for block-storage: cinder-iscsi\n\
+            2014-11-06 05:23:21,912 [DEBUG] oil_ci.deploy.deployment: Set backend\
+            \ for networking: neutron-nsx\n2014-11-06 05:23:21,913 [DEBUG] oil_ci.deploy.deployment:\
+            \ Set backend for image-storage: glance-swift\n2014-11-06 05:23:21,913\
+            \ [DEBUG] oil_ci.deploy.deployment: Set backend for compute: nova-kvm\n\
+            2014-11-06 05:23:22,430 [INFO] oil_ci.deploy.oil_deployer: Bootstrapping\
+            \ new juju environment\n2014-11-06 05:23:22,430 [DEBUG] oil_ci.deploy.oil_deployer:\
+            \ Using environment constraints: tags=hw-ok\n2014-11-06 05:23:22,896 [INFO]\
+            \ oil_ci.juju.client: Boostrapping new environment\nLaunching instance\n\
+            WARNING picked arbitrary tools &{1.20.11-precise-amd64 https://streams.canonical.com/juju/tools/releases/juju-1.20.11-precise-amd64.tgz\
+            \ 196a1348755f3ce869ce1319995d2d6b672809e165d87987dc5c12828c228de8 8112417}\n\
+            \ - /MAAS/api/1.0/nodes/node-a0223dec-c4cd-11e3-824b-00163efc5068/\nWaiting\
+            \ for address\nAttempting to connect to hayward-22.oil:22\nAttempting\
+            \ to connect to hayward-22.oil:22\nAttempting to connect to 10.245.0.204:22\n\
+            Warning: Permanently added 'hayward-22.oil' (ECDSA) to the list of known\
+            \ hosts.\nLogging to /var/log/cloud-init-output.log on remote host\nInstalling\
+            \ add-apt-repository\nAdding apt repository: deb http://ubuntu-cloud.archive.canonical.com/ubuntu\
+            \ precise-updates/cloud-tools main\nRunning apt-get update\nRunning apt-get\
+            \ upgrade\nInstalling package: git\nInstalling package: curl\nInstalling\
+            \ package: cpu-checker\nInstalling package: bridge-utils\nInstalling package:\
+            \ rsyslog-gnutls\nFetching tools: curl -sSfw 'tools from %{url_effective}\
+            \ downloaded: HTTP %{http_code}; time %{time_total}s; size %{size_download}\
+            \ bytes; speed %{speed_download} bytes/s ' --retry 10 -o $bin/tools.tar.gz\
+            \ 'https://streams.canonical.com/juju/tools/releases/juju-1.20.11-precise-amd64.tgz'\n\
+            Bootstrapping Juju machine agent\nStarting Juju machine agent (jujud-machine-0)\n\
+            2014-11-06 05:34:11,815 [DEBUG] oil_ci.deploy.deployment: Detected neutron\
+            \ choice, adding neutron-$ubuntu_release (precise)\n2014-11-06 05:34:12,134\
+            \ [INFO] oil_ci.placement.density: nova-compute units of 3 to machines:\
+            \ [1, 2, 3]\n2014-11-06 05:34:12,134 [INFO] oil_ci.placement.density:\
+            \ Base services:\n2014-11-06 05:34:12,134 [INFO] oil_ci.placement.density:\
+            \ 3 units of swift-storage to: ['nova-compute=0', 'nova-compute=1', 'nova-compute=2']\n\
+            2014-11-06 05:34:12,134 [INFO] oil_ci.placement.density: LXCed services:\n\
+            2014-11-06 05:34:12,134 [INFO] oil_ci.placement.density: 1 units of ceilometer\
+            \ to: ['lxc:nova-compute=0']\n2014-11-06 05:34:12,134 [INFO] oil_ci.placement.density:\
+            \ 1 units of glance to: ['lxc:nova-compute=1']\n2014-11-06 05:34:12,135\
+            \ [INFO] oil_ci.placement.density: 1 units of heat to: ['lxc:nova-compute=2']\n\
+            2014-11-06 05:34:12,135 [INFO] oil_ci.placement.density: 1 units of keystone\
+            \ to: ['lxc:cinder=0']\n2014-11-06 05:34:12,135 [INFO] oil_ci.placement.density:\
+            \ 1 units of mongodb to: ['lxc:neutron-gateway=0']\n2014-11-06 05:34:12,135\
+            \ [INFO] oil_ci.placement.density: 1 units of mysql to: ['lxc:nova-cloud-controller=0']\n\
+            2014-11-06 05:34:12,135 [INFO] oil_ci.placement.density: 1 units of openstack-dashboard\
+            \ to: ['lxc:nova-compute=0']\n2014-11-06 05:34:12,135 [INFO] oil_ci.placement.density:\
+            \ 1 units of rabbitmq-server to: ['lxc:nova-compute=1']\n2014-11-06 05:34:12,135\
+            \ [INFO] oil_ci.placement.density: 1 units of swift-proxy to: ['lxc:nova-compute=2']\n\
+            2014-11-06 05:34:12,141 [DEBUG] oil_ci.placement.density: cinder needs\
+            \ 1 machine(s)\n2014-11-06 05:34:12,141 [DEBUG] oil_ci.placement.density:\
+            \ neutron-gateway needs 1 machine(s)\n2014-11-06 05:34:12,141 [DEBUG]\
+            \ oil_ci.placement.density: nova-cloud-controller needs 1 machine(s)\n\
+            2014-11-06 05:34:12,141 [DEBUG] oil_ci.placement.density: nova-compute\
+            \ needs 3 machine(s)\n2014-11-06 05:34:12,142 [INFO] oil_ci.placement.density:\
+            \ Deployment will require 7 machines (6 + bootstrap)\n2014-11-06 05:34:12,167\
+            \ [DEBUG] oil_ci.deploy.deployment: deployment_yaml: oil_deployment:\n\
+            \  default: true\n  overrides:\n    openstack-origin: cloud:precise-icehouse\n\
+            \    source: cloud:precise-updates/icehouse\n  relations:\n  - - keystone\n\
+            \    - mysql\n  - - nova-cloud-controller\n    - glance\n  - - nova-cloud-controller\n\
+            \    - keystone\n  - - nova-cloud-controller\n    - mysql\n  - - nova-cloud-controller\n\
+            \    - rabbitmq-server\n  - - glance\n    - keystone\n  - - glance\n \
+            \   - mysql\n  - - cinder\n    - glance\n  - - cinder\n    - keystone\n\
+            \  - - cinder\n    - nova-cloud-controller\n  - - cinder\n    - mysql\n\
+            \  - - cinder\n    - rabbitmq-server\n  - - openstack-dashboard\n    -\
+            \ keystone\n  - - heat\n    - mysql\n  - - heat\n    - rabbitmq-server\n\
+            \  - - heat\n    - keystone\n  - - ceilometer\n    - keystone\n  - - ceilometer\n\
+            \    - rabbitmq-server\n  - - ceilometer\n    - mongodb\n  - - ceilometer-agent\n\
+            \    - nova-compute\n  - - ceilometer-agent\n    - ceilometer\n  - - neutron-gateway\n\
+            \    - mysql\n  - - neutron-gateway\n    - nova-cloud-controller\n  -\
+            \ - nova-compute:amqp\n    - rabbitmq-server:amqp\n  - - nova-compute\n\
+            \    - nova-cloud-controller\n  - - nova-compute\n    - glance\n  - -\
+            \ neutron-gateway:amqp\n    - rabbitmq-server\n  - - swift-proxy\n   \
+            \ - keystone\n  - - swift-proxy\n    - swift-storage\n  - - swift-proxy\n\
+            \    - glance\n  - - nvp-transport-node\n    - neutron-gateway\n  series:\
+            \ precise\n  services:\n    ceilometer:\n      branch: lp:charms/ceilometer\n\
+            \      to:\n      - lxc:nova-compute=0\n    ceilometer-agent:\n      branch:\
+            \ lp:charms/ceilometer-agent\n    cinder:\n      branch: lp:~openstack-charmers/charms/trusty/cinder/next\n\
+            \      options:\n        block-device: /dev/sdb /srv/cinder.img|10G\n\
+            \        glance-api-version: 2\n        overwrite: 'true'\n        remove-missing:\
+            \ true\n    glance:\n      branch: lp:~openstack-charmers/charms/trusty/glance/next\n\
+            \      to:\n      - lxc:nova-compute=1\n    heat:\n      branch: lp:~openstack-charmers/charms/trusty/heat/next\n\
+            \      to:\n      - lxc:nova-compute=2\n    keystone:\n      branch: lp:~gnuoy/charms/trusty/keystone/next-1385105\n\
+            \      options:\n        admin-password: openstack\n        admin-token:\
+            \ ubuntutesting\n      to:\n      - lxc:cinder=0\n    mongodb:\n     \
+            \ branch: lp:charms/mongodb\n      to:\n      - lxc:neutron-gateway=0\n\
+            \    mysql:\n      branch: lp:charms/trusty/mysql\n      to:\n      -\
+            \ lxc:nova-cloud-controller=0\n    neutron-gateway:\n      branch: lp:charms/quantum-gateway\n\
+            \      options:\n        plugin: nsx\n    nova-cloud-controller:\n   \
+            \   branch: lp:~openstack-charmers/charms/trusty/nova-cloud-controller/next\n\
+            \      options:\n        network-manager: Neutron\n        nvp-controllers:\
+            \ 10.245.0.20\n        nvp-l3-uuid: edcfd1ed-6462-44ef-afff-df8f751b76b1\n\
+            \        nvp-tz-uuid: 7ffcd31a-c2bc-48d9-926d-9d0df9d30d20\n        quantum-plugin:\
+            \ nsx\n        quantum-security-groups: 'yes'\n    nova-compute:\n   \
+            \   branch: lp:~openstack-charmers/charms/trusty/nova-compute/next\n \
+            \     num_units: 3\n      options:\n        virt-type: kvm\n    nvp-transport-node:\n\
+            \      branch: lp:~james-page/charms/precise/nvp-transport-node/tarball-url\n\
+            \      options:\n        cluster-controllers: 10.245.0.20\n        ovs-tarball-url:\
+            \ http://10.245.0.10/cloud_images/vmware/nsx-ovs-2.1.0-build34867-ubuntu_precise_amd64.tar.gz\n\
+            \        tz-uuid: 7ffcd31a-c2bc-48d9-926d-9d0df9d30d20\n    openstack-dashboard:\n\
+            \      branch: lp:charms/openstack-dashboard\n      to:\n      - lxc:nova-compute=0\n\
+            \    rabbitmq-server:\n      branch: lp:charms/rabbitmq-server\n     \
+            \ to:\n      - lxc:nova-compute=1\n    swift-proxy:\n      branch: lp:~openstack-charmers/charms/trusty/swift-proxy/next\n\
+            \      options:\n        replicas: 3\n        swift-hash: fdfef9d4-8b06-11e2-8ac0-531c923c8fae\n\
+            \        zone-assignment: auto\n      to:\n      - lxc:nova-compute=2\n\
+            \    swift-storage:\n      branch: lp:~openstack-charmers/charms/trusty/swift-storage/next\n\
+            \      num_units: 3\n      options:\n        block-device: /srv/swift.img|10G\n\
+            \        overwrite: 'true'\n        zone: 1\n      to:\n      - nova-compute=0\n\
+            \      - nova-compute=1\n      - nova-compute=2\n  total_machines: 7\n\
+            \n2014-11-06 05:34:12,168 [INFO] oil_ci.deploy.oil_deployer: Deploying\
+            \ from /tmp/tmpWn3QOG\n2014-11-06 05:34:12,168 [INFO] oil_ci.juju.juju_deployer:\
+            \ Updating juju config from oil-ci.conf/[juju]\n2014-11-06 05:34:12,169\
+            \ [DEBUG] oil_ci.juju.juju_deployer: juju.no_local_mods = False\n2014-11-06\
+            \ 05:34:12,169 [DEBUG] oil_ci.juju.juju_deployer: juju.update_charms =\
+            \ False\n2014-11-06 05:34:12,170 [DEBUG] oil_ci.juju.juju_deployer: Converted\
+            \ option overrides to NoneType\n2014-11-06 05:34:12,170 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.overrides = None\n2014-11-06 05:34:12,170 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.branch_only = False\n2014-11-06 05:34:12,170 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.timeout = 3600\n2014-11-06 05:34:12,171 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.watch = True\n2014-11-06 05:34:12,171 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.verbose = True\n2014-11-06 05:34:12,171 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.debug = True\n2014-11-06 05:34:12,172 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.rel_wait = 600\n2014-11-06 05:34:12,172 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.bootstrap = False\n2014-11-06 05:34:12,172 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ Converted option retry_count to NoneType\n2014-11-06 05:34:12,173 [DEBUG]\
+            \ oil_ci.juju.juju_deployer: juju.retry_count = None\n2014-11-06 05:34:12,173\
+            \ [DEBUG] oil_ci.juju.juju_deployer: juju.ignore_errors = False\n2014-11-06\
+            \ 05:34:12,173 [DEBUG] oil_ci.juju.juju_deployer: juju.deploy_delay =\
+            \ 0\n2014-11-06 05:34:12,174 [DEBUG] oil_ci.juju.juju_deployer: juju.log_level\
+            \ = DEBUG\n2014-11-06 05:34:12,174 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.maas_base_tag = hw-ok\n2014-11-06 05:34:12,174 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.juju_deployer_config_dir = /etc/oil-ci/deployer\n2014-11-06 05:34:12,175\
+            \ [DEBUG] oil_ci.juju.juju_deployer: juju.os_tenant_credentials_file =\
+            \ /etc/oil-ci/os-tenant.conf\n2014-11-06 05:34:12,175 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ juju.placement_policy = density\n2014-11-06 05:34:12,183 [DEBUG] oil_ci.juju.juju_deployer:\
+            \ Creating loggers for deployer: ['', 'deploy.cli', 'deploy.env', 'deployer',\
+            \ 'deploy.deploy', 'deploy.charm', 'deploy.importer']\n2014-11-06 05:34:12,465\
+            \ [DEBUG] deployer.import: Getting charms...\n2014-11-06 05:34:12,466\
+            \ [DEBUG] deployer.charm:  Branching charm lp:charms/mongodb @ precise/mongodb\n\
+            2014-11-06 05:34:15,962 [DEBUG] deployer.charm:  Branching charm lp:~openstack-charmers/charms/trusty/nova-cloud-controller/next\
+            \ @ precise/nova-cloud-controller\n2014-11-06 05:34:18,910 [DEBUG] deployer.charm:\
+            \  Branching charm lp:~openstack-charmers/charms/trusty/swift-proxy/next\
+            \ @ precise/swift-proxy\n2014-11-06 05:34:21,829 [DEBUG] deployer.charm:\
+            \  Branching charm lp:~openstack-charmers/charms/trusty/heat/next @ precise/heat\n\
+            2014-11-06 05:34:24,528 [DEBUG] deployer.charm:  Branching charm lp:charms/trusty/mysql\
+            \ @ precise/mysql\n2014-11-06 05:34:27,107 [DEBUG] deployer.charm:  Branching\
+            \ charm lp:~openstack-charmers/charms/trusty/glance/next @ precise/glance\n\
+            2014-11-06 05:34:30,329 [DEBUG] deployer.charm:  Branching charm lp:charms/ceilometer\
+            \ @ precise/ceilometer\n2014-11-06 05:34:33,033 [DEBUG] deployer.charm:\
+            \  Branching charm lp:~openstack-charmers/charms/trusty/nova-compute/next\
+            \ @ precise/nova-compute\n2014-11-06 05:34:35,809 [DEBUG] deployer.charm:\
+            \  Branching charm lp:~james-page/charms/precise/nvp-transport-node/tarball-url\
+            \ @ precise/nvp-transport-node\n2014-11-06 05:34:39,161 [DEBUG] deployer.charm:\
+            \  Branching charm lp:charms/ceilometer-agent @ precise/ceilometer-agent\n\
+            2014-11-06 05:34:41,639 [DEBUG] deployer.charm:  Branching charm lp:~openstack-charmers/charms/trusty/swift-storage/next\
+            \ @ precise/swift-storage\n2014-11-06 05:34:44,503 [DEBUG] deployer.charm:\
+            \  Branching charm lp:charms/rabbitmq-server @ precise/rabbitmq-server\n\
+            2014-11-06 05:34:47,547 [DEBUG] deployer.charm:  Branching charm lp:~gnuoy/charms/trusty/keystone/next-1385105\
+            \ @ precise/keystone\n2014-11-06 05:34:50,335 [DEBUG] deployer.charm:\
+            \  Branching charm lp:charms/openstack-dashboard @ precise/openstack-dashboard\n\
+            2014-11-06 05:34:52,615 [DEBUG] deployer.charm:  Branching charm lp:~openstack-charmers/charms/trusty/cinder/next\
+            \ @ precise/cinder\n2014-11-06 05:34:55,308 [DEBUG] deployer.charm:  Branching\
+            \ charm lp:charms/quantum-gateway @ precise/neutron-gateway\n2014-11-06\
+            \ 05:34:59,188 [DEBUG] deployer.deploy: Resolving configuration\n2014-11-06\
+            \ 05:34:59,234 [DEBUG] deployer.env: Connecting to environment...\n2014-11-06\
+            \ 05:35:00,490 [DEBUG] deployer.env: Connected to environment\n2014-11-06\
+            \ 05:35:00,491 [INFO] deployer.import: Deploying services...\n2014-11-06\
+            \ 05:35:00,491 [DEBUG] deployer.import: <deployer.env.go.GoEnvironment\
+            \ object at 0x376af90>\n2014-11-06 05:35:01,861 [INFO] deployer.import:\
+            \  Deploying service ceilometer-agent using local:precise/ceilometer-agent\n\
+            2014-11-06 05:35:06,675 [INFO] deployer.import:  Deploying service cinder\
+            \ using local:precise/cinder\n2014-11-06 05:35:14,347 [INFO] deployer.import:\
+            \  Deploying service neutron-gateway using local:precise/quantum-gateway\n\
+            2014-11-06 05:35:23,005 [INFO] deployer.import:  Deploying service nova-cloud-controller\
+            \ using local:precise/nova-cloud-controller\n2014-11-06 05:36:10,124 [INFO]\
+            \ deployer.import:  Deploying service nova-compute using local:precise/nova-compute\n\
+            2014-11-06 05:36:24,862 [INFO] deployer.import:  Deploying service nvp-transport-node\
+            \ using local:precise/nvp-transport-node\n2014-11-06 05:36:29,678 [INFO]\
+            \ deployer.import:  Deploying service ceilometer using local:precise/ceilometer\n\
+            2014-11-06 05:36:29,678 [DEBUG] deployer.import:  Refetching status for\
+            \ placement deploys\n2014-11-06 05:36:43,877 [INFO] deployer.import: \
+            \ Deploying service glance using local:precise/glance\n2014-11-06 05:36:53,680\
+            \ [INFO] deployer.import:  Deploying service heat using local:precise/heat\n\
+            2014-11-06 05:37:02,492 [INFO] deployer.import:  Deploying service keystone\
+            \ using local:precise/keystone\n2014-11-06 05:37:11,125 [INFO] deployer.import:\
+            \  Deploying service mongodb using local:precise/mongodb\n2014-11-06 05:37:18,898\
+            \ [INFO] deployer.import:  Deploying service mysql using local:precise/mysql\n\
+            2014-11-06 05:37:26,686 [INFO] deployer.import:  Deploying service openstack-dashboard\
+            \ using local:precise/openstack-dashboard\n2014-11-06 05:37:35,019 [INFO]\
+            \ deployer.import:  Deploying service rabbitmq-server using local:precise/rabbitmq-server\n\
+            2014-11-06 05:37:43,159 [INFO] deployer.import:  Deploying service swift-proxy\
+            \ using local:precise/swift-proxy\n2014-11-06 05:37:51,466 [INFO] deployer.import:\
+            \  Deploying service swift-storage using local:precise/swift-storage\n\
+            2014-11-06 05:38:03,371 [DEBUG] deployer.import: Adding units...\n2014-11-06\
+            \ 05:38:04,661 [WARNING] deployer.import: Config specifies num units for\
+            \ subordinate: ceilometer-agent\n2014-11-06 05:38:04,662 [DEBUG] deployer.import:\
+            \  Service 'cinder' does not need any more units added.\n2014-11-06 05:38:04,663\
+            \ [DEBUG] deployer.import:  Service 'neutron-gateway' does not need any\
+            \ more units added.\n2014-11-06 05:38:04,663 [DEBUG] deployer.import:\
+            \  Service 'nova-cloud-controller' does not need any more units added.\n\
+            2014-11-06 05:38:04,664 [DEBUG] deployer.import:  Service 'nova-compute'\
+            \ does not need any more units added.\n2014-11-06 05:38:04,664 [WARNING]\
+            \ deployer.import: Config specifies num units for subordinate: nvp-transport-node\n\
+            2014-11-06 05:38:04,665 [DEBUG] deployer.import:  Service 'ceilometer'\
+            \ does not need any more units added.\n2014-11-06 05:38:04,665 [DEBUG]\
+            \ deployer.import:  Service 'glance' does not need any more units added.\n\
+            2014-11-06 05:38:04,666 [DEBUG] deployer.import:  Service 'heat' does\
+            \ not need any more units added.\n2014-11-06 05:38:04,666 [DEBUG] deployer.import:\
+            \  Service 'keystone' does not need any more units added.\n2014-11-06\
+            \ 05:38:04,667 [DEBUG] deployer.import:  Service 'mongodb' does not need\
+            \ any more units added.\n2014-11-06 05:38:04,668 [DEBUG] deployer.import:\
+            \  Service 'mysql' does not need any more units added.\n2014-11-06 05:38:04,668\
+            \ [DEBUG] deployer.import:  Service 'openstack-dashboard' does not need\
+            \ any more units added.\n2014-11-06 05:38:04,669 [DEBUG] deployer.import:\
+            \  Service 'rabbitmq-server' does not need any more units added.\n2014-11-06\
+            \ 05:38:04,670 [DEBUG] deployer.import:  Service 'swift-proxy' does not\
+            \ need any more units added.\n2014-11-06 05:38:04,672 [INFO] deployer.import:\
+            \ Adding 2 more units to swift-storage\n2014-11-06 05:38:14,657 [DEBUG]\
+            \ deployer.import: Waiting for units before adding relations\n2014-11-06\
+            \ 05:38:15,922 [DEBUG] deployer.env:  Delta unit: swift-storage/1 change:pending\n\
+            2014-11-06 05:38:16,006 [DEBUG] deployer.env:  Delta unit: swift-storage/2\
+            \ change:pending\n2014-11-06 05:42:45,987 [DEBUG] deployer.env:  Delta\
+            \ machine: 5 change:pending\n2014-11-06 05:42:46,069 [DEBUG] deployer.env:\
+            \  Delta machine: 5 change:started\n2014-11-06 05:42:46,070 [DEBUG] deployer.env:\
+            \  Delta unit: nova-compute/1 change:pending\n2014-11-06 05:42:46,070\
+            \ [DEBUG] deployer.env:  Delta unit: swift-storage/1 change:pending\n\
+            2014-11-06 05:43:10,991 [DEBUG] deployer.env:  Delta machine: 4 change:pending\n\
+            2014-11-06 05:43:11,074 [DEBUG] deployer.env:  Delta machine: 4 change:started\n\
+            2014-11-06 05:43:11,075 [DEBUG] deployer.env:  Delta unit: nova-compute/0\
+            \ change:pending\n2014-11-06 05:43:11,076 [DEBUG] deployer.env:  Delta\
+            \ unit: swift-storage/0 change:pending\n2014-11-06 05:43:25,995 [DEBUG]\
+            \ deployer.env:  Delta machine: 2 change:pending\n2014-11-06 05:43:26,084\
+            \ [DEBUG] deployer.env:  Delta machine: 2 change:started\n2014-11-06 05:43:26,085\
+            \ [DEBUG] deployer.env:  Delta unit: neutron-gateway/0 change:pending\n\
+            2014-11-06 05:43:55,999 [DEBUG] deployer.env:  Delta machine: 3 change:pending\n\
+            2014-11-06 05:43:56,083 [DEBUG] deployer.env:  Delta machine: 3 change:started\n\
+            2014-11-06 05:43:56,084 [DEBUG] deployer.env:  Delta unit: nova-cloud-controller/0\
+            \ change:pending\n2014-11-06 05:44:01,003 [DEBUG] deployer.env:  Delta\
+            \ unit: nova-cloud-controller/0 change:pending\n2014-11-06 05:44:06,002\
+            \ [DEBUG] deployer.env:  Delta unit: nova-compute/0 change:installed\n\
+            2014-11-06 05:44:16,003 [DEBUG] deployer.env:  Delta unit: nova-compute/0\
+            \ change:started\n2014-11-06 05:45:06,013 [DEBUG] deployer.env:  Delta\
+            \ machine: 4/lxc/0 change:pending\n2014-11-06 05:45:46,014 [DEBUG] deployer.env:\
+            \  Delta machine: 4/lxc/1 change:pending\n2014-11-06 05:45:51,015 [DEBUG]\
+            \ deployer.env:  Delta unit: nova-compute/1 change:installed\n2014-11-06\
+            \ 05:45:51,098 [DEBUG] deployer.env:  Delta unit: swift-storage/0 change:installed\n\
+            2014-11-06 05:45:51,099 [DEBUG] deployer.env:  Delta machine: 6 change:started\n\
+            2014-11-06 05:45:51,099 [DEBUG] deployer.env:  Delta unit: nova-compute/2\
+            \ change:pending\n2014-11-06 05:45:56,019 [DEBUG] deployer.env:  Delta\
+            \ unit: nova-compute/2 change:pending\n2014-11-06 05:45:56,102 [DEBUG]\
+            \ deployer.env:  Delta unit: nova-compute/1 change:started\n2014-11-06\
+            \ 05:45:56,103 [DEBUG] deployer.env:  Delta unit: swift-storage/2 change:pending\n\
+            2014-11-06 05:46:26,024 [DEBUG] deployer.env:  Delta unit: swift-storage/0\
+            \ change:started\n2014-11-06 05:46:31,025 [DEBUG] deployer.env:  Delta\
+            \ unit: swift-storage/1 change:installed\n2014-11-06 05:46:31,108 [DEBUG]\
+            \ deployer.env:  Delta machine: 3/lxc/0 change:pending\n2014-11-06 05:46:31,108\
+            \ [DEBUG] deployer.env:  Delta machine: 4/lxc/0 change:started\n2014-11-06\
+            \ 05:46:31,110 [DEBUG] deployer.env:  Delta unit: ceilometer/0 change:pending\n\
+            2014-11-06 05:46:36,029 [DEBUG] deployer.env:  Delta unit: ceilometer/0\
+            \ change:pending\n2014-11-06 05:46:46,028 [DEBUG] deployer.env:  Delta\
+            \ machine: 4/lxc/1 change:pending\n2014-11-06 05:46:46,111 [DEBUG] deployer.env:\
+            \  Delta machine: 4/lxc/1 change:started\n2014-11-06 05:46:46,112 [DEBUG]\
+            \ deployer.env:  Delta unit: openstack-dashboard/0 change:pending\n2014-11-06\
+            \ 05:47:01,032 [DEBUG] deployer.env:  Delta unit: neutron-gateway/0 change:installed\n\
+            2014-11-06 05:47:21,034 [DEBUG] deployer.env:  Delta unit: neutron-gateway/0\
+            \ change:started\n2014-11-06 05:47:31,037 [DEBUG] deployer.env:  Delta\
+            \ machine: 5/lxc/0 change:pending\n2014-11-06 05:47:41,039 [DEBUG] deployer.env:\
+            \  Delta unit: swift-storage/1 change:started\n2014-11-06 05:47:41,121\
+            \ [DEBUG] deployer.env:  Delta machine: 5/lxc/1 change:pending\n2014-11-06\
+            \ 05:48:16,043 [DEBUG] deployer.env:  Delta unit: openstack-dashboard/0\
+            \ change:installed\n2014-11-06 05:48:21,044 [DEBUG] deployer.env:  Delta\
+            \ unit: openstack-dashboard/0 change:installed\n2014-11-06 05:48:31,046\
+            \ [DEBUG] deployer.env:  Delta unit: ceilometer/0 change:pending\n2014-11-06\
+            \ 05:48:31,129 [DEBUG] deployer.env:  Delta unit: ceilometer/0 change:installed\n\
+            2014-11-06 05:48:31,129 [DEBUG] deployer.env:  Delta machine: 3/lxc/0\
+            \ change:started\n2014-11-06 05:48:31,129 [DEBUG] deployer.env:  Delta\
+            \ unit: openstack-dashboard/0 change:started\n2014-11-06 05:48:31,129\
+            \ [DEBUG] deployer.env:  Delta unit: mysql/0 change:pending\n2014-11-06\
+            \ 05:48:41,049 [DEBUG] deployer.env:  Delta unit: ceilometer/0 change:started\n\
+            2014-11-06 05:48:51,050 [DEBUG] deployer.env:  Delta machine: 2/lxc/0\
+            \ change:pending\n2014-11-06 05:49:01,051 [DEBUG] deployer.env:  Delta\
+            \ unit: nova-compute/2 change:installed\n2014-11-06 05:49:06,052 [DEBUG]\
+            \ deployer.env:  Delta unit: nova-compute/2 change:started\n2014-11-06\
+            \ 05:49:06,135 [DEBUG] deployer.env:  Delta machine: 5/lxc/0 change:pending\n\
+            2014-11-06 05:49:11,054 [DEBUG] deployer.env:  Delta machine: 5/lxc/0\
+            \ change:started\n2014-11-06 05:49:11,137 [DEBUG] deployer.env:  Delta\
+            \ unit: glance/0 change:pending\n2014-11-06 05:49:16,055 [DEBUG] deployer.env:\
+            \  Delta unit: mysql/0 change:installed\n2014-11-06 05:49:21,055 [DEBUG]\
+            \ deployer.env:  Delta machine: 5/lxc/1 change:pending\n2014-11-06 05:49:21,139\
+            \ [DEBUG] deployer.env:  Delta machine: 5/lxc/1 change:started\n2014-11-06\
+            \ 05:49:21,140 [DEBUG] deployer.env:  Delta unit: rabbitmq-server/0 change:pending\n\
+            2014-11-06 05:49:31,057 [DEBUG] deployer.env:  Delta unit: rabbitmq-server/0\
+            \ change:installed\n2014-11-06 05:50:16,064 [DEBUG] deployer.env:  Delta\
+            \ machine: 6/lxc/0 change:pending\n2014-11-06 05:50:21,065 [DEBUG] deployer.env:\
+            \  Delta machine: 2/lxc/0 change:pending\n2014-11-06 05:50:21,148 [DEBUG]\
+            \ deployer.env:  Delta machine: 2/lxc/0 change:started\n2014-11-06 05:50:21,149\
+            \ [DEBUG] deployer.env:  Delta unit: nova-cloud-controller/0 change:pending\n\
+            2014-11-06 05:50:21,150 [DEBUG] deployer.env:  Delta unit: mongodb/0 change:pending\n\
+            2014-11-06 05:50:26,068 [DEBUG] deployer.env:  Delta unit: nova-cloud-controller/0\
+            \ change:installed\n2014-11-06 05:50:31,069 [DEBUG] deployer.env:  Delta\
+            \ unit: mysql/0 change:started\n2014-11-06 05:50:36,071 [DEBUG] deployer.env:\
+            \  Delta unit: rabbitmq-server/0 change:installed\n2014-11-06 05:50:36,154\
+            \ [DEBUG] deployer.env:  Delta machine: 6/lxc/1 change:pending\n2014-11-06\
+            \ 05:50:36,155 [DEBUG] deployer.env:  Delta unit: nova-cloud-controller/0\
+            \ change:started\n2014-11-06 05:50:41,072 [DEBUG] deployer.env:  Delta\
+            \ unit: rabbitmq-server/0 change:started\n2014-11-06 05:50:46,073 [DEBUG]\
+            \ deployer.env:  Delta unit: swift-storage/2 change:installed\n2014-11-06\
+            \ 05:51:16,077 [DEBUG] deployer.env:  Delta unit: swift-storage/2 change:started\n\
+            2014-11-06 05:51:36,079 [DEBUG] deployer.env:  Delta unit: mongodb/0 change:installed\n\
+            2014-11-06 05:51:36,162 [DEBUG] deployer.env:  Delta unit: mongodb/0 change:installed\n\
+            2014-11-06 05:51:36,162 [DEBUG] deployer.env:  Delta unit: glance/0 change:installed\n\
+            2014-11-06 05:51:41,083 [DEBUG] deployer.env:  Delta unit: glance/0 change:installed\n\
+            2014-11-06 05:51:46,087 [DEBUG] deployer.env:  Delta machine: 6/lxc/0\
+            \ change:pending\n2014-11-06 05:51:51,084 [DEBUG] deployer.env:  Delta\
+            \ machine: 6/lxc/0 change:pending\n2014-11-06 05:51:51,167 [DEBUG] deployer.env:\
+            \  Delta machine: 6/lxc/0 change:started\n2014-11-06 05:51:51,167 [DEBUG]\
+            \ deployer.env:  Delta unit: glance/0 change:started\n2014-11-06 05:51:51,167\
+            \ [DEBUG] deployer.env:  Delta unit: heat/0 change:pending\n2014-11-06\
+            \ 05:52:01,086 [DEBUG] deployer.env:  Delta machine: 6/lxc/1 change:pending\n\
+            2014-11-06 05:52:01,169 [DEBUG] deployer.env:  Delta machine: 6/lxc/1\
+            \ change:started\n2014-11-06 05:52:01,169 [DEBUG] deployer.env:  Delta\
+            \ unit: swift-proxy/0 change:pending\n2014-11-06 05:52:26,092 [DEBUG]\
+            \ deployer.env:  Delta unit: mongodb/0 change:installed\n2014-11-06 05:52:51,093\
+            \ [DEBUG] deployer.env:  Delta unit: mongodb/0 change:started\n2014-11-06\
+            \ 05:54:06,104 [DEBUG] deployer.env:  Delta unit: heat/0 change:pending\n\
+            2014-11-06 05:54:06,187 [DEBUG] deployer.env:  Delta unit: heat/0 change:installed\n\
+            2014-11-06 05:54:06,187 [DEBUG] deployer.env:  Delta unit: swift-proxy/0\
+            \ change:installed\n2014-11-06 05:54:11,106 [DEBUG] deployer.env:  Delta\
+            \ unit: swift-proxy/0 change:installed\n2014-11-06 05:54:11,190 [DEBUG]\
+            \ deployer.env:  Delta unit: heat/0 change:started\n2014-11-06 05:54:51,111\
+            \ [DEBUG] deployer.env:  Delta unit: swift-proxy/0 change:started\n2014-11-06\
+            \ 06:50:48,280 [DEBUG] deployer.env: Connecting to environment...\n2014-11-06\
+            \ 06:50:49,513 [DEBUG] deployer.env: Connected to environment\n2014-11-06\
+            \ 06:50:49,514 [ERROR] deployer.import: Reached deployment timeout.. exiting\n\
+            2014-11-06 06:50:49,515 [ERROR] oil_ci.deploy.oil_deployer: Deployment\
+            \ failed: \nTraceback (most recent call last):\n  File \"/usr/lib/python2.7/dist-packages/oil_ci/deploy/oil_deployer.py\"\
+            , line 140, in deploy\n    debug=True, verbose=True)\n  File \"/usr/lib/python2.7/dist-packages/oil_ci/juju/juju_deployer.py\"\
+            , line 83, in run_deployer\n    importer.Importer(env, deploy, options=opts).run()\n\
+            \  File \"/usr/lib/python2.7/dist-packages/deployer/action/importer.py\"\
+            , line 212, in run\n    self.check_timeout()\n  File \"/usr/lib/python2.7/dist-packages/deployer/action/importer.py\"\
+            , line 165, in check_timeout\n    raise ErrorExit()\nErrorExit\n2014-11-06\
+            \ 06:50:49,516 [INFO] oil_ci.deploy.oil_deployer: Saving deployment artifacts\
+            \ to: ./artifacts\n+ rc=1\n+ echo 'Deployment returned: 1'\nDeployment\
+            \ returned: 1\n+ [[ 1 == 0 ]]\n+ test-catalog -p ec832ce3-4393-4d4f-ab06-06836ea47e08\
+            \ -t /etc/oil-ci/test-catalog-auth.json\n2014-11-06 06:50:51 [INFO] test-catalog.:\
+            \ Loading system wide config: /etc/test-catalog/test-catalog.conf\n+ oil-ci\
+            \ generate pipeline_tags --nodes=artifacts/oil_nodes --juju=artifacts/juju_status.yaml\
+            \ --out=artifacts/mapping.json\n2014-11-06 06:50:51,894 [DEBUG] oil_ci:\
+            \ Loaded config from: /etc/oil-ci/oil-ci.conf\n2014-11-06 06:50:52,134\
+            \ [DEBUG] oil_ci.deploy.deployment: Creating loggers for deployer: ['',\
+            \ 'deploy.cli', 'deploy.env', 'deployer', 'deploy.deploy', 'deploy.charm',\
+            \ 'deploy.importer']\n+ test-catalog -B ec832ce3-4393-4d4f-ab06-06836ea47e08\
+            \ artifacts/mapping.json -t /etc/oil-ci/test-catalog-auth.json\n2014-11-06\
+            \ 06:50:52 [INFO] test-catalog.: Loading system wide config: /etc/test-catalog/test-catalog.conf\n\
+            +--------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n\
+            | Job Metadata |                                                     \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                                    \
+            \                                                  |\n+--------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n\
+            |     meta     |  \n+--------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+\n\
+            + juju ssh -e ci-oil-slave4 0 'cat /var/log/juju/all-machines.log'\nWarning:\
+            \ Permanently added 'hayward-22.oil' (ECDSA) to the list of known hosts.\n\
+            Warning: Permanently added 'hayward-22.oil' (ECDSA) to the list of known\
+            \ hosts.\nConnection to hayward-22.oil closed.\n+ juju ssh -e ci-oil-slave4\
+            \ 0 'cat /var/log/juju/machine-0.log'\nWarning: Permanently added 'hayward-22.oil'\
+            \ (ECDSA) to the list of known hosts.\nWarning: Permanently added 'hayward-22.oil'\
+            \ (ECDSA) to the list of known hosts.\nConnection to hayward-22.oil closed.\n\
+            + wget http://10.33.16.17:8080/job/pipeline_deploy/21048//consoleText\
+            \ -O ./artifacts/console.txt\n--2014-11-06 06:51:07--  http://10.33.16.17:8080/job/pipeline_deploy/21048//consoleText\n\
+            Connecting to 10.33.16.17:8080... connected.\nHTTP request sent, awaiting\
+            \ response... 200 OK\nLength: unspecified [text/plain]\nSaving to: `./artifacts/console.txt'\n\
+            \n     0K .......... .......... .......... .......... .......    14.8M=0.003s\n\
+            \n2014-11-06 06:51:07 (14.8 MB/s) - `./artifacts/console.txt' saved [48988]\n\
+            \n+ echo 'Cleaning Pipeline Environment'\nCleaning Pipeline Environment\n\
+            + exit 1\nBuild step 'Execute shell' marked build as failure\nArchiving\
+            \ artifacts\nPerforming Post build task...\nMatch found for :Archiving\
+            \ artifacts : True\nLogical operation result is TRUE\nRunning script \
+            \ : #!/bin/bash -x\n. ./pipeline_parameters\n\n# archive the results.\n\
+            oil-ci do archive --pipeline_id $PIPELINE_ID --artifacts_dir ./artifacts\n\
+            \n[pipeline_deploy] $ /bin/bash -x /tmp/hudson8556483273020321708.sh\n\
+            + . ./pipeline_parameters\n++ export OPENSTACK_RELEASE=icehouse\n++ OPENSTACK_RELEASE=icehouse\n\
+            ++ export COMPUTE=nova-kvm\n++ COMPUTE=nova-kvm\n++ export BLOCK_STORAGE=cinder-iscsi\n\
+            ++ BLOCK_STORAGE=cinder-iscsi\n++ export IMAGE_STORAGE=glance-swift\n\
+            ++ IMAGE_STORAGE=glance-swift\n++ export PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n\
+            ++ PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n++ export NETWORKING=neutron-nsx\n\
+            ++ NETWORKING=neutron-nsx\n++ export UBUNTU_RELEASE=precise\n++ UBUNTU_RELEASE=precise\n\
+            + oil-ci do archive --pipeline_id ec832ce3-4393-4d4f-ab06-06836ea47e08\
+            \ --artifacts_dir ./artifacts\n2014-11-06 06:51:07,817 [DEBUG] oil_ci:\
+            \ Loaded config from: /etc/oil-ci/oil-ci.conf\n2014-11-06 06:51:08,036\
+            \ [DEBUG] oil_ci.deploy.deployment: Creating loggers for deployer: ['',\
+            \ 'deploy.cli', 'deploy.env', 'deployer', 'deploy.deploy', 'deploy.charm',\
+            \ 'deploy.importer']\n2014-11-06 06:51:08,074 [INFO] oil_ci.archiver:\
+            \ Using <class 'oil_ci.archiver.swift.OILSwiftArchiver'> archiver:\n2014-11-06\
+            \ 06:51:08,394 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/run_config\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/run_config\n\
+            2014-11-06 06:51:08,555 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/deployment_parameters.json\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/deployment_parameters.json\n\
+            2014-11-06 06:51:08,699 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/juju_debug_log.txt\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/juju_debug_log.txt\n\
+            2014-11-06 06:51:08,927 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/deployer_oil_deployment.yaml\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/deployer_oil_deployment.yaml\n\
+            2014-11-06 06:51:09,074 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/mapping.json\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/mapping.json\n\
+            2014-11-06 06:51:09,202 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/juju_status.yaml\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/juju_status.yaml\n\
+            2014-11-06 06:51:09,305 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/juju_debug_machine-0.txt\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/juju_debug_machine-0.txt\n\
+            2014-11-06 06:51:09,470 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/console.txt\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/console.txt\n\
+            2014-11-06 06:51:09,560 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/oil_nodes\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/oil_nodes\n\
+            2014-11-06 06:51:09,683 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/run_config.parameter\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/run_config.parameter\n\
+            2014-11-06 06:51:09,798 [DEBUG] oil_ci.archive.local: archiving file ./artifacts/pipeline_status\
+            \ to swift:archiver/ec832ce3-4393-4d4f-ab06-06836ea47e08/./artifacts/pipeline_status\n\
+            POST BUILD TASK : SUCCESS\nEND OF POST BUILD TASK : 0\nCould not match\
+            \ :Analyzing artifacts  : False\nLogical operation result is FALSE\nSkipping\
+            \ script  : #!/bin/bash -x\n. ./pipeline_parameters\n\n# Run crude-analysis\
+            \ on this pipeline, store results in artifacts\nCRUDE_REPORT=./artifacts/crude_report\n\
+            mkdir -p $CRUDE_REPORT\ncrude-analysis -o $CRUDE_REPORT $PIPELINE_ID\n\
+            rc=$?\necho \"crude-analysis-result=$rc\" > $CRUDE_REPORT/result.txt\n\
+            \nEND OF POST BUILD TASK \t: 1\nMatch found for :Cleaning Pipeline Environment\
+            \ : True\nLogical operation result is TRUE\nRunning script  : #!/bin/bash\
+            \ -x\n. ./pipeline_parameters\n\nif ! echo $NODE_LABELS | grep -q \"master\"\
+            \ ; then\n    # NODE_LABELS may be in any order, use NODE_NAME to filter\n\
+            \    label=\"$(echo $NODE_LABELS | fmt -w 1 | grep -v $NODE_NAME)\"\n\
+            \    env_arg=\"--environment $label\"\n    env=$label\n    tags=\"--constraints\
+            \ $label\"\nelse\n    label=\"$NODE_LABELS\"\n    env=maas\n    tags=\"\
+            --constraints oil\"\nfi\n\n# HACK -- call juju destroy-environment -y\
+            \ $env when MAAS fixed\necho \"Destroying current environment: $env\"\n\
+            STOPNODE=/var/lib/jenkins/juju-stop-nodes.py\n$STOPNODE $env || {\n  \
+            \  echo \"failed to apply workaround, try with juju\" \n    juju destroy-environment\
+            \ -y $env\n}\nrm -rf ~/.juju/environments\n\n[pipeline_deploy] $ /bin/bash\
+            \ -x /tmp/hudson3813726520791934889.sh\n+ . ./pipeline_parameters\n++\
+            \ export OPENSTACK_RELEASE=icehouse\n++ OPENSTACK_RELEASE=icehouse\n++\
+            \ export COMPUTE=nova-kvm\n++ COMPUTE=nova-kvm\n++ export BLOCK_STORAGE=cinder-iscsi\n\
+            ++ BLOCK_STORAGE=cinder-iscsi\n++ export IMAGE_STORAGE=glance-swift\n\
+            ++ IMAGE_STORAGE=glance-swift\n++ export PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n\
+            ++ PIPELINE_ID=ec832ce3-4393-4d4f-ab06-06836ea47e08\n++ export NETWORKING=neutron-nsx\n\
+            ++ NETWORKING=neutron-nsx\n++ export UBUNTU_RELEASE=precise\n++ UBUNTU_RELEASE=precise\n\
+            Exiting with: 0\n+ rm -rf /var/lib/jenkins/.juju/environments\nPOST BUILD\
+            \ TASK : SUCCESS\nEND OF POST BUILD TASK : 2\nFinished: FAILURE\n\n"
+        charms: []
+        link to jenkins: http://oil-jenkins.canonical.com/job/pipeline_deploy/00000/console
+        machines: []
+        ports: []
+        regexps: NO REGEX - UNFILED/UNMATCHED BUG
+        slaves: []
+        states: []
+        units: []
+        vendors: []
+    build: '00000'
+    link to test-catalog: https://oil.canonical.com/pipeline/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+    status: Unknown

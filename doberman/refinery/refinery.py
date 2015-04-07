@@ -659,6 +659,7 @@ class Refinery(CrudeAnalysis):
                                self.cli.genoilstats_build, fx_pls, ext))
             print
 
+
 def main():
     refined = Refinery(make_plots=False)
     return refined.message

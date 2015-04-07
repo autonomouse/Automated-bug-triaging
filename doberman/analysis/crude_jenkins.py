@@ -22,13 +22,14 @@ class Jenkins(Common):
         self.cli = cli
         self.netloc = self.cli.netloc
         self.cookie = None
-        self.connect_to_jenkins()
-        try:
-            self._jenkins.append(self.jenkins_api)
-        except:
-            msg = "Problem connecting to Jenkins (try refreshing cookies?)"
-            self.cli.LOG.error(msg)
-            raise Exception(msg)
+        if not self.cli.offline_mode:
+            self.connect_to_jenkins()
+            try:
+                self._jenkins.append(self.jenkins_api)
+            except:
+                msg = "Problem connecting to Jenkins (try refreshing cookies?)"
+                self.cli.LOG.error(msg)
+                raise Exception(msg)
 
     def connect_to_jenkins(self):
         """ Connects to jenkins via jenkinsapi, returns a jenkins object. """
@@ -163,7 +164,8 @@ class Build(Common):
     def __init__(self, build_number, jobname, jenkins, yaml_dict, cli, bugs,
                  pipeline):
         self.cli = cli
-        self.fetch_data_if_appropriate(jenkins, jobname, build_number)
+        if not self.cli.offline_mode:
+            self.fetch_data_if_appropriate(jenkins, jobname, build_number)
         self.build_number = build_number
         self.jobname = jobname
         self.jenkins = jenkins
@@ -197,12 +199,16 @@ class Build(Common):
 
         parse_as_xml = self.cli.xmls
         xml_files_parsed = []
-        # TODO: This still polls jenkins, even in 'offline' mode:
-        build_details = [build_info for build_info in self.jenkins.jenkins_api
-                         [self.jobname]._poll()['builds'] if build_info
-                         ['number'] == int(self.build_number)][0]
-        build_status = (build_details['result'] if 'result' in build_details
-                        else 'Unknown')
+
+        if not self.cli.offline_mode:
+            build_details =\
+                [build_info for build_info in self.jenkins.jenkins_api
+                 [self.jobname]._poll()['builds']
+                 if build_info['number'] == int(self.build_number)][0]
+            build_status = (build_details['result'] if 'result' in
+                            build_details else 'Unknown')
+        else:
+            build_status = 'Unknown'
         matching_bugs = {}
 
         bug_unmatched = True
