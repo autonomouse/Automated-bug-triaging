@@ -294,6 +294,11 @@ bugs:
   "1373402":
     category: None
     description: "No handlers could be found for logger glanceclient.common.http (tempest fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "No handlers could be found for logger .glanceclient.common.http"
     test_tempest_smoke:
       -
         "console.txt":
