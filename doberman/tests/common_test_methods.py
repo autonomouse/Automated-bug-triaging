@@ -11,10 +11,10 @@ from lxml import etree
 
 class CommonTestMethods(DobermanTestBase):
 
-    mock_data_dir = "./doberman/mock_data/"
+    mock_data_dir = "./doberman/tests/mock_data/"
     mock_output_data = os.path.abspath(os.path.join(mock_data_dir, "output"))
     DB_files = os.path.abspath(os.path.join(mock_data_dir, "database_files"))
-    real_db_yaml = "../../../samples/mock_database.yml"
+    real_db_yaml = "../../../../samples/mock_database.yml"
     pipeline_id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
     paabn_info = {'pipeline_deploy': '00001',
                   'pipeline_prepare': '00002',
