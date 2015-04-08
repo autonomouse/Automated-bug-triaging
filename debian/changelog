@@ -1,3 +1,10 @@
+doberman (1.2.1-0ubuntu1) utopic; urgency=medium
+
+  * CrudeAnalysis now has unit tests, including one to make sure it can actually find each the bugs it is looking for
+  * Quick fix to bug introduced last commit to rematch to enable it to find both console bugs and glob-matched file bugs (this won't happen any more as we finally has a full set of unit tests!)
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 08 Apr 2015 13:38:48 +0100
+
 doberman (1.2.0-0ubuntu1) utopic; urgency=medium
 
   * Fixed a huge bug where it wasn't looking for bugs in console.txt files
