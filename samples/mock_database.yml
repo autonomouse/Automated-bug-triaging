@@ -173,7 +173,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp:
-            - "^No more IP addresses available on network"
+            - "No more IP addresses available on network"
 
   "1372997":
     category: None
@@ -725,7 +725,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "This server could not verify that you are authorized to access the document you requested. Either you supplied the wrong credentials (e.g., bad password), or your browser does not understand how to supply the credentials required"
+            - "This server could not verify that you are authorized to access the document you requested. Either you supplied the wrong credentials .e.g., bad password., or your browser does not understand how to supply the credentials required"
 
   "1416437":
     category: None

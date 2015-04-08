@@ -242,7 +242,6 @@ class Build(Common):
                         if len(globs) == 0:
                             info['error'] = target_file + " not present"
                             break
-
                         for target_location in globs:
                             try:
                                 target = target_location.split(os.sep)[-1]
@@ -251,7 +250,8 @@ class Build(Common):
                             if not (target in parse_as_xml):
                                 with open(target_location, 'r') as grep_me:
                                     text = grep_me.read()
-                                hit = self.rematch(and_dict, target, text)
+                                hit = self.rematch(and_dict, target,
+                                                   target_file, text)
                                 if hit:
                                     failed_to_hit_any_flag = False
                                     glob_hits.append(
@@ -293,7 +293,7 @@ class Build(Common):
                                     info['xunit name'] = \
                                         fail.getparent().get('name')
                                     hit = self.rematch(and_dict, target,
-                                                       pre_log)
+                                                       target_file, pre_log)
                                     if hit:
                                         failed_to_hit_any_flag = False
                                         # Add to hit_dict:
@@ -434,15 +434,13 @@ class Build(Common):
 
         return uxf_dict
 
-    def rematch(self, bugs, target_file, text):
+    def rematch(self, bugs, target_file, orig_filename_in_db, text):
         """ Search files in bugs for multiple matching regexps. """
-        original_target_file = target_file if target_file != \
-            "{}_console.txt".format(self.jobname) else "console.txt"
-        target_bugs = bugs.get(original_target_file, bugs.get('*'))
-
+        if target_file == "{}_console.txt".format(self.jobname):
+            orig_filename_in_db = "console.txt"
+        target_bugs = bugs.get(orig_filename_in_db, bugs.get('*'))
         if not target_bugs:
             return
-
         regexps = target_bugs.get('regexp')
 
         if type(regexps) == list:
@@ -454,11 +452,15 @@ class Build(Common):
         else:
             regexp = regexps
             set_re = set([regexps])
+
         if regexp not in ['None', None, '']:
             matches = re.compile(regexp, re.DOTALL).findall(text)
             if matches:
                 if len(set_re) == len(set(matches)):
-                    return {target_file: {'regexp': regexps}}
+                    if '*' in orig_filename_in_db:
+                        return {orig_filename_in_db: {'regexp': regexps}}
+                    else:
+                        return {target_file: {'regexp': regexps}}
 
 
 class Deploy(Build):
