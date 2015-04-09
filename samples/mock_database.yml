@@ -369,7 +369,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "Failed to prepare deployed cloud.{1,2000}ConnectionFailed. Connection to neutron failed. Maximum attempts reached"
+            - "Failed to prepare deployed cloud.{1,2000}ConnectionFailed. Connection to neutron failed"
 
   "1387688":
     category: None
