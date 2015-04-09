@@ -842,3 +842,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "juju_debug_log.txt":
             regexp:
             - "Unable to locate package calico-compute"
+
+  "1442271":
+    category: None
+    description: "AssertionError. State change timeout exceeded for boto.test_ec2_volumes (tempest fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "AssertionError. State change timeout exceeded"
+
