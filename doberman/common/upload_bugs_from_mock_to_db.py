@@ -6,7 +6,7 @@ import json
 import yaml
 
 DEFAULT_DB = '/usr/share/doberman/samples/mock_database.yml'
-DEFAULT_TOKEN = '/etc/oil-ci/test-catalog-auth.json'
+DEFAULT_TOKEN = 'test-catalog-auth.json'
 DEFAULT_ENDPOINT = 'https://oil.canonical.com/api/'
 
 

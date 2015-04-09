@@ -7,7 +7,7 @@ from doberman.analysis.analysis import CrudeAnalysis
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
 from pprint import pprint
-from cli import CLI
+from filing_station_cli import CLI
 
 '''
     def autofile(self):
@@ -25,12 +25,12 @@ class FilingStation(CrudeAnalysis):
 
     """
 
-    def __init__(self):
+    def __init__(self, cli=False):
         """ Overwriting CrudeAnalysis' __init__ method """
-
         self.message = -1
-        self.cli = CLI()
-
+        
+        self.cli = CLI().populate_cli() if not cli else cli
+        
         # Download and analyse the crude output yamls:
         self.autofile()
 
@@ -41,13 +41,13 @@ class FilingStation(CrudeAnalysis):
     def autofile(self):
         """ Get and analyse the crude output yamls.
         """
-        # Get refinery output        
+        # Get refinery output
         self.cli.LOG.info("Working on {0} as refinery output directory"
                           .format(self.cli.reportdir))
         unfiled_bugs_yamls = [unf_bugs_file for unf_bugs_file in os.listdir(
-                              self.cli.reportdir) if 'auto-triaged_' in 
+                              self.cli.reportdir) if 'auto-triaged_' in
                               unf_bugs_file]
-        for fname in unfiled_bugs_yamls:                    
+        for fname in unfiled_bugs_yamls:
             #fname = 'auto-triaged_unfiled_bugs.yml'
             #self.test_catalog = TestCatalog(self.cli)
             #if not self.cli.offline_mode:
@@ -74,7 +74,7 @@ class FilingStation(CrudeAnalysis):
     def create_lp_bugs(self, bugs_to_file):
         """
         """
-        
+
         for pl in bugs_to_file:
             for bug in bugs_to_file[pl]:
                 bug_to_file = bugs_to_file[pl][bug]
@@ -117,7 +117,7 @@ class FilingStation(CrudeAnalysis):
                 example_pl += "{}:\n{}\n\n".format(buginfo, conv_txt)
 
             example_pl +="\n"
-            affectedpls = "AFFECTED PIPELINES \n --------------------------- \n"
+            affectedpls = "AFFECTED PIPELINES \n ---------------------------\n"
             affectedpls += "\n{}\n\n".format(dup_pipelines)
 
             #import pdb; pdb.set_trace()
