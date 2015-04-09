@@ -844,4 +844,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
+            - "ERROR.*bootstrap instance started but did not change to Deployed state"
+
+  "1438023":
+    category: None
+    description: "Prodstack: ConnectionFailed: Connection to neutron failed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "raise exceptions.ConnectionFailed(reason=e).*ConnectionFailed: Connection to neutron failed"
