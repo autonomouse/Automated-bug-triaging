@@ -33,7 +33,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "unit. nova-compute.+agent-state. error details. hook failed...ceph-relation-changed"
+            - "unit. nova-compute.*agent-state. error details. hook failed...ceph-relation-changed"
 
   "1358326":
     category: None
@@ -289,7 +289,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "ERROR bootstrap failed"
+            - "Calling .juju bootstrap. failed"
 
   "1373402":
     category: None
@@ -670,7 +670,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "importer.py.. line.{5,7} in check_timeout"
+            - "importer.py.. line.* in check_timeout"
 
 
   "1414656":
@@ -700,7 +700,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "identity-admin-relation-changed. for keystone.identity-admin"
+            - "contrail-configuration.*agent-state: error details: hook failed: .identity-admin-relation-change"
 
 
   "1417045":
@@ -766,7 +766,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "400 BAD REQUEST....distro_series.{1,50} is not a valid distro_series.  It should be one of. .., .windows.win2012hvr2., .ubuntu"
+            - "ERROR failed to bootstrap environment: cannot start bootstrap instance: gomaasapi: got error back from server: 400 BAD REQUEST.*is not a valid distro_series.*It should be one of"
 
   "1418235":
     category: None
@@ -823,16 +823,24 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "OperationalError..Code..Message.Unknown error occurred...Message...Error...Errors."
 
-
-  "1436496":
+  "1430834":
     category: None
-    description: "[n1kv] pipeline-prepare: network profile not found"
+    description: "Prodstack: no workspace from node hudson.slaves.* Build Aborted"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
     test_tempest_smoke:
       -
         "console.txt":
             regexp:
-            - "Network Profile default_network_profile could not be found"
-
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
 
   "1436436":
     category: None
@@ -851,4 +859,32 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "AssertionError. State change timeout exceeded"
+
+  "1437056":
+    category: None
+    description: "Prodstack: bootstrap instance started but did not change to Deployed state"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "ERROR.*bootstrap instance started but did not change to Deployed state"
+
+  "1438023":
+    category: None
+    description: "Prodstack: ConnectionFailed. Connection to neutron failed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "raise exceptions.ConnectionFailed.reason=e..*ConnectionFailed. Connection to neutron failed"
+
+  "1441652":
+    category: None
+    description: "1.8b1: 502 Proxy Error when trying to access MAAS in browser"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "gomaasapi: got error back from server: 502 Proxy Error"
+
 
