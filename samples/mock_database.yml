@@ -284,12 +284,12 @@ bugs:
 
   "1371792":
     category: None
-    description: Bootstrap failure
+    description: "juju bootstrap failures - dpkg lock race condition"
     pipeline_deploy:
       -
         "console.txt":
             regexp:
-            - "Calling .juju bootstrap. failed"
+            - "Reading package lists...E: Could not get lock /var/lib/dpkg/lock - open \(11: Resource temporarily unavailable\).*Unable to lock the administration directory \(/var/lib/dpkg/\), is another process using it?.*ERROR bootstrap failed"
 
   "1373402":
     category: None
@@ -304,16 +304,6 @@ bugs:
         "console.txt":
             regexp:
             - "No handlers could be found for logger .glanceclient.common.http"
-
-  "1407690":
-    category: None
-    description: "[Prodstack] HTTPInternalServerError - 500 Internal Server Error (prepare fail)"
-    pipeline_prepare:
-      -
-        "console.txt":
-            regexp:
-            - "Failed to prepare deployed cloud.{1000,1200}HTTPInternalServerError. 500 Internal Server Error"
-
 
   "1375220":
     category: None
@@ -887,4 +877,29 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "gomaasapi: got error back from server: 502 Proxy Error"
 
+  "1444365":
+    category: None
+    description: "Failed to prepare network for deployed cloud - exceptions.Unauthorized"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "_cs_request.*raise exceptions.Unauthorized\(message=body\).*Unauthorized: Authentication required"
 
+  "1444380":
+    category: None
+    description: "Failure to prepare network for deployed cloud - NeutronClientException: 500 - HTTPInternalServerError"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "self.prepare_network\(\).*NeutronClientException: 500-\{.+.+NeutronError.: \{.+.+message.+: u.Request Failed: internal server error while processing your request.*type.*HTTPInternalServerError"
+
+  "1444394":
+    category: None
+    description: "pipeline_prepare failure - CommunicationError: Error communicating with glance node"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Failed to prepare deployed cloud.*glanceclient\/common\/http.py.*_http_request.*raise exc.CommunicationError\(message=message\).*Error communicating with http://.*:\d{4,5"
