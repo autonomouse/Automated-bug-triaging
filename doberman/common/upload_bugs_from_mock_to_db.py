@@ -79,7 +79,7 @@ def main():
         endpoint = endpoint[0]
     cookie_location = args.token
     if type(cookie_location) == list:
-        cookie_locatoin = cookie_location[0]
+        cookie_location = cookie_location[0]
 
     cookie = json.load(open(cookie_location))
     client = tc_client(endpoint=endpoint, cookies=cookie)
