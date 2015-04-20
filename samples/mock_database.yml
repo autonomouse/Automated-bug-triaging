@@ -663,16 +663,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "NeutronError....Request Failed. internal server error while processing your request"
 
-  "1414652":
-    category: None
-    description: "[Serverstack] Reached deployment timeout (deploy fail)"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "importer.py.. line.* in check_timeout"
-
-
   "1414656":
     category: None
     description: "[Serverstack] swift-storage fails to install (deploy fail)"
@@ -777,25 +767,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Found unit contrail-configuration.{3,40} in error state. hook failed...identity-admin-relation-changed. for keystone.identity.admin"
 
-  "1372407":
-    category: None
-    description: "Absent juju_status.yaml"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
-    pipeline_prepare:
-      -
-        "console.txt":
-            regexp:
-            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
-    test_tempest_smoke:
-      -
-        "console.txt":
-            regexp:
-            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
-
   "1433978":
     category: None
     description: "[Prodstack] Failed deployment due to mysql, lxc, hook failed (deploy fail)"
@@ -887,4 +858,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "gomaasapi: got error back from server: 502 Proxy Error"
 
-
+  "1438551":
+    category: None
+    description: "Prodstack qdaemon should release all nodes with the base tag when initializing"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "cannot run instances. cannot run instances. gomaasapi. got error back from server. 409 CONFLICT .No available node matches constraints"
