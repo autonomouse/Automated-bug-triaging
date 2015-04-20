@@ -89,8 +89,8 @@ class FilingStation(CrudeAnalysis):
             pipeline = bug_to_file.get('job').split('_')[1]
             title = "[{}] {} ({} fail)".format(cloud, bug, pipeline)
 
-            warning = "This bug does not yet have an entry in the bugs " \
-                      "database"
+            warning = "This bug does not yet have an entry in the bugs "
+            warning += "database"
             warning += " - remove this line once the bug number and regexp "
             warning += "have been added."
 
@@ -128,8 +128,8 @@ class FilingStation(CrudeAnalysis):
             # all_scores
             # link to pipeline_start
 
-            bug_description = notes + link2jen + cons_op + example_pl + \
-                affectedpls
+            bug_description = notes + link2jen + cons_op + example_pl
+            bug_description += affectedpls
 
             tags = ""
 
