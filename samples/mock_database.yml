@@ -858,4 +858,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "gomaasapi: got error back from server: 502 Proxy Error"
 
-
+  "1438551":
+    category: None
+    description: "Prodstack qdaemon should release all nodes with the base tag when initializing"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "cannot run instances. cannot run instances. gomaasapi. got error back from server. 409 CONFLICT .No available node matches constraints"
