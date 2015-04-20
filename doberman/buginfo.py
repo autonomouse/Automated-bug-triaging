@@ -118,8 +118,11 @@ class BugInfo():
     # Description: This method will file a bug in launchpad
     def file_bug(self, intitle, indesc, intags='doberman'):
         # pass in tags optionally, default to doberman
-        bugtask = launchpad.bugs.createBug(description=indesc, title=intitle, target=self.launchpad.distributions[self.dist],\
-                                           tags=intags)
+        bugtask = self.launchpad.bugs.createBug(
+            description=indesc,
+            title=intitle,
+            target=self.launchpad.distributions[self.dist],
+            tags=intags)
         bugno = bugtask.id
-        
+
         return bugno

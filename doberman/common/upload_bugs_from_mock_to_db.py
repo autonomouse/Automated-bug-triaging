@@ -23,12 +23,12 @@ def parse():
     return parser.parse_args()
 
 
-def update_bugs_database(endpoint, cookielocation, db_location):    
+def update_bugs_database(endpoint, cookielocation, db_location):
     endpoint = endpoint[0] if type(endpoint) == list else endpoint
     cookielocation = \
         cookielocation[0] if type(cookielocation) == list else cookielocation
     db_location = db_location[0] if type(db_location) == list else db_location
-    
+
     local_db = yaml.load(open(db_location))
     cookie = json.load(open(cookielocation))
     client = tc_client(endpoint=endpoint, cookies=cookie)

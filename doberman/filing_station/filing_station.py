@@ -4,8 +4,6 @@ import sys
 import os
 import yaml
 from doberman.analysis.analysis import CrudeAnalysis
-from doberman.analysis.crude_jenkins import Jenkins
-from doberman.analysis.crude_test_catalog import TestCatalog
 from pprint import pprint
 from cli import CLI
 
@@ -18,6 +16,7 @@ from cli import CLI
         self.api.file_bugs()
         self.api.tidy_up()
 '''
+
 
 class FilingStation(CrudeAnalysis):
     """
@@ -41,18 +40,19 @@ class FilingStation(CrudeAnalysis):
     def autofile(self):
         """ Get and analyse the crude output yamls.
         """
-        # Get refinery output        
+        # Get refinery output
         self.cli.LOG.info("Working on {0} as refinery output directory"
                           .format(self.cli.reportdir))
         unfiled_bugs_yamls = [unf_bugs_file for unf_bugs_file in os.listdir(
-                              self.cli.reportdir) if 'auto-triaged_' in 
+                              self.cli.reportdir) if 'auto-triaged_' in
                               unf_bugs_file]
-        for fname in unfiled_bugs_yamls:                    
+        for fname in unfiled_bugs_yamls:
             #fname = 'auto-triaged_unfiled_bugs.yml'
             #self.test_catalog = TestCatalog(self.cli)
             #if not self.cli.offline_mode:
             #    self.jenkins = Jenkins(self.cli)
-            #    self.build_pl_ids_and_check() # But should be pl_start uilds, not pl_deploy
+            #    self.build_pl_ids_and_check()
+            # But should be pl_start uilds, not pl_deploy
             #    output_folder = self.cli.reportdir
             #    self.download_unfiled_bugs(fname, output_folder)
             #    # TODO: Fetch from pipeline_start on jenkins...
@@ -66,7 +66,8 @@ class FilingStation(CrudeAnalysis):
             self.create_lp_bugs(bugs_to_file)
 
     def download_unfiled_bugs(self, fname, output_folder):
-        # Also get info from pipeline_deploy? No, this should be in pipeline_start already!!!
+        # Also get info from pipeline_deploy? No, this should be in
+        # pipeline_start already!!!
         #os.path.join(output_folder, fname)
         #import pdb; pdb.set_trace()
         pass
@@ -74,7 +75,7 @@ class FilingStation(CrudeAnalysis):
     def create_lp_bugs(self, bugs_to_file):
         """
         """
-        
+
         for pl in bugs_to_file:
             for bug in bugs_to_file[pl]:
                 bug_to_file = bugs_to_file[pl][bug]
@@ -88,15 +89,17 @@ class FilingStation(CrudeAnalysis):
             pipeline = bug_to_file.get('job').split('_')[1]
             title = "[{}] {} ({} fail)".format(cloud, bug, pipeline)
 
-            warning = "This bug does not yet have an entry in the bugs database"
-            warning += " - remove this line once the bug number and regexp have "
-            warning += "been added."
+            warning = "This bug does not yet have an entry in the bugs " \
+                      "database"
+            warning += " - remove this line once the bug number and regexp "
+            warning += "have been added."
 
-            dup_pipelines = "\n".join([pl for pl in bug_to_file.pop('duplicates')])
+            dup_pipelines = "\n".join
+            ([pl for pl in bug_to_file.pop('duplicates')])
 
             notes = "NOTES \n --------- \n{}\n\n".format(warning)
-            link2jen = "LINK TO JENKINS CONSOLE OUTPUT \n ------------------------"
-            link2jen += "---------------------- \n "
+            link2jen = "LINK TO JENKINS CONSOLE OUTPUT \n --------------------"
+            link2jen += "-------------------------- \n "
             link2jen += "\n{}\n\n".format(bug_to_file.pop('link to jenkins'))
             cons_op = "ERRORS, FAILS AND TRACEBACK (NORMALISED) \n"
             cons_op += "------------------------------------ \n"
@@ -106,26 +109,27 @@ class FilingStation(CrudeAnalysis):
                 # I need to turn this into a nice table eventually...
                 txt = bug_to_file[buginfo]
                 if not txt:
-                     conv_txt = "?"
+                    conv_txt = "?"
                 elif type(txt) is list:
                     conv_txt = "\n".join(txt)
                 elif type(txt) is dict:
-                    conv_txt = "\n".join("{}: {}".format(k,v) for k,v in
+                    conv_txt = "\n".join("{}: {}".format(k, v) for k, v in
                                          txt.items())
                 else:
                     conv_txt = txt
                 example_pl += "{}:\n{}\n\n".format(buginfo, conv_txt)
 
-            example_pl +="\n"
-            affectedpls = "AFFECTED PIPELINES \n --------------------------- \n"
-            affectedpls += "\n{}\n\n".format(dup_pipelines)
+            example_pl += "\n"
+            affectedpls = "AFFECTED PIPELINES \n --------------------------- "
+            affectedpls += "\n\n{}\n\n".format(dup_pipelines)
 
             #import pdb; pdb.set_trace()
             # self.cli.match_threshold
             # all_scores
             # link to pipeline_start
 
-            bug_description = notes + link2jen + cons_op + example_pl + affectedpls
+            bug_description = notes + link2jen + cons_op + example_pl + \
+                affectedpls
 
             tags = ""
 
@@ -169,18 +173,19 @@ class FilingStation(CrudeAnalysis):
         """
         msg = "Bug filed on {} with launchpad bug id: {}"
 
-        bug_tracker = '/tmp/mock_launchpad/' # tmp
-        self.mkdir(bug_tracker) # tmp
+        bug_tracker = '/tmp/mock_launchpad/'  # tmp
+        self.mkdir(bug_tracker)  # tmp
 
-        file_path = os.path.join(bug_tracker, '{}_{}.yml'.format(bug_to_file[0],
-                                 bug_to_file[1]))
+        file_path = os.path.join
+        (bug_tracker, '{}_{}.yml'.format(bug_to_file[0], bug_to_file[1]))
         with open(file_path, 'w') as outfile:
             for line in bug_to_file[1:]:
                 outfile.write(line + "\n")
 
-        lp_bug_id = bug_to_file[1] # tmp
+        lp_bug_id = bug_to_file[1]  # tmp
 
         self.cli.LOG.info(msg.format(bug_tracker, lp_bug_id))
+
 
 def main():
     fs = FilingStation()
