@@ -5,7 +5,8 @@ import argparse
 import json
 import yaml
 
-DEFAULT_DB = '/usr/share/doberman/samples/mock_database.yml'
+
+DEFAULT_DB = 'samples/mock_database.yml'
 DEFAULT_TOKEN = 'test-catalog-auth.json'
 DEFAULT_ENDPOINT = 'https://oil.canonical.com/api/'
 
@@ -23,9 +24,14 @@ def parse():
     return parser.parse_args()
 
 
-def update_bugs_database(endpoint, cookie_location, db_location):
+def update_bugs_database(endpoint, cookielocation, db_location):    
+    endpoint = endpoint[0] if type(endpoint) == list else endpoint
+    cookielocation = \
+        cookielocation[0] if type(cookielocation) == list else cookielocation
+    db_location = db_location[0] if type(db_location) == list else db_location
+    
     local_db = yaml.load(open(db_location))
-    cookie = json.load(open(cookie_location))
+    cookie = json.load(open(cookielocation))
     client = tc_client(endpoint=endpoint, cookies=cookie)
 
     remote_db = {'bugs': []}

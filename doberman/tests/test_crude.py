@@ -66,6 +66,7 @@ class CrudeAnalysisTests(CommonTestMethods):
 
         add_to_xml_dict = {}
         for bug in bugs.items():
+            bug_number = bug[0]
             bug_keys = bug[1].keys()
             bug_keys.remove('category')
             bug_keys.remove('description')
@@ -86,7 +87,7 @@ class CrudeAnalysisTests(CommonTestMethods):
                     if expanded_filename in cli.xmls:
                         if tmpfile not in add_to_xml_dict:
                             add_to_xml_dict[tmpfile] = []
-                        add_to_xml_dict[tmpfile].append((bug[0], text))
+                        add_to_xml_dict[tmpfile].append((bug_number, text))
                     else:
                         with open(tmpfile, 'a+') as f:
                             f.write(text + "\n")
@@ -105,7 +106,12 @@ class CrudeAnalysisTests(CommonTestMethods):
             self.get_output_data(fname="triage_test_tempest_smoke.yml",
                                  output_data_dir=self.tmpdir)
         bugs_found.extend(tempest_data.get('bugs').keys())
-        self.assertTrue([b for b in bugs.keys() if b not in bugs_found] == [])
+        failed_bugs = [b for b in bugs.keys() if b not in bugs_found]
+        if failed_bugs:
+            print("\nThe following bug(s) were not found:\n")
+        for bug_num in failed_bugs:
+            print(bug_num)
+        self.assertTrue(failed_bugs == [])
 
     def test_date_passing(self):
         options_parser = OptionsParser()
@@ -115,4 +121,3 @@ class CrudeAnalysisTests(CommonTestMethods):
         response2 = options_parser.date_parse(input_str2)
         correct_response = datetime(1980, 12, 1, 0, 0, tzinfo=pytz.utc)
         self.assertEqual(response1, response2, correct_response)
-
