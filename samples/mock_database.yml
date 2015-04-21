@@ -33,7 +33,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "unit. nova-compute.+agent-state. error details. hook failed...ceph-relation-changed"
+            - "unit. nova-compute.*agent-state. error details. hook failed...ceph-relation-changed"
 
   "1358326":
     category: None
@@ -284,12 +284,12 @@ bugs:
 
   "1371792":
     category: None
-    description: Bootstrap failure
+    description: "juju bootstrap failures - dpkg lock race condition"
     pipeline_deploy:
       -
         "console.txt":
             regexp:
-            - "ERROR bootstrap failed"
+            - "Reading package lists...E: Could not get lock /var/lib/dpkg/lock - open .11. Resource temporarily unavailable.*Unable to lock the administration directory ./var/lib/dpkg/., is another process using it?.*ERROR bootstrap failed"
 
   "1373402":
     category: None
@@ -304,16 +304,6 @@ bugs:
         "console.txt":
             regexp:
             - "No handlers could be found for logger .glanceclient.common.http"
-
-  "1407690":
-    category: None
-    description: "[Prodstack] HTTPInternalServerError - 500 Internal Server Error (prepare fail)"
-    pipeline_prepare:
-      -
-        "console.txt":
-            regexp:
-            - "Failed to prepare deployed cloud.{1000,1200}HTTPInternalServerError. 500 Internal Server Error"
-
 
   "1375220":
     category: None
@@ -369,7 +359,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "Failed to prepare deployed cloud.{1,2000}ConnectionFailed. Connection to neutron failed. Maximum attempts reached"
+            - "Failed to prepare deployed cloud.{1,2000}ConnectionFailed. Connection to neutron failed"
 
   "1387688":
     category: None
@@ -568,6 +558,10 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "unit. mysql... machine. .{1,3}lxc.{1,3} agent-state. error details. hook failed...install"
+      -
+        "mysql_*_var_log_juju_*mysql*.log":
+            regexp:
+                - "ImportError. No module named six"
 
   "1405802":
     category: None
@@ -625,7 +619,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "juju_status.yaml":
             regexp:
-            - "409 CONFLICT .No available node matches constraints. tags=hw-ok."
+            - "409 CONFLICT .No available node matches constraints"
 
   "1405804":
     category: None
@@ -663,16 +657,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "NeutronError....Request Failed. internal server error while processing your request"
 
-  "1414652":
-    category: None
-    description: "[Serverstack] Reached deployment timeout (deploy fail)"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "importer.py.. line.{5,7} in check_timeout"
-
-
   "1414656":
     category: None
     description: "[Serverstack] swift-storage fails to install (deploy fail)"
@@ -700,7 +684,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "identity-admin-relation-changed. for keystone.identity-admin"
+            - "contrail-configuration.*agent-state: error details: hook failed: .identity-admin-relation-change"
 
 
   "1417045":
@@ -766,7 +750,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "400 BAD REQUEST....distro_series.{1,50} is not a valid distro_series.  It should be one of. .., .windows.win2012hvr2., .ubuntu"
+            - "ERROR failed to bootstrap environment: cannot start bootstrap instance: gomaasapi: got error back from server: 400 BAD REQUEST.*is not a valid distro_series.*It should be one of"
 
   "1418235":
     category: None
@@ -776,25 +760,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Found unit contrail-configuration.{3,40} in error state. hook failed...identity-admin-relation-changed. for keystone.identity.admin"
-
-  "1372407":
-    category: None
-    description: "Absent juju_status.yaml"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
-    pipeline_prepare:
-      -
-        "console.txt":
-            regexp:
-            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
-    test_tempest_smoke:
-      -
-        "console.txt":
-            regexp:
-            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
 
   "1433978":
     category: None
@@ -823,16 +788,24 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "OperationalError..Code..Message.Unknown error occurred...Message...Error...Errors."
 
-
-  "1436496":
+  "1430834":
     category: None
-    description: "[n1kv] pipeline-prepare: network profile not found"
+    description: "Prodstack: no workspace from node hudson.slaves.* Build Aborted"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
     test_tempest_smoke:
       -
         "console.txt":
             regexp:
-            - "Network Profile default_network_profile could not be found"
-
+            - "Exception when executing the batch command : no workspace from node hudson.slaves.* which is computer hudson.slaves.* and has channel null"
 
   "1436436":
     category: None
@@ -842,3 +815,80 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "juju_debug_log.txt":
             regexp:
             - "Unable to locate package calico-compute"
+
+  "1442271":
+    category: None
+    description: "AssertionError. State change timeout exceeded for boto.test_ec2_volumes (tempest fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "AssertionError. State change timeout exceeded"
+
+  "1437056":
+    category: None
+    description: "Prodstack: bootstrap instance started but did not change to Deployed state"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "ERROR.*bootstrap instance started but did not change to Deployed state"
+
+  "1438023":
+    category: None
+    description: "Prodstack: ConnectionFailed. Connection to neutron failed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "raise exceptions.ConnectionFailed.reason=e..*ConnectionFailed. Connection to neutron failed"
+
+  "1441652":
+    category: None
+    description: "1.8b1: 502 Proxy Error when trying to access MAAS in browser"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "gomaasapi: got error back from server: 502 Proxy Error"
+
+  "1446248":
+    category: None
+    description: "Packages cannot be authenticated leading to hook install failures"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "agent-state. error details. hook failed...install"
+      -
+        "*_var_log_juju_*.log":
+            regexp:
+                - "WARNING. The following packages cannot be authenticated....*install logger.go..*   .+..+.*install logger.go..* E. There are problems and -y was used without --force-yes.*..*Traceback .most recent call last.."
+
+  "1444365":
+    category: None
+    description: "Failed to prepare network for deployed cloud - exceptions.Unauthorized"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "_cs_request.*raise exceptions.Unauthorized.message=body.*Unauthorized: Authentication required"
+
+  "1444380":
+    category: None
+    description: "Failure to prepare network for deployed cloud - NeutronClientException: 500 - HTTPInternalServerError"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "self.prepare_network.*NeutronClientException: 500-.+NeutronError.+message.+ u.Request Failed. internal server error while processing your request.*type.*HTTPInternalServerError"
+
+  "1444394":
+    category: None
+    description: "pipeline_prepare failure - CommunicationError: Error communicating with glance node"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Failed to prepare deployed cloud.*glanceclient.common.http.py.*_http_request.*raise exc.CommunicationError.message=message.*Error communicating with http"
+
