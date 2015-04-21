@@ -568,6 +568,10 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "unit. mysql... machine. .{1,3}lxc.{1,3} agent-state. error details. hook failed...install"
+      -
+        "mysql_*_var_log_juju_*mysql*.log":
+            regexp:
+                - "ImportError. No module named six"
 
   "1405802":
     category: None
@@ -625,7 +629,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "juju_status.yaml":
             regexp:
-            - "409 CONFLICT .No available node matches constraints. tags=hw-ok."
+            - "409 CONFLICT .No available node matches constraints"
 
   "1405804":
     category: None
@@ -858,11 +862,15 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "gomaasapi: got error back from server: 502 Proxy Error"
 
-  "1438551":
+  "1446248":
     category: None
-    description: "Prodstack qdaemon should release all nodes with the base tag when initializing"
+    description: "Packages cannot be authenticated leading to hook install failures"
     pipeline_deploy:
       -
         "console.txt":
             regexp:
-            - "cannot run instances. cannot run instances. gomaasapi. got error back from server. 409 CONFLICT .No available node matches constraints"
+            - "agent-state. error details. hook failed...install"
+      -
+        "*_var_log_juju_*.log":
+            regexp:
+                - "WARNING. The following packages cannot be authenticated....*install logger.go..*   .+..+.*install logger.go..* E. There are problems and -y was used without --force-yes.*..*Traceback .most recent call last.."
