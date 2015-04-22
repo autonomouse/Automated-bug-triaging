@@ -617,7 +617,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
     description: "prodstack No available node matches constraints tags=hw-ok - non-oil allocated node"
     pipeline_deploy:
       -
-        "juju_status.yaml":
+        "console.txt":
             regexp:
             - "409 CONFLICT .No available node matches constraints"
 
