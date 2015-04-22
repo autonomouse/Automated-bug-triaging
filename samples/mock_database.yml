@@ -892,3 +892,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "ERROR failed to bootstrap environment. cannot start bootstrap instance. gomaasapi. got error back from server. 503 SERVICE UNAVAILABLE .node.{38} Unable to allocate static IP due to address exhaustion"
             
+  "1447210":
+    category: None
+    description: "[Prodstack] oil_ci.cli - Inspection and Authorization Failed - failed to apply workaround, try with juju (prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "oil_ci.cli. Inspection failed. Authorization Failed. An unexpected error prevented the server from fulfilling your request.+failed to apply workaround, try with juju"
