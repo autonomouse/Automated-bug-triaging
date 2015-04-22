@@ -1,7 +1,10 @@
 import os
 import yaml
+import pytz
 from common_test_methods import CommonTestMethods
 from doberman.analysis.analysis import CrudeAnalysis
+from doberman.common.options_parser import OptionsParser
+from datetime import datetime
 
 
 class CrudeAnalysisTests(CommonTestMethods):
@@ -109,3 +112,12 @@ class CrudeAnalysisTests(CommonTestMethods):
         for bug_num in failed_bugs:
             print(bug_num)
         self.assertTrue(failed_bugs == [])
+
+    def test_date_passing(self):
+        options_parser = OptionsParser()
+        input_str1 = "1 Dec 80"
+        response1 = options_parser.date_parse(input_str1)
+        input_str2 = "1_Dec_80"
+        response2 = options_parser.date_parse(input_str2)
+        correct_response = datetime(1980, 12, 1, 0, 0, tzinfo=pytz.utc)
+        self.assertEqual(response1, response2, correct_response)

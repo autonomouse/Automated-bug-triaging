@@ -1,14 +1,18 @@
-#! /usr/bin/env python2
-
-from doberman.analysis.analysis import CLI
+from doberman.common.CLI import CLI
+from doberman.common.options_parser import OptionsParser
 from doberman.common import utils
 
 
 class CLI(CLI):
     def __init__(self):
-        self.set_up_log_and_parser()
+        self.set_up_parser()
+        self.add_options_to_parser()
         self.add_refinery_specific_options_to_parser()
-        self.parse_cli_args()
+        self.LOG = self.set_up_logger('refinery')
+
+    def populate_cli(self):
+        options_parser = OptionsParser()
+        return options_parser.parse_opts_and_args(self.opts, self.args)
 
     def add_refinery_specific_options_to_parser(self):
         prsr = self.parser
@@ -19,7 +23,13 @@ class CLI(CLI):
         prsr.add_option('-g', '--genoilstats_build', action='store',
                         dest='genoilstats_build', default=None,
                         help=('the jenkins build number of gen_oil_stats'))
-        (opts, args) = self.parser.parse_args()
+        (self.opts, self.args) = self.parser.parse_args()
+
+
+class OptionsParser(OptionsParser):
+
+    def parse_opts_and_args(self, opts, args=None):
+        super(OptionsParser, self).parse_opts_and_args(opts, args)
 
         # cli override of config values
         if opts.configfile:
@@ -35,3 +45,4 @@ class CLI(CLI):
 
         if opts.genoilstats_build:
             self.genoilstats_build = opts.genoilstats_build
+        return self

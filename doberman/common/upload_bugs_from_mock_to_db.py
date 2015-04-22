@@ -5,6 +5,7 @@ import argparse
 import json
 import yaml
 
+
 DEFAULT_DB = 'samples/mock_database.yml'
 DEFAULT_TOKEN = 'test-catalog-auth.json'
 DEFAULT_ENDPOINT = 'https://oil.canonical.com/api/'

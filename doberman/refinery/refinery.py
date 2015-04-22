@@ -12,7 +12,7 @@ from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
 from plotting import Plotting
 from difflib import SequenceMatcher
-from cli import CLI
+from refinery_cli import CLI
 
 
 class Refinery(CrudeAnalysis):
@@ -27,11 +27,10 @@ class Refinery(CrudeAnalysis):
 
     """
 
-    def __init__(self, make_plots=False):
+    def __init__(self, make_plots=False, cli=False):
         """ Overwriting CrudeAnalysis' __init__ method """
-
+        self.cli = CLI().populate_cli() if not cli else cli
         self.message = -1
-        self.cli = CLI()
         self.bug_rankings = {}
         self.info_file_cache = {}
         self.max_sequence_size = 10000  # <- Put this in doberman.conf
