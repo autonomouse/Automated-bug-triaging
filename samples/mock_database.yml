@@ -883,3 +883,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Failed to prepare deployed cloud.*glanceclient.common.http.py.*_http_request.*raise exc.CommunicationError.message=message.*Error communicating with http"
 
+  "1447147":
+    category: None
+    description: "Unable to allocate static IP due to address exhaustion (gomaasapi 503)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "ERROR failed to bootstrap environment. cannot start bootstrap instance. gomaasapi. got error back from server. 503 SERVICE UNAVAILABLE .node.{38} Unable to allocate static IP due to address exhaustion"
+            
