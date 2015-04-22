@@ -471,7 +471,7 @@ class Deploy(Build):
                  pipeline):
         super(Deploy, self).__init__(build_number, jobname, jenkins, yaml_dict,
                                      cli, bugs, pipeline)
-        self.message = 1
+        self.message = None
 
         # Process downloaded data:
         self.process_deploy_data()
