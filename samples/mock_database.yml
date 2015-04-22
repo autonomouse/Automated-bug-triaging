@@ -464,15 +464,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Cannot add PPA"
 
-  "1392536":
-    category: None
-    description: "OIL systems in pending state in juju_status.yaml"
-    pipeline_deploy:
-      -
-        "juju_status.yaml":
-            regexp:
-            - "agent-state. pending.{5}(containers|agent-version)."
-
   "1396657":
     category: None
     description: "prodstack unit ceph/2 machine: 3 agent-state error details hook failed install"
