@@ -244,7 +244,8 @@ bugs:
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
-            regexp: "MismatchError: '204' != '200'"
+            regexp:  
+            - "MismatchError: '204' != '200'"
 
   "1373030":
     category: None
