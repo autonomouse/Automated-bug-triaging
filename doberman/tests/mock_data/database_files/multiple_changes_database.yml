@@ -1,0 +1,20 @@
+bugs:
+            
+  "fake_bug_01":
+    category: None
+    description: "A fake bug for testing purposes"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "moo run_config artifacts/run_config.parameter"
+            
+  "fake_bug_02":
+    category: None
+    description: "A fake bug for testing purposes"
+    pipeline_deploy:
+      -
+        "juju_status*":
+            regexp:
+            - "gomaasapi"
+
