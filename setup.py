@@ -24,6 +24,7 @@ setup(
             'crude-analysis = doberman.analysis.analysis:main',
             'refinery = doberman.refinery.refinery:main',
             'filing-station = doberman.filing_station.filing_station:main',
+            'updatabase = doberman.common.upload_bugs_from_mock_to_db:main',
         ]
         },
     )
