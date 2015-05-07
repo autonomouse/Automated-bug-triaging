@@ -23,8 +23,8 @@ class CLI(CLI):
         prsr.add_option('-g', '--jjob_build', action='store',
                         dest='jjob_build', default=None,
                         help=('build num of this jenkins job if applicable'))
-        prsr.add_option('-G', '--jjob', action='store', dest='jjob', 
-                        default=None, 
+        prsr.add_option('-G', '--jjob', action='store', dest='jjob',
+                        default=None,
                         help=('the jenkins job calling refinery'))
         (self.opts, self.args) = self.parser.parse_args()
 
