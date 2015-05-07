@@ -122,8 +122,8 @@ class FilingStation(CrudeAnalysis):
         bug_tracker = '/tmp/mock_launchpad/'  # tmp
         self.mkdir(bug_tracker)  # tmp
 
-        file_path = os.path.join
-        (bug_tracker, '{}_{}.yml'.format(bug_to_file[0], bug_to_file[1]))
+        file_me = '{}_{}.yml'.format(bug_to_file[0], bug_to_file[1])
+        file_path = os.path.join(bug_tracker, file_me)
         with open(file_path, 'w') as outfile:
             for line in bug_to_file[1:]:
                 outfile.write(line + "\n")
