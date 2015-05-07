@@ -5,17 +5,7 @@ import os
 import yaml
 from doberman.analysis.analysis import CrudeAnalysis
 from pprint import pprint
-from cli import CLI
-
-'''
-    def autofile(self):
-        self.api.associate_jobs_into_pipelines()
-        self.api.get_data_from_refinery()
-        self.message = self.api.analyse_refinery_output()
-        self.api.generate_filing_station_output_files()
-        self.api.file_bugs()
-        self.api.tidy_up()
-'''
+from filing_station_cli import CLI
 
 
 class FilingStation(CrudeAnalysis):
@@ -24,18 +14,14 @@ class FilingStation(CrudeAnalysis):
 
     """
 
-    def __init__(self):
+    def __init__(self, cli=False):
         """ Overwriting CrudeAnalysis' __init__ method """
-
         self.message = -1
-        self.cli = CLI()
+
+        self.cli = CLI().populate_cli() if not cli else cli
 
         # Download and analyse the crude output yamls:
         self.autofile()
-
-        # Tidy Up:
-        #if not self.cli.keep_data:
-        #    self.remove_dirs(self.all_build_numbers)
 
     def autofile(self):
         """ Get and analyse the crude output yamls.
@@ -47,30 +33,12 @@ class FilingStation(CrudeAnalysis):
                               self.cli.reportdir) if 'auto-triaged_' in
                               unf_bugs_file]
         for fname in unfiled_bugs_yamls:
-            #fname = 'auto-triaged_unfiled_bugs.yml'
-            #self.test_catalog = TestCatalog(self.cli)
-            #if not self.cli.offline_mode:
-            #    self.jenkins = Jenkins(self.cli)
-            #    self.build_pl_ids_and_check()
-            # But should be pl_start uilds, not pl_deploy
-            #    output_folder = self.cli.reportdir
-            #    self.download_unfiled_bugs(fname, output_folder)
-            #    # TODO: Fetch from pipeline_start on jenkins...
-            #else:
-            #    self.cli.LOG.info("*** Offline mode is on. ***")
             file_location = os.path.join(self.cli.reportdir, fname)
             with open(file_location, "r") as f:
                 bugs_to_file = yaml.load(f).get('pipelines')
 
             # File bug on launchpad:
             self.create_lp_bugs(bugs_to_file)
-
-    def download_unfiled_bugs(self, fname, output_folder):
-        # Also get info from pipeline_deploy? No, this should be in
-        # pipeline_start already!!!
-        #os.path.join(output_folder, fname)
-        #import pdb; pdb.set_trace()
-        pass
 
     def create_lp_bugs(self, bugs_to_file):
         """
@@ -123,11 +91,6 @@ class FilingStation(CrudeAnalysis):
             affectedpls = "AFFECTED PIPELINES \n --------------------------- "
             affectedpls += "\n\n{}\n\n".format(dup_pipelines)
 
-            #import pdb; pdb.set_trace()
-            # self.cli.match_threshold
-            # all_scores
-            # link to pipeline_start
-
             bug_description = notes + link2jen + cons_op + example_pl
             bug_description += affectedpls
 
@@ -148,24 +111,7 @@ class FilingStation(CrudeAnalysis):
         pprint("\n".join(bug_to_file).split('\n'))
         print
         print
-
-        #message = "Do you wish to file this bug on launchpad (y/N)\n>"
-        #user_input = raw_input(message)
-        #if user_input.lower() == 'y':
-        #    self.file_bugs_on_launchpad(bug_to_file)
-        #else:
-        #    self.cli.LOG.info("This bug has not been filed")
         self.file_bugs_in_folder(bug_to_file)
-
-    def file_bugs_on_launchpad(self, bug_to_file):
-        """ """
-
-        # TODO:
-        #lp = self.cli.launchpad_bug_tracker
-        #bug_info = BugInfo(lp, 'oil',)
-        #lp_bug_id = bug_info(lp, title, bug_description, tags)
-
-        pass
 
     def file_bugs_in_folder(self, bug_to_file):
         """

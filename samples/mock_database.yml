@@ -244,7 +244,8 @@ bugs:
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
-            regexp: "MismatchError: '204' != '200'"
+            regexp:  
+            - "MismatchError: '204' != '200'"
 
   "1373030":
     category: None
@@ -284,12 +285,12 @@ bugs:
 
   "1371792":
     category: None
-    description: Bootstrap failure
+    description: "juju bootstrap failures - dpkg lock race condition"
     pipeline_deploy:
       -
         "console.txt":
             regexp:
-            - "Calling .juju bootstrap. failed"
+            - "Reading package lists...E: Could not get lock /var/lib/dpkg/lock - open .11. Resource temporarily unavailable.*Unable to lock the administration directory ./var/lib/dpkg/., is another process using it?.*ERROR bootstrap failed"
 
   "1373402":
     category: None
@@ -304,16 +305,6 @@ bugs:
         "console.txt":
             regexp:
             - "No handlers could be found for logger .glanceclient.common.http"
-
-  "1407690":
-    category: None
-    description: "[Prodstack] HTTPInternalServerError - 500 Internal Server Error (prepare fail)"
-    pipeline_prepare:
-      -
-        "console.txt":
-            regexp:
-            - "Failed to prepare deployed cloud.{1000,1200}HTTPInternalServerError. 500 Internal Server Error"
-
 
   "1375220":
     category: None
@@ -474,15 +465,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Cannot add PPA"
 
-  "1392536":
-    category: None
-    description: "OIL systems in pending state in juju_status.yaml"
-    pipeline_deploy:
-      -
-        "juju_status.yaml":
-            regexp:
-            - "agent-state. pending.{5}(containers|agent-version)."
-
   "1396657":
     category: None
     description: "prodstack unit ceph/2 machine: 3 agent-state error details hook failed install"
@@ -568,6 +550,10 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "unit. mysql... machine. .{1,3}lxc.{1,3} agent-state. error details. hook failed...install"
+      -
+        "mysql_*_var_log_juju_*mysql*.log":
+            regexp:
+                - "ImportError. No module named six"
 
   "1405802":
     category: None
@@ -623,9 +609,9 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
     description: "prodstack No available node matches constraints tags=hw-ok - non-oil allocated node"
     pipeline_deploy:
       -
-        "juju_status.yaml":
+        "console.txt":
             regexp:
-            - "409 CONFLICT .No available node matches constraints. tags=hw-ok."
+            - "409 CONFLICT .No available node matches constraints"
 
   "1405804":
     category: None
@@ -858,11 +844,60 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "gomaasapi: got error back from server: 502 Proxy Error"
 
-  "1438551":
+  "1446248":
     category: None
-    description: "Prodstack qdaemon should release all nodes with the base tag when initializing"
+    description: "Packages cannot be authenticated leading to hook install failures"
     pipeline_deploy:
       -
         "console.txt":
             regexp:
-            - "cannot run instances. cannot run instances. gomaasapi. got error back from server. 409 CONFLICT .No available node matches constraints"
+            - "agent-state. error details. hook failed...install"
+      -
+        "*_var_log_juju_*.log":
+            regexp:
+                - "WARNING. The following packages cannot be authenticated....*install logger.go..*   .+..+.*install logger.go..* E. There are problems and -y was used without --force-yes.*..*Traceback .most recent call last.."
+
+  "1444365":
+    category: None
+    description: "Failed to prepare network for deployed cloud - exceptions.Unauthorized"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "_cs_request.*raise exceptions.Unauthorized.message=body.*Unauthorized: Authentication required"
+
+  "1444380":
+    category: None
+    description: "Failure to prepare network for deployed cloud - NeutronClientException: 500 - HTTPInternalServerError"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "self.prepare_network.*NeutronClientException: 500-.+NeutronError.+message.+ u.Request Failed. internal server error while processing your request.*type.*HTTPInternalServerError"
+
+  "1444394":
+    category: None
+    description: "pipeline_prepare failure - CommunicationError: Error communicating with glance node"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Failed to prepare deployed cloud.*glanceclient.common.http.py.*_http_request.*raise exc.CommunicationError.message=message.*Error communicating with http"
+
+  "1447147":
+    category: None
+    description: "Unable to allocate static IP due to address exhaustion (gomaasapi 503)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "ERROR failed to bootstrap environment. cannot start bootstrap instance. gomaasapi. got error back from server. 503 SERVICE UNAVAILABLE .node.{38} Unable to allocate static IP due to address exhaustion"
+            
+  "1447210":
+    category: None
+    description: "[Prodstack] oil_ci.cli - Inspection and Authorization Failed - failed to apply workaround, try with juju (prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "oil_ci.cli. Inspection failed. Authorization Failed. An unexpected error prevented the server from fulfilling your request.+failed to apply workaround, try with juju"

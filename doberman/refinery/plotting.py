@@ -5,7 +5,7 @@ import os
 import yaml
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
-from doberman.analysis.analysis import CLI
+from refinery_cli import CLI
 
 # Matplotlib imports - The order is important to generate plots without X
 import matplotlib as mpl
@@ -19,12 +19,9 @@ class Plotting(CrudeAnalysis):
     """
     """
 
-    def __init__(self, cli=None):
-        """
-        """
-        if not cli:
-            cli = CLI()
-        self.cli = cli
+    def __init__(self, cli=False):
+        """  """
+        self.cli = CLI().populate_cli() if not cli else cli
 
         if 'inputdir' not in self.cli.__dict__:
             self.cli.inputdir = self.cli.reportdir
