@@ -1,7 +1,7 @@
 import os
 import yaml
 from common_test_methods import CommonTestMethods
-from doberman.common.upload_bugs_from_mock_to_db import get_new_or_bugs_to_edit
+from doberman.upload_bugs_from_mock_to_db import get_new_or_bugs_to_edit
 
 
 class BugsUploader(CommonTestMethods):
