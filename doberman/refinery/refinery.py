@@ -620,8 +620,8 @@ class Refinery(CrudeAnalysis):
         TODO: put the default url in the conf file.
 
         """
-        jlink = "{2} data can be found at: "
-        jlink += "{0}/job/gen_oil_stats/{1}/artifact/artifacts/{2}{3}/*view*/"
+        jlink = "{3} data can be found at: "
+        jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
 
         for job in job_names:
             if job in self.cli.multi_bugs_in_pl:
@@ -646,16 +646,16 @@ class Refinery(CrudeAnalysis):
                 print("No bugs found.")
             print
 
-        if hasattr(self.cli, 'genoilstats_build'):
+        if hasattr(self.cli, 'jjob_build'):
             paabn = 'pipelines_and_associated_build_numbers'
             fx_pls = 'pipelines_affected_by_bug'
             ext = '.yml'
             print
-            print(jlink.format(self.cli.external_jenkins_url,
-                               self.cli.genoilstats_build, paabn, ext))
+            print(jlink.format(self.cli.external_jenkins_url, self.cli.jjob,
+                               self.cli.jjob_build, paabn, ext))
             print
-            print(jlink.format(self.cli.external_jenkins_url,
-                               self.cli.genoilstats_build, fx_pls, ext))
+            print(jlink.format(self.cli.external_jenkins_url, self.cli.jjob,
+                               self.cli.jjob_build, fx_pls, ext))
             print
 
 
