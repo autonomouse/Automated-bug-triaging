@@ -1,3 +1,16 @@
+doberman (1.3.0-0ubuntu1) utopic; urgency=medium
+
+  * Can now run the bugs uploader via the 'updatabase' command.
+  * Bugs uploader now only upload bugs if they have changed and removes bugs from the database if they have been removed from the yaml. It is now alo possible to purge all bugs from the database before you begin uploading.
+  * Doberman now uses test-catalog to get the bug numbers rather than through jenkins.
+  * Doberman now treats underscores as spaces when providing dates (useful for entering dates into jenkins build params which doesn't allow spaces or quotes)
+  * Some changes to the way in which Doberman returns error codes - It's now a bit more consistent, although this still will need to be revisited at some point int he future, so we can get out red or blue lights on jenkins in the way taht everyone is happy with.
+  * Finally linted filing-station, et al (thanks, Larry!)
+  * Removed high-level generic bugs from mock_database yaml
+ 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 07 May 2015 11:18:10 +0100
+
 doberman (1.2.1-0ubuntu1) utopic; urgency=medium
 
   * CrudeAnalysis now has unit tests, including one to make sure it can actually find each the bugs it is looking for
