@@ -59,9 +59,8 @@ def get_new_or_bugs_to_edit(local_db, remote_db):
             orphan_bugs.append((remote_bugno, remote_data))
 
     # Find any bugs that are in local_db that aren't in remote_db:
-    new_bugs = [local_bugno for local_bugno, local_data in
-                local_db['bugs'].items() if local_bugno not in
-                remote_db['bugs']]
+    new_bugs = [local_bugno for local_bugno, jnk in local_db['bugs'].items()
+                if local_bugno not in remote_db['bugs']]
     altered_bugs.extend(new_bugs)
     return (altered_bugs, orphan_bugs)
 

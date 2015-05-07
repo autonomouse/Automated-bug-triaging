@@ -137,8 +137,6 @@ class FileParser(Common):
                 ports = ", ".join(this_unit['open-ports']) if 'open-ports' \
                     in this_unit else "N/A"
                 machine_no = this_unit['machine'].split('/')[0]
-                host_name = (this_unit['public-address'] if 'public-address' in
-                             this_unit else 'Unknown')
                 machine_info = self.data['machines'][machine_no]
 
                 if 'hardware' in machine_info:

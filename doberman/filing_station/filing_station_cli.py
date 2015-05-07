@@ -21,12 +21,10 @@ class CLI(CLI):
 
         (self.opts, self.args) = self.parser.parse_args()
 
+
 class OptionsParser(OptionsParser):
 
     def parse_opts_and_args(self, opts, args=None):
         super(OptionsParser, self).parse_opts_and_args(opts, args)
         self.autofile_on_launchpad = opts.autofile_on_launchpad
         return self
-
-
-
