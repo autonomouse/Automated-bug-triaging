@@ -901,3 +901,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "oil_ci.cli. Inspection failed. Authorization Failed. An unexpected error prevented the server from fulfilling your request.+failed to apply workaround, try with juju"
+
+  "1453947":
+    category: None
+    description: "prodstack: 500 error in agent-state-info"
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+           - 'agent-state-info. gomaasapi. got error back from server. 500 INTERNAL SERVER'
