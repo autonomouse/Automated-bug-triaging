@@ -909,4 +909,4 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
          "juju_status.yaml":
            regexp:
-           - 'agent-state-info. gomaasapi. got error back from server. 500 INTERNAL SERVER'
+           - 'agent-state-info. .gomaasapi. got error back from server. 500 INTERNAL SERVER'
