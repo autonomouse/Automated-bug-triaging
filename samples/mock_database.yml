@@ -910,3 +910,30 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_status.yaml":
            regexp:
            - 'agent-state-info. .gomaasapi. got error back from server. 500 INTERNAL SERVER'
+
+  "1454464":
+    category: None
+    description: "Prodstack: bootstrap fails with no route to host that's succesfully deployed"
+    pipeline_deploy:
+      -
+         "console.txt":
+           regexp:
+           - "ERROR failed to bootstrap environment. waited for 30m0s without being able to connect. ssh. connect to host.*port 22. No route to host"
+
+  "1441319":
+    category: None
+    description: "intermittent: failed to retrieve the template to clone: template container juju-trusty-lxc-template did not stop"
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+           - "failed to retrieve the template to clone. template container.*juju-trusty-lxc-template. did not stop"
+
+  "1454468":
+    category: None
+    description: "win2012hvr2 node deployed by maas but juju status remains pending with juju 1.23.2"
+    pipeline_deploy:
+      -
+         "juju_debug_log.txt":
+           regexp:
+           - "unit nova-hyperv/0 cannot get assigned machine. unit .nova-hyperv/0. is not assigned to a machine"
