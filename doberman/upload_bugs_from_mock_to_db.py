@@ -134,9 +134,10 @@ def update_bugs_database(client, db_location, force=False, dryrun=True):
     local_db = yaml.load(open(db_location))
     remote_db = client.get_bug_info(force_refresh=True)
     altered_bugs, orphan_bugs = get_new_or_bugs_to_edit(local_db, remote_db)
-    delete_orphan_bugs(client, db_location, orphan_bugs, force)
-    add_new_or_edit_existing_bugs(client, remote_db, local_db, altered_bugs)
-    # last force_refresh is used to drop the cache from the server and reload
+    delete_orphan_bugs(client, db_location, orphan_bugs, force, dryrun)
+    add_new_or_edit_existing_bugs(client, remote_db, local_db, altered_bugs,
+                                  dryrun)
+    # Last force_refresh is used to drop the cache from the server and reload:
     return client.get_bug_info(force_refresh=True)
 
 
@@ -146,7 +147,7 @@ def main():
     cookie = json.load(open(args.token))
     client = tc_client(endpoint=args.endpoint, cookies=cookie)
     if args.wipe:
-        wipe_bugs_database(client)
+        wipe_bugs_database(client, args.dryrun)
     if args.dryrun:
         print("\n***Dry-run: No data will be written to database.***\n")
     update_bugs_database(client, args.database, args.force, args.dryrun)
