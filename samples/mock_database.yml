@@ -937,3 +937,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_debug_log.txt":
            regexp:
            - "unit nova-hyperv/0 cannot get assigned machine. unit .nova-hyperv/0. is not assigned to a machine"
+
+  "1410876":
+    category: None
+    description: "Error executing lxc-clone: lxc_container: utils.c: mkdir_p 220 Not a directory - Could not destroy snapshot %s - failed to allocate a pty; Insufficent privileges to control juju-trusty-lxc-template"
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+           - "agent-state-info. .lxc container cloning failed. error executing .lxc-clone.*lxc_container. utils.c. mkdir_p. 220 Not a directory - failed to create.*directory.*lxc_container. lxccontainer.c. do_snapshot_destroy. 3272 Could not destroy.*snapshot"
