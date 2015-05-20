@@ -372,15 +372,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "oil_ci.prepare.oil_prepper. Failed to prepare deployed cloud.{1,2000}NeutronClientException. Request Failed. internal server error while processing your request"
 
-  "1387698":
-    category: None
-    description: "Prodstack: oil_ci can not setup ssh connection"
-    pipeline_prepare:
-      -
-        "console.txt":
-            regexp:
-            - "oil_ci.ssh. Could not setup ssh connection to"
-
   "1386663":
     category: None
     description: "Prodstack: image-service-relation-changed"
