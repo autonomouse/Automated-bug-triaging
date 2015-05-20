@@ -990,3 +990,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "nova-cloud-controller_*_var_log_nova_nova-api-os-compute.log":
             regexp:
             - "ERROR nova.api.openstack.*Caught error...OperationalError.{7,10}Too many connections"
+
+  "1213179":
+    category: None
+    description:
+    test_tempest_smoke:
+      -
+        "glance_*_var_log_glance_api.log":
+            regexp:
+            - "TRACE swiftclient ClientException. Container HEAD failed.{55,70}glance 404 Not Found"
