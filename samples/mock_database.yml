@@ -244,7 +244,7 @@ bugs:
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
-            regexp:  
+            regexp:
             - "MismatchError: '204' != '200'"
 
   "1373030":
@@ -892,7 +892,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "ERROR failed to bootstrap environment. cannot start bootstrap instance. gomaasapi. got error back from server. 503 SERVICE UNAVAILABLE .node.{38} Unable to allocate static IP due to address exhaustion"
-            
+
   "1447210":
     category: None
     description: "[Prodstack] oil_ci.cli - Inspection and Authorization Failed - failed to apply workaround, try with juju (prepare fail)"
@@ -902,7 +902,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "oil_ci.cli. Inspection failed. Authorization Failed. An unexpected error prevented the server from fulfilling your request.+failed to apply workaround, try with juju"
 
-  "1453947":
+  "1453954":
     category: None
     description: "prodstack: 500 error in agent-state-info"
     pipeline_deploy:
@@ -910,6 +910,10 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_status.yaml":
            regexp:
            - 'agent-state-info. .gomaasapi. got error back from server. 500 INTERNAL SERVER'
+      -
+         "console.txt":
+           regexp:
+           - 'ERROR failed to bootstrap environment. cannot start bootstrap instance. gomaasapi. got error back from server. 500 INTERNAL SERVER ERROR'
 
   "1454464":
     category: None
@@ -968,3 +972,21 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "juju_debug_log.txt":
             regexp:
             - "unit.glance/..config-changed logger.go... AttributeError. .NoneType. object has no attribute .TemplateNotFound.*config-changed"
+
+  "1456997":
+    category: None
+    description:
+    test_tempest_smoke:
+      -
+        "tempest_xunit.xml":
+            regexp:
+            - "No valid host was found. Exceeded max scheduling attempts"
+
+  "1339910":
+    category: None
+    description:
+    test_tempest_smoke:
+      -
+        "nova-cloud-controller_*_var_log_nova_nova-api-os-compute.log":
+            regexp:
+            - "ERROR nova.api.openstack.*Caught error...OperationalError.{7,10}Too many connections"
