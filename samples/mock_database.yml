@@ -946,3 +946,25 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_status.yaml":
            regexp:
            - "agent-state-info. .lxc container cloning failed. error executing .lxc-clone.*lxc_container. utils.c. mkdir_p. 220 Not a directory - failed to create.*directory.*lxc_container. lxccontainer.c. do_snapshot_destroy. 3272 Could not destroy.*snapshot"
+
+  "1456832":
+    category: None
+    description: "nova-compute/0 fails to install - agent-state: installing"
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+           - "nova-compute/.{11}agent-state. installing"
+
+  "1424678":
+    category: None
+    description: "Prodstack: glance/0 error details: hook failed: config-changed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "unit. glance/.. machine. .{1,7} agent-state. error details. hook failed. .config-changed"
+      -
+        "juju_debug_log.txt":
+            regexp:
+            - "unit.glance/..config-changed logger.go... AttributeError. .NoneType. object has no attribute .TemplateNotFound.*config-changed"
