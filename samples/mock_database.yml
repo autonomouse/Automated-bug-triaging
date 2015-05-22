@@ -984,7 +984,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
 
   "1457813":
     category: None
-    description:
+    description: "[prodstack] service neutron-calico has no calico-acl-api relation (deploy fail)"
     pipeline_deploy:
       -
         "console.txt":
