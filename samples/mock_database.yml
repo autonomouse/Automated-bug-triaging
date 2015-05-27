@@ -990,3 +990,31 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "service .neutron.calico. has no .calico.acl.api. relation"
+
+  "1412364":
+    category: None
+    description: "Icehouse tempest job fails due to mismatch between networkx and decorator versions in LVMISCSIDriver driver"
+    test_tempest_smoke:
+      -
+        "cinder_*_var_log_cinder_cinder-volume.log":
+            regexp:
+            - "ERROR cinder.volume.manager .req..{8}..{4}..{4}..{4}..{12} . . . . .. Error encountered during initialization of driver. LVMISCSIDriver"
+
+  "1459193":
+    category: None
+    description: "OperationalError. no such table. ml2_vlan_allocations"
+    test_tempest_smoke:
+      -
+        "nova-cloud-controller_*_var_log_neutron_server.log":
+            regexp:
+            - "CRITICAL neutron ... OperationalError. .OperationalError. no such table. ml2_vlan_allocations"
+
+  "1459202":
+    category: None
+    description: " Failed to attach network adapter device (tempest fail)"
+    test_tempest_smoke:
+      -
+        "nova-cloud-controller_*_var_log_nova_nova-api-os-compute.log":
+            regexp:
+            - "InterfaceAttachFailed: Failed to attach network adapter device"
+
