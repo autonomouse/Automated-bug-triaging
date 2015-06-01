@@ -162,9 +162,17 @@ class CommonTestMethods(DobermanTestBase):
                 text = text.replace(replace_this, 'x' * int(len_xs))
         return text
 
+    def replace_space(self, text):
+        if '\s' not in text:
+            return text
+
+        result = " ".join(text.split('\s'))
+        return result
+
     def generate_text_from_regexp(self, regexp):
         text_n = self.replace_n_matching(regexp)
-        text_n_a = self.replace_x_asterisk(text_n)
+        no_spaces = self.replace_space(text_n)
+        text_n_a = self.replace_x_asterisk(no_spaces)
         text_n_a_p = self.replace_x_plus(text_n_a)
         text_n_a_p_o = self.replace_or(text_n_a_p)
         text = text_n_a_p_o

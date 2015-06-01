@@ -89,6 +89,9 @@ class CrudeAnalysisTests(CommonTestMethods):
                             add_to_xml_dict[tmpfile] = []
                         add_to_xml_dict[tmpfile].append((bug_number, text))
                     else:
+                        # yaml files need to be valid yaml; this makes it a list of strings.
+                        if 'juju_status.yaml' in tmpfile:
+                            text = "- '%s'" % (text)
                         with open(tmpfile, 'a+') as f:
                             f.write(text + "\n")
         if add_to_xml_dict:
