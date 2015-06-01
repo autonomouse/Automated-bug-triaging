@@ -1043,4 +1043,4 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
          "juju_status.yaml":
            regexp:
-               - 'agent-state: pending\s+containers:\s+(\d+/lxc/\d+:\s+instance-id: pending\s+series: (trusty|precise))*\s+dns-name: hayward'
+               - 'agent-state: pending\s+(containers:\s+(\d+/lxc/\d+:\s+instance-id: pending\s+series: (trusty|precise))*)*\s+dns-name: hayward'
