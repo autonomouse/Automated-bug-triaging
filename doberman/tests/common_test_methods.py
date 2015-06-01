@@ -130,12 +130,49 @@ class CommonTestMethods(DobermanTestBase):
     def replace_x_asterisk(self, text):
         if '*' not in text:
             return text
-        split_up = text.split('*')
-        for num in range(0, len(split_up)-1):
-            lastchar = split_up[num][-1]
-            repl_char = 'x' if lastchar is '.' else lastchar
-            text = text.replace(lastchar + '*', repl_char)
+        last = text.rfind("*")
+
+        while last != -1:
+
+            if last == 0:
+                raise Exception("Invalid regex '%s': nothing to repeat." % (text))
+
+            if text[last - 1] != ')':
+                lastchar = text[last - 1]
+                repl_char = 'x' if lastchar is '.' else lastchar
+                text = text.replace(lastchar + '*', repl_char)
+            elif text[last - 1] == ')':
+                closed_paren = last - 1
+                # repeating a group! need to find the balanced open paren
+                # this is a huge hack and won't work in a lot of regexes.
+                # it has no idea about escaped parens.
+                depth = 1
+                open_paren = None
+                for i in range(closed_paren - 1, -1, -1):
+                    if text[i] == ')':
+                        depth += 1
+                        continue
+                    if text[i] == '(':
+                        depth -= 1
+                        if depth == 0:
+                            open_paren = i
+                            break
+                        if depth < 0:
+                            raise Exception("We can't handle this regex! "
+                                            "Check optional group parens balance.")
+
+                if open_paren is not None:
+                   text = "".join([
+                       text[:open_paren],
+                       text[open_paren+1:closed_paren],
+                       text[closed_paren+2:]])
+                else:
+                   raise Exception("We can't handle this regex! "
+                                   "Check optional group parens balance.")
+
+            last = text.rfind("*")
         return text
+
 
     def replace_x_plus(self, text):
         if '+' not in text:
@@ -169,10 +206,18 @@ class CommonTestMethods(DobermanTestBase):
         result = " ".join(text.split('\s'))
         return result
 
+    def replace_digits(self, text):
+        if '\d' not in text:
+            return text
+
+        result = "1".join(text.split('\d'))
+        return result
+
     def generate_text_from_regexp(self, regexp):
         text_n = self.replace_n_matching(regexp)
         no_spaces = self.replace_space(text_n)
-        text_n_a = self.replace_x_asterisk(no_spaces)
+        no_digits = self.replace_digits(no_spaces)
+        text_n_a = self.replace_x_asterisk(no_digits)
         text_n_a_p = self.replace_x_plus(text_n_a)
         text_n_a_p_o = self.replace_or(text_n_a_p)
         text = text_n_a_p_o

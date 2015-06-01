@@ -1035,3 +1035,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_status.yaml":
            regexp:
                - 'failed\s+to\s+retrieve\s+the\s+template\s+to\s+clone:\s+lxc\s+container\s+creation\s+failed:\s+error\s+executing\s+"lxc-create"'
+
+  "1456933":
+    category: None
+    description: "sm15k node failed to PXE boot."
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+               - 'agent-state: pending\s+containers:\s+(\d+/lxc/\d+:\s+instance-id: pending\s+series: (trusty|precise))*\s+dns-name: hayward'
