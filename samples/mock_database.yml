@@ -1018,3 +1018,20 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "InterfaceAttachFailed: Failed to attach network adapter device"
 
+  "1448150":
+    category: None
+    description: "Calico bundle generated with neutron-gateway relation with nova-compute without neutron-gateway service"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Invalid relation in config. service neutron-gateway not found. rel neutron-gateway*nova-compute"
+
+  "1457720":
+    category: None
+    description: "bad credential error"
+    pipeline_deploy:
+      -
+         "juju_debug_log.txt":
+           regexp:
+           - "Error. invalid entity name or password. ErrorCode. unauthorized access"
