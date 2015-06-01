@@ -1026,3 +1026,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_debug_log.txt":
            regexp:
            - "Error. invalid entity name or password. ErrorCode. unauthorized access"
+
+  "1454676":
+    category: None
+    description: "failed to retrieve the template to clone: lxc container creation failed"
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+               - 'failed\s+to\s+retrieve\s+the\s+template\s+to\s+clone:\s+lxc\s+container\s+creation\s+failed:\s+error\s+executing\s+"lxc-create"'
