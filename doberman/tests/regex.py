@@ -12,25 +12,29 @@ CATEGORIES = {
     }
 
 
+def generate_from_list(node_list):
+    return "".join([
+        generate_node(node)
+        for node in node_list])
+
+
 def repeat_subnode(node):
     node_value = node[1]
     min_repeat = node_value[0]
     subnode = node_value[2][0]
-    instances = [generate_node(subnode) for _ in range(min_repeat)]
-    return "".join(instances) 
+    node_list = [subnode] * min_repeat
+    return generate_from_list(node_list)
 
 
 def generate_subpattern(node):
     subpattern_list = node[1][1]
-    return "".join([
-        generate_node(subpattern)
-        for subpattern in subpattern_list])
+    return generate_from_list(subpattern_list)
 
 
 def generate_branch(node):
     branches = node[1][1]
     branch = random.choice(branches)
-    return generate_match(branch)
+    return generate_from_list(branch)
 
 
 def generate_category(node):
@@ -46,7 +50,7 @@ type_handlers = {
     'any': lambda node: random.choice(CHARACTERS),
     'subpattern': generate_subpattern,
     'branch': generate_branch,
-    'in': lambda node: generate_match(node[1]),
+    'in': lambda node: generate_from_list(node[1]),
     'category': generate_category,
 }
 
@@ -61,15 +65,7 @@ def generate_node(node):
     return handler(node)
 
 
-def generate_match(regex_tree):
-    generated_text = ""
-    for node in regex_tree:
-        node_text = generate_node(node)
-        generated_text += node_text
-    return generated_text
-
-
 def generate_from_regex(regex):
     regex_tree = re.sre_parse.parse(regex).data
-    generated_text = generate_match(regex_tree)
+    generated_text = generate_from_list(regex_tree)
     return generated_text
