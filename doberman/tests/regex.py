@@ -2,11 +2,8 @@
 import random
 import re
 import string
-import sys
 
 from collections import defaultdict
-
-RANDOM_MAX = 4000
 
 CHARACTERS = string.ascii_letters + string.digits
 
