@@ -107,8 +107,7 @@ class Refinery(CrudeAnalysis):
                     return os.path.join("{0}", "{1}", "{2}")
 
     def generate_yamls(self):
-        """ Write data to output yaml files.
-        """
+        """ Write data to output yaml files."""
 
         self.write_output_yaml(self.cli.reportdir,
                                'pipelines_affected_by_bug.yml',
@@ -164,9 +163,7 @@ class Refinery(CrudeAnalysis):
             self.cli.LOG.info(msg)
 
     def download_triage_files(self, job, marker, output_folder):
-        """
-        Get crude output
-        """
+        """Get crude output."""
         self.cli.op_dir_structure = os.path.join("{0}", "{3}", "{2}")
         self.all_build_numbers = []
         build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
@@ -216,9 +213,7 @@ class Refinery(CrudeAnalysis):
         shutil.rmtree(path_to_crude_folder)
 
     def unify_downloaded_triage_files(self, crude_job, marker, jobs):
-        """
-        Unify the downloaded crude output yamls into a single dictionary.
-
+        """Unify the downloaded crude output yamls into a single dictionary.
         """
 
         bug_dict = {}
@@ -284,9 +279,7 @@ class Refinery(CrudeAnalysis):
         return (bug_dict, job_specific_bugs_dict)
 
     def unify(self, crude_job, marker, job, filename, rdir, build_num=None):
-        """
-        Unify the downloaded crude output yamls into a single dictionary.
-
+        """Unify the downloaded crude output yamls into a single dictionary.
         """
         if build_num:
             file_location = os.path.join(rdir, str(build_num), filename)
@@ -389,8 +382,7 @@ class Refinery(CrudeAnalysis):
 
     def calculate_bug_prevalence(self, unique_unfiled_bugs, unified_bugdict,
                                  job_specific_bugs_dict):
-        """
-            Calculate_bug_prevalence
+        """Calculate_bug_prevalence
         """
         self.cli.LOG.info("Analysing the downloaded crude output yamls.")
         bug_prevalence = {'all_bugs': {}}
@@ -524,13 +516,12 @@ class Refinery(CrudeAnalysis):
             return bug_feedback
 
     def group_similar_unfiled_bugs(self, unified_bugdict):
-        """
-            Group unfiled bugs together by similarity of error message. If the
-            string to compare is larger than the given max_sequence_size
-            (default: 10000 characters), this strings are compared for an
-            exact match, otherwise, SequenceMatcher is used to determine if
-            an error is close enough (i.e. greater than the given threshold
-            value) to be considered a match.
+        """Group unfiled bugs together by similarity of error message. If the
+        string to compare is larger than the given max_sequence_size
+        (default: 10000 characters), this strings are compared for an
+        exact match, otherwise, SequenceMatcher is used to determine if
+        an error is close enough (i.e. greater than the given threshold
+        value) to be considered a match.
         """
 
         self.cli.LOG.info("Grouping unfiled bugs by error similarity.")
@@ -614,14 +605,14 @@ class Refinery(CrudeAnalysis):
 
     def report_top_ten_bugs(self, job_names, bug_rankings,
                             url='https://bugs.launchpad.net/bugs/{}'):
-        """
-        Print the top ten bugs for each job to the console.
-
+        """Print the top ten bugs for each job to the console.
         TODO: put the default url in the conf file.
-
         """
         jlink = "{3} data can be found at: "
         jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
+        
+        generic_bug_id = 'GenericBug_Ignore'
+        generic_bugs = {}
 
         for job in job_names:
             if job in self.cli.multi_bugs_in_pl:
@@ -634,6 +625,13 @@ class Refinery(CrudeAnalysis):
             print
             job_ranking = bug_rankings.get(job)
             if job_ranking:
+                gen_bugs = [bug_info for bug_info in job_ranking if
+                            bug_info[0] == generic_bug_id]
+                if gen_bugs != []:
+                    generic_bugs[job] = gen_bugs[0]
+                    del job_ranking[job_ranking.index(generic_bugs[job])]
+                else:
+                    generic_bugs[job] = ('', 0)
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
@@ -645,6 +643,18 @@ class Refinery(CrudeAnalysis):
             else:
                 print("No bugs found.")
             print
+
+        if sum([v[1] for k, v in generic_bugs.items()]) > 0:
+            print("Generic/high-level bugs")
+            print("-----------------------")
+            for gjob in generic_bugs:
+                target_type = ("tests" if gjob in self.cli.multi_bugs_in_pl 
+                               else "pipelines")
+                num_generics = generic_bugs[gjob][1]
+                if num_generics > 0:
+                    print("{} - {} {}".format(gjob, num_generics, target_type))
+                print
+        print
 
         if hasattr(self.cli, 'jjob_build'):
             paabn = 'pipelines_and_associated_build_numbers'
