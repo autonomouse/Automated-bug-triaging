@@ -3,7 +3,6 @@ import random
 import re
 import string
 
-from collections import defaultdict
 
 CHARACTERS = string.ascii_letters + string.digits
 
@@ -64,15 +63,11 @@ def generate_node(node):
 
 def generate_match(regex_tree):
     generated_text = ""
-
     for node in regex_tree:
         node_text = generate_node(node)
-
         if node_text is None:
             continue
-
         generated_text += node_text
-
     return generated_text
 
 
