@@ -65,8 +65,6 @@ def generate_match(regex_tree):
     generated_text = ""
     for node in regex_tree:
         node_text = generate_node(node)
-        if node_text is None:
-            continue
         generated_text += node_text
     return generated_text
 
