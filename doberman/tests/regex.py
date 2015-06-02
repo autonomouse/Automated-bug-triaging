@@ -9,7 +9,7 @@ CHARACTERS = string.ascii_letters + string.digits
 
 CATEGORIES = {
     'category_space' : [" ", "\t", "\n"],
-    'category_digit': map(chr, range(ord('0'), ord('9')+1)),
+    'category_digit': string.digits,
     }
 
 
