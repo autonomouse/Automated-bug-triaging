@@ -245,7 +245,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp:
-            - "MismatchError: '204' != '200'"
+            - "MismatchError: (.+204.+ != .+200.+|!=:)"
 
   "1373030":
     category: None
