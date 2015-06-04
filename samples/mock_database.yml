@@ -245,7 +245,7 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp:
-            - "MismatchError: '204' != '200'"
+            - "MismatchError: (.+204.+ != .+200.+|!=:)"
 
   "1373030":
     category: None
@@ -1044,3 +1044,21 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_status.yaml":
            regexp:
                - 'agent-state: pending\s+(containers:\s+(\d+/lxc/\d+:\s+instance-id: pending\s+series: (trusty|precise))*)*\s+dns-name: hayward'
+
+  "1461438":
+    category: None
+    description: "BuildErrorException - failed to build and is in ERROR status"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "BuildErrorException. Server ..server_id.s failed to build and is in ERROR status.*Details. Server .{5,60} failed to build and is in ERROR status"
+
+  "1461448":
+    category: None
+    description: "Failed to prepare deployed cloud - raise BadStatusLine(line)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "raise BadStatusLine.line..*BadStatusLine"
