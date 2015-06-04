@@ -610,7 +610,7 @@ class Refinery(CrudeAnalysis):
         """
         jlink = "{3} data can be found at: "
         jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
-        
+
         generic_bug_id = 'GenericBug_Ignore'
         generic_bugs = {}
 
@@ -648,7 +648,7 @@ class Refinery(CrudeAnalysis):
             print("Generic/high-level bugs")
             print("-----------------------")
             for gjob in generic_bugs:
-                target_type = ("tests" if gjob in self.cli.multi_bugs_in_pl 
+                target_type = ("tests" if gjob in self.cli.multi_bugs_in_pl
                                else "pipelines")
                 num_generics = generic_bugs[gjob][1]
                 if num_generics > 0:
