@@ -468,7 +468,7 @@ class Refinery(CrudeAnalysis):
                     return
                 info_file = additional_info.get('text')
 
-            if info_file in self.info_file_cache:
+            if info_file and info_file in self.info_file_cache:
                 return self.info_file_cache[info_file]
 
             # Temporarily load up the whole output file into memory:
@@ -624,7 +624,7 @@ class Refinery(CrudeAnalysis):
             job_ranking = bug_rankings.get(job)
             if job_ranking:
                 generic_bugs[job] = \
-                    self.find_generic_bugs(job_ranking, generic_bugs, job)
+                    self.count_generic_bugs(job_ranking, generic_bugs, job)
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
@@ -639,25 +639,26 @@ class Refinery(CrudeAnalysis):
         return generic_bugs, job_ranking
 
     def display_generic_bugs(self, generic_bugs, job_ranking):
-        if sum([v[1] for k, v in generic_bugs.iteritems()]) > 0:
+        if sum([v for k, v in generic_bugs.iteritems()]) > 0:
             print("Generic/high-level bugs")
             print("-----------------------")
             for gjob in generic_bugs:
-                target_type = ("tests" if gjob in self.cli.multi_bugs_in_pl
-                               else "pipelines")
-                num_generics = generic_bugs[gjob][1]
+                target_type = ("test" if gjob in self.cli.multi_bugs_in_pl
+                               else "pipeline")
+                num_generics = generic_bugs[gjob]
+                plural = 's' if num_generics > 1 else ''
                 if num_generics > 0:
-                    print("{} - {} {}".format(gjob, num_generics, target_type))
+                    print("{} - {} {}{}".format(gjob, num_generics,
+                                                target_type, plural))
         print
 
-    def find_generic_bugs(self, job_ranking, generic_bugs, job):
-        gen_bugs = [bug_info for bug_info in job_ranking if bug_info[0] ==
-                    self.cli.generic_bug_id]
-        if gen_bugs != []:
-            del job_ranking[job_ranking.index(generic_bugs[job])]
-            return gen_bugs[0]
-        else:
-            return ('', 0)
+    def count_generic_bugs(self, job_ranking, generic_bugs, job):
+        for i, bug_info in enumerate(job_ranking):
+           if bug_info[0] != self.cli.generic_bug_id:
+               continue
+           del job_ranking[i]
+           return bug_info[1]
+        return 0
 
     def display_external_links(self, job_ranking):
         jlink = "{3} data can be found at: "
