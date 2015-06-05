@@ -1,3 +1,6 @@
 .coverage
 oil-auth.json
 test-catalog-auth.json
+doberman/tests/mock_data/output/auto-triaged_unfiled_bugs.yml
+doberman/tests/mock_data/output/bug_ranking_all_bugs.yml
+doberman/tests/mock_data/output/pipelines_affected_by_bug.yml
