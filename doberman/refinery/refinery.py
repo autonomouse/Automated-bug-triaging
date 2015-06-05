@@ -16,15 +16,13 @@ from refinery_cli import CLI
 
 
 class Refinery(CrudeAnalysis):
-    """
-    A post-analysis class that processes the yaml output file from
+    """A post-analysis class that processes the yaml output file from
     CrudeAnalysis and collates number of machine affected by each bug, provides
     percentages of failures that are auto-triaged successfully and will
     hopefully determine if crude is working (a.k.a. "Doberman metrics"). It
     will produce a list of 'known associates' - bugs that are frequently found
     together in the same failure to help with triage and identifying root
     causes of failure.
-
     """
 
     def __init__(self, make_plots=False, cli=False):
@@ -603,15 +601,15 @@ class Refinery(CrudeAnalysis):
 
         return (grouped_bugs, all_scores)
 
-    def report_top_ten_bugs(self, job_names, bug_rankings,
-                            url='https://bugs.launchpad.net/bugs/{}'):
-        """Print the top ten bugs for each job to the console.
-        TODO: put the default url in the conf file.
-        """
-        jlink = "{3} data can be found at: "
-        jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
+    def report_top_ten_bugs(self, job_names, bug_rankings):
+        """Print the top ten bugs for each job to the console."""
+        generic_bugs, job_ranking = self.display_top_ten_bugs(job_names,
+                                                              bug_rankings)
+        self.display_generic_bugs(generic_bugs, job_ranking)
+        self.display_external_links(job_ranking)
 
-        generic_bug_id = 'GenericBug_Ignore'
+    def display_top_ten_bugs(self, job_names, bug_rankings):
+        url = self.cli.bug_tracker_url
         generic_bugs = {}
 
         for job in job_names:
@@ -625,13 +623,8 @@ class Refinery(CrudeAnalysis):
             print
             job_ranking = bug_rankings.get(job)
             if job_ranking:
-                gen_bugs = [bug_info for bug_info in job_ranking if
-                            bug_info[0] == generic_bug_id]
-                if gen_bugs != []:
-                    generic_bugs[job] = gen_bugs[0]
-                    del job_ranking[job_ranking.index(generic_bugs[job])]
-                else:
-                    generic_bugs[job] = ('', 0)
+                generic_bugs[job] = \
+                    self.find_generic_bugs(job_ranking, generic_bugs, job)
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
@@ -643,8 +636,10 @@ class Refinery(CrudeAnalysis):
             else:
                 print("No bugs found.")
             print
+        return generic_bugs, job_ranking
 
-        if sum([v[1] for k, v in generic_bugs.items()]) > 0:
+    def display_generic_bugs(self, generic_bugs, job_ranking):
+        if sum([v[1] for k, v in generic_bugs.iteritems()]) > 0:
             print("Generic/high-level bugs")
             print("-----------------------")
             for gjob in generic_bugs:
@@ -653,8 +648,20 @@ class Refinery(CrudeAnalysis):
                 num_generics = generic_bugs[gjob][1]
                 if num_generics > 0:
                     print("{} - {} {}".format(gjob, num_generics, target_type))
-                print
         print
+
+    def find_generic_bugs(self, job_ranking, generic_bugs, job):
+        gen_bugs = [bug_info for bug_info in job_ranking if bug_info[0] ==
+                    self.cli.generic_bug_id]
+        if gen_bugs != []:
+            del job_ranking[job_ranking.index(generic_bugs[job])]
+            return gen_bugs[0]
+        else:
+            return ('', 0)
+
+    def display_external_links(self, job_ranking):
+        jlink = "{3} data can be found at: "
+        jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
 
         if hasattr(self.cli, 'jjob_build'):
             paabn = 'pipelines_and_associated_build_numbers'
