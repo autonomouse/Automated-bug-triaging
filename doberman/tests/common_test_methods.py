@@ -33,14 +33,24 @@ class CommonTestMethods(DobermanTestBase):
         if hasattr(self, 'tmpdir'):
             shutil.rmtree(self.tmpdir)
 
-    def get_output_data(self, fname="triage_pipeline_deploy.yml",
-                        output_data_dir=mock_output_data):
+    def get_output_data(self, fname, output_data_dir):
         with open(os.path.join(output_data_dir, fname),'r') as f:
-            output = yaml.load(f)
+            return yaml.load(f)
+
+    def get_crude_output_data(self, fname="triage_pipeline_deploy.yml",
+                        output_data_dir=mock_output_data):
         try:
-            return output['pipeline'][self.pipeline_id]
+            data = self.get_output_data(fname, output_data_dir)
+            return data['pipeline'][self.pipeline_id]
         except KeyError:
             return {'bugs': {}}
+
+    def get_refinery_output_data(self, fname="bug_ranking_pipeline_deploy.yml",
+                        output_data_dir=mock_output_data):
+        try:
+            return self.get_output_data(fname, output_data_dir)
+        except KeyError:
+            return
 
     def populate_cli_var(self, bugs_database, reportdir=mock_output_data):
         cli = namedtuple('CLI', '')
@@ -65,6 +75,11 @@ class CommonTestMethods(DobermanTestBase):
         cli.use_deploy = False
         cli.verify = True
         cli.xmls = ['tempest_xunit.xml']
+        cli.multi_bugs_in_pl = "test_tempest_smoke"
+        self.max_sequence_size = '10000'
+        cli.bug_tracker_bugs_url = "https://bugs.launchpad.net/oil/+bug/{}"
+        cli.generic_bug_id = "GenericBug_Ignore"
+        cli.bug_tracker_url = "https://bugs.launchpad.net/bugs/{}"
 
         LOG = utils.get_logger('doberman.analysis')
         LOG.info("Doberman version {0}".format(__version__))

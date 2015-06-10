@@ -16,27 +16,24 @@ from refinery_cli import CLI
 
 
 class Refinery(CrudeAnalysis):
-    """
-    A post-analysis class that processes the yaml output file from
+    """A post-analysis class that processes the yaml output file from
     CrudeAnalysis and collates number of machine affected by each bug, provides
     percentages of failures that are auto-triaged successfully and will
     hopefully determine if crude is working (a.k.a. "Doberman metrics"). It
     will produce a list of 'known associates' - bugs that are frequently found
     together in the same failure to help with triage and identifying root
     causes of failure.
-
     """
 
-    def __init__(self, make_plots=False, cli=False):
-        """ Overwriting CrudeAnalysis' __init__ method """
+    def __init__(self, cli=False, make_plots=False, dont_print=False):
+        """Overwriting CrudeAnalysis' __init__ method."""
         self.cli = CLI().populate_cli() if not cli else cli
         self.message = -1
         self.bug_rankings = {}
         self.info_file_cache = {}
-        self.max_sequence_size = 10000  # <- Put this in doberman.conf
 
         # Download and analyse the crude output yamls:
-        self.analyse_crude_output(make_plots)
+        self.analyse_crude_output(make_plots, dont_print)
 
         # Tidy Up:
         if not self.cli.keep_data:
@@ -46,7 +43,7 @@ class Refinery(CrudeAnalysis):
             [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
 
-    def analyse_crude_output(self, make_plots):
+    def analyse_crude_output(self, make_plots, dont_print):
         """ Get and analyse the crude output yamls.
         """
         other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
@@ -77,7 +74,8 @@ class Refinery(CrudeAnalysis):
                                           self.unified_bugdict,
                                           self.job_specific_bugs_dict)
 
-        self.report_top_ten_bugs(other_jobs, self.bug_rankings)
+        if not dont_print:
+            self.report_top_ten_bugs(other_jobs, self.bug_rankings)
         if 'pipeline_ids' in self.__dict__:
             self.log_pipelines()
         self.generate_yamls()
@@ -89,9 +87,8 @@ class Refinery(CrudeAnalysis):
                 self.cli.LOG.info("Unable to generate plots.")
 
     def determine_folder_structure(self, jobs):
-        """
-            Set directory structure for downloads, where 0 is reportdir, 1 is
-            job name and 2 is build number.
+        """Set directory structure for downloads, where 0 is reportdir, 1 is
+        job name and 2 is build number.
         """
         crude_folder = os.path.join(self.cli.reportdir, self.cli.crude_job)
 
@@ -107,8 +104,7 @@ class Refinery(CrudeAnalysis):
                     return os.path.join("{0}", "{1}", "{2}")
 
     def generate_yamls(self):
-        """ Write data to output yaml files.
-        """
+        """Write data to output yaml files."""
 
         self.write_output_yaml(self.cli.reportdir,
                                'pipelines_affected_by_bug.yml',
@@ -164,9 +160,7 @@ class Refinery(CrudeAnalysis):
             self.cli.LOG.info(msg)
 
     def download_triage_files(self, job, marker, output_folder):
-        """
-        Get crude output
-        """
+        """Get crude output."""
         self.cli.op_dir_structure = os.path.join("{0}", "{3}", "{2}")
         self.all_build_numbers = []
         build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
@@ -216,9 +210,7 @@ class Refinery(CrudeAnalysis):
         shutil.rmtree(path_to_crude_folder)
 
     def unify_downloaded_triage_files(self, crude_job, marker, jobs):
-        """
-        Unify the downloaded crude output yamls into a single dictionary.
-
+        """Unify the downloaded crude output yamls into a single dictionary.
         """
 
         bug_dict = {}
@@ -284,9 +276,7 @@ class Refinery(CrudeAnalysis):
         return (bug_dict, job_specific_bugs_dict)
 
     def unify(self, crude_job, marker, job, filename, rdir, build_num=None):
-        """
-        Unify the downloaded crude output yamls into a single dictionary.
-
+        """Unify the downloaded crude output yamls into a single dictionary.
         """
         if build_num:
             file_location = os.path.join(rdir, str(build_num), filename)
@@ -389,8 +379,7 @@ class Refinery(CrudeAnalysis):
 
     def calculate_bug_prevalence(self, unique_unfiled_bugs, unified_bugdict,
                                  job_specific_bugs_dict):
-        """
-            Calculate_bug_prevalence
+        """Calculate_bug_prevalence
         """
         self.cli.LOG.info("Analysing the downloaded crude output yamls.")
         bug_prevalence = {'all_bugs': {}}
@@ -478,16 +467,14 @@ class Refinery(CrudeAnalysis):
                     return
                 info_file = additional_info.get('text')
 
+            if info_file is None:
+                return
             if info_file in self.info_file_cache:
                 return self.info_file_cache[info_file]
 
             # Temporarily load up the whole output file into memory:
             with open(info_file, 'r') as f:
                 info = f.read()
-        # TODO: It might be worth investigating something similar to the above
-        # for xml files. Providing the xml filename as info_file and then using
-        # lxml to load it up, then searching for the appropriate class and
-        # unit. However, this does sound like it might slow things down a lot.
 
         # replace pipeline id(s) with placeholder:
         pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
@@ -524,13 +511,12 @@ class Refinery(CrudeAnalysis):
             return bug_feedback
 
     def group_similar_unfiled_bugs(self, unified_bugdict):
-        """
-            Group unfiled bugs together by similarity of error message. If the
-            string to compare is larger than the given max_sequence_size
-            (default: 10000 characters), this strings are compared for an
-            exact match, otherwise, SequenceMatcher is used to determine if
-            an error is close enough (i.e. greater than the given threshold
-            value) to be considered a match.
+        """Group unfiled bugs together by similarity of error message. If the
+        string to compare is larger than the given max_sequence_size (default:
+        10000 characters), this strings are compared for an exact match,
+        otherwise, SequenceMatcher is used to determine if an error is close
+        enough (i.e. greater than the given threshold value) to be considered
+        a match.
         """
 
         self.cli.LOG.info("Grouping unfiled bugs by error similarity.")
@@ -572,8 +558,8 @@ class Refinery(CrudeAnalysis):
                         msg = "{} and {} are equivalent"
                         self.cli.LOG.debug(msg.format(already_seen,
                                                       unfiled_bug))
-                    elif (len(info_a) > self.max_sequence_size or
-                          len(info_b) > self.max_sequence_size):
+                    elif (len(info_a) > self.cli.max_sequence_size or
+                          len(info_b) > self.cli.max_sequence_size):
                         score = -1
                     else:
                         score = SequenceMatcher(None, info_a,
@@ -612,16 +598,17 @@ class Refinery(CrudeAnalysis):
 
         return (grouped_bugs, all_scores)
 
-    def report_top_ten_bugs(self, job_names, bug_rankings,
-                            url='https://bugs.launchpad.net/bugs/{}'):
-        """
-        Print the top ten bugs for each job to the console.
+    def report_top_ten_bugs(self, job_names, bug_rankings):
+        """Print the top ten bugs for each job to the console."""
+        generic_bugs, job_ranking = self.display_top_ten_bugs(job_names,
+                                                              bug_rankings)
+        self.display_generic_bugs(generic_bugs)
+        self.display_external_links()
 
-        TODO: put the default url in the conf file.
-
-        """
-        jlink = "{3} data can be found at: "
-        jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
+    def display_top_ten_bugs(self, job_names, bug_rankings):
+        url = self.cli.bug_tracker_url
+        job_ranking = None
+        generic_bugs = {}
 
         for job in job_names:
             if job in self.cli.multi_bugs_in_pl:
@@ -634,6 +621,8 @@ class Refinery(CrudeAnalysis):
             print
             job_ranking = bug_rankings.get(job)
             if job_ranking:
+                generic_bugs[job] = \
+                    self.count_generic_bugs(job_ranking, generic_bugs, job)
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
@@ -645,6 +634,33 @@ class Refinery(CrudeAnalysis):
             else:
                 print("No bugs found.")
             print
+        return generic_bugs
+
+    def display_generic_bugs(self, generic_bugs):
+        if sum([v for k, v in generic_bugs.iteritems()]) > 0:
+            print("Generic/high-level bugs")
+            print("-----------------------")
+            for gjob in generic_bugs:
+                target_type = ("test" if gjob in self.cli.multi_bugs_in_pl
+                               else "pipeline")
+                num_generics = generic_bugs[gjob]
+                plural = 's' if num_generics > 1 else ''
+                if num_generics > 0:
+                    print("{} - {} {}{}".format(gjob, num_generics,
+                                                target_type, plural))
+        print
+
+    def count_generic_bugs(self, job_ranking, generic_bugs, job):
+        for i, bug_info in enumerate(job_ranking):
+            if bug_info[0] != self.cli.generic_bug_id:
+                continue
+            del job_ranking[i]
+            return bug_info[1]
+        return 0
+
+    def display_external_links(self):
+        jlink = "{3} data can be found at: "
+        jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
 
         if hasattr(self.cli, 'jjob_build'):
             paabn = 'pipelines_and_associated_build_numbers'

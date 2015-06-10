@@ -29,6 +29,10 @@ class OptionsParser(object):
         self.match_threshold = cfg.get('DEFAULT', 'match_threshold')
         self.crude_job = cfg.get('DEFAULT', 'crude_job')
 
+        self.max_sequence_size = cfg.get('DEFAULT', 'max_sequence_size')
+        self.generic_bug_id = cfg.get('DEFAULT', 'generic_bug_id')
+        self.bug_tracker_url = cfg.get('DEFAULT', 'bug_tracker_url')
+
         self.offline_mode = opts.offline_mode
 
         self.database = opts.database

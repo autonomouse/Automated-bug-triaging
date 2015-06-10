@@ -20,19 +20,19 @@ class CrudeAnalysisTests(CommonTestMethods):
     def test_build_number_in_output(self):
         cli = self.populate_cli_var("blank_database.yml")
         analysis = CrudeAnalysis(cli)
-        data = self.get_output_data()
+        data = self.get_crude_output_data()
         self.assertEqual(data['build'], '00000')
 
     def test_find_console_bug(self):
         cli = self.populate_cli_var("fake_bug_01_database.yml")
         analysis = CrudeAnalysis(cli)
-        data = self.get_output_data()
+        data = self.get_crude_output_data()
         self.assertIn("fake_bug_01", data['bugs'])
 
     def test_find_unfiled_console_bug(self):
         cli = self.populate_cli_var("blank_database.yml")
         analysis = CrudeAnalysis(cli)
-        data = self.get_output_data()
+        data = self.get_crude_output_data()
         self.assertNotIn("fake_bug_01", data['bugs'])
         self.assertIn("unfiled-", data['bugs'].keys()[0])
 
@@ -49,7 +49,7 @@ class CrudeAnalysisTests(CommonTestMethods):
     def test_find_bug_in_glob_matched_filename(self):
         cli = self.populate_cli_var("glob_matched_filename_bug_database.yml")
         analysis = CrudeAnalysis(cli)
-        data = self.get_output_data()
+        data = self.get_crude_output_data()
         self.assertTrue('fake_bug_02' in data.get('bugs'))
 
     def test_create_bugs_from_latest_mock_database_and_find_them(self):
@@ -89,7 +89,8 @@ class CrudeAnalysisTests(CommonTestMethods):
                             add_to_xml_dict[tmpfile] = []
                         add_to_xml_dict[tmpfile].append((bug_number, text))
                     else:
-                        # yaml files need to be valid yaml; this makes it a list of strings.
+                        # yaml files need to be valid yaml; this makes it a 
+                        # list of strings.
                         if 'juju_status.yaml' in tmpfile:
                             text = "- '%s'" % (text)
                         with open(tmpfile, 'a+') as f:
@@ -99,14 +100,16 @@ class CrudeAnalysisTests(CommonTestMethods):
 
         analysis = CrudeAnalysis(cli)
         bugs_found = []
-        deploy_data = self.get_output_data(fname="triage_pipeline_deploy.yml",
-                                           output_data_dir=self.tmpdir)
+        deploy_data =\
+            self.get_crude_output_data(fname="triage_pipeline_deploy.yml",
+                                       output_data_dir=self.tmpdir)
         bugs_found.extend(deploy_data.get('bugs').keys())
-        prepare_data = self.get_output_data(fname="triage_pipeline_prepare.yml",
-                                            output_data_dir=self.tmpdir)
+        prepare_data =\
+            self.get_crude_output_data(fname="triage_pipeline_prepare.yml",
+                                       output_data_dir=self.tmpdir)
         bugs_found.extend(prepare_data.get('bugs').keys())
         tempest_data = \
-            self.get_output_data(fname="triage_test_tempest_smoke.yml",
+            self.get_crude_output_data(fname="triage_test_tempest_smoke.yml",
                                  output_data_dir=self.tmpdir)
         bugs_found.extend(tempest_data.get('bugs').keys())
         failed_bugs = [b for b in bugs.keys() if b not in bugs_found]
