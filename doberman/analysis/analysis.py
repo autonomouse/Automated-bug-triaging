@@ -59,9 +59,12 @@ class CrudeAnalysis(Common):
 
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
-                pipeline = \
-                    self.test_catalog.get_pipeline_from_deploy_build(idn)
-                # pipeline = self.jenkins.get_pipeline_from_deploy_build(idn)
+                try:
+                    pipeline = \
+                        self.test_catalog.get_pipeline_from_deploy_build(idn)
+                except:
+                    # Fall back to jenkins if test-catalog is down:
+                    pipeline = self.jenkins.get_pipeline_from_deploy_build(idn)
             else:
                 pipeline = idn
             # Quickly cycle through to check all pipelines are real:
