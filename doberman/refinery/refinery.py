@@ -600,8 +600,7 @@ class Refinery(CrudeAnalysis):
 
     def report_top_ten_bugs(self, job_names, bug_rankings):
         """Print the top ten bugs for each job to the console."""
-        generic_bugs, job_ranking = self.display_top_ten_bugs(job_names,
-                                                              bug_rankings)
+        generic_bugs = self.display_top_ten_bugs(job_names, bug_rankings)
         self.display_generic_bugs(generic_bugs)
         self.display_external_links()
 
