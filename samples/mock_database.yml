@@ -1,4 +1,38 @@
 bugs:
+  "GenericBug_Ignore":
+    category: None
+    description: "Place regexps for generic, high-level bugs to be ignored here"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "importer.py.. line.* in check_timeout"
+      -
+        "juju_debug_machine*.txt":
+            regexp:
+            - "ERROR juju.worker runner.go.{1,10} exited .api.. unable to connect to .wss...localhost.{2,10}.environment"
+            - "ERROR juju.worker runner.go.{1,10} fatal .cleaner.. watcher iteration.{1,30}error. EOF"
+            - "ERROR juju.worker.firewaller firewaller.go.{1,10} failed to lookup.{1,10}machine.{1,10}lxc.{1,10} skipping port change"
+      -
+        "juju_debug_log.txt":
+            regexp:
+            - "ERROR juju.worker.firewaller firewaller.go.{1,10} failed to lookup.{1,10}machine.{1,10}lxc.{1,10} skipping port change"
+            - "ERROR juju.state.unit unit.go.{3,5} unit ceilometer.. cannot get.{0,5}assigned machine. unit .ceilometer... is not assigned to a machine"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "oil_ci.ssh. Could not setup ssh connection to"
+      -
+        "console.txt":
+            regexp:
+            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "No such file or directory.{1,5}artifacts.juju_status.yaml"
+
   "1358393":
     category: None
     description: "prodstack: nvp-transport-node hook failed config-changed"
@@ -603,6 +637,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "409 CONFLICT .No available node matches constraints"
+      -
+        "juju_debug_machine-*.txt":
+            regexp:
+            - "ERROR juju.provisioner provisioner_task.go.{1,5} cannot start.{1,10}instance for machine.{1,10}cannot run instances. cannot run instances.{1,10}gomaasapi: got error back from server. 409 CONFLICT .No available node matches.{1,10}constraints. tags=hw-ok"
+
 
   "1405804":
     category: None
