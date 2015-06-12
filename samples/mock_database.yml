@@ -631,6 +631,10 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "409 CONFLICT .No available node matches constraints"
       -
+        "juju_status.yaml":
+            regexp:
+            - "409 CONFLICT .No available node matches constraints"
+      -
         "juju_debug_machine-*.txt":
             regexp:
             - "ERROR juju.provisioner provisioner_task.go.{1,5} cannot start.{1,10}instance for machine.{1,10}cannot run instances. cannot run instances.{1,10}gomaasapi: got error back from server. 409 CONFLICT .No available node matches.{1,10}constraints. tags=hw-ok"
