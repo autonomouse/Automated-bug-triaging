@@ -1098,3 +1098,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "raise BadStatusLine.line..*BadStatusLine"
+  "1449402":
+    category: None
+    description: "504 Gateway Error in Juju Status"
+    pipeline_deploy:
+      -
+        "juju_status.yaml":
+          regexp:
+          - "agent-state-info: .gomaasapi: got error back from server: 504 GATEWAY TIMEOUT."
