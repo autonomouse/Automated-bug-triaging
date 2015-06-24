@@ -1110,7 +1110,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
 
   "1468294":
     category: None
-    description: "[Prodstack] JujuTestClientException - Calling "juju bootstrap" failed (deploy fail)"
+    description: "[Prodstack] JujuTestClientException - Calling juju bootstrap failed (deploy fail)"
     pipeline_deploy:
       -
         "console.txt":
