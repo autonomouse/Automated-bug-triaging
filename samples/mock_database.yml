@@ -918,7 +918,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "oil_ci.cli. Inspection failed. Authorization Failed. An unexpected error prevented the server from fulfilling your request"
+            - "oil_ci.cli.{1,5} Inspection failed. Authorization Failed. An unexpected error prevented the server from fulfilling your request"
 
   "1453954":
     category: None
@@ -1098,6 +1098,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "raise BadStatusLine.line..*BadStatusLine"
+
   "1449402":
     category: None
     description: "504 Gateway Error in Juju Status"
@@ -1106,3 +1107,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "juju_status.yaml":
           regexp:
           - "agent-state-info: .gomaasapi: got error back from server: 504 GATEWAY TIMEOUT."
+
+  "1468294":
+    category: None
+    description: "[Prodstack] JujuTestClientException - Calling "juju bootstrap" failed (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+          regexp:
+          - "juju bootstrap. failed.{600,800}raise JujuTestClientException"
