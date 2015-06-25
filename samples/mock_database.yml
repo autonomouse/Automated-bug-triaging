@@ -869,7 +869,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "gomaasapi: got error back from server: 502 Proxy Error"
+            - "gomaasapi. got error back from server. 502 Proxy Error"
+      -
+        "juju_status.yaml":
+            regexp:
+            - "gomaasapi. got error back from server. 502 Proxy Error"
 
   "1446248":
     category: None
@@ -1106,7 +1110,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "juju_status.yaml":
           regexp:
-          - "agent-state-info: .gomaasapi: got error back from server: 504 GATEWAY TIMEOUT."
+          - "agent-state-info. .gomaasapi. got error back from server. 504 GATEWAY TIMEOUT."
+      -
+        "console.txt":
+            regexp:
+            - "cannot start bootstrap instance. gomaasapi. got error back from server. 504 GATEWAY TIMEOUT"
 
   "1468294":
     category: None
@@ -1116,3 +1124,48 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
           regexp:
           - "juju bootstrap. failed.{600,800}raise JujuTestClientException"
+
+  "1468579":
+    category: None
+    description: "juju bootstrap failed - cannot dial mongo to initiate replicaset: no reachable servers"
+    pipeline_deploy:
+      -
+        "console.txt":
+          regexp:
+          - "replica set. cannot dial mongo to initiate replicaset. no reachable servers.{1,500}ERROR failed to bootstrap environment"
+
+  "1468581":
+    category: None
+    description: "juju bootstrap fails - Waiting for API to become available ERROR cannot get all blocks: EOF"
+    pipeline_deploy:
+      -
+        "console.txt":
+          regexp:
+          - "Waiting for API to become available.*ERROR cannot get all blocks. EOF.*Calling .juju bootstrap. failed!"
+
+  "1468584":
+    category: None
+    description: "juju bootstrap failed - cannot initiate replica set: cannot get replica set status: can't get local.system.replset config from self or any seed (EMPTYCONFIG)"
+    pipeline_deploy:
+      -
+        "console.txt":
+          regexp:
+          - "can.t get local.system.replset config from self or any seed .EMPTYCONFIG..*ERROR failed to bootstrap environment"
+
+  "1468586":
+    category: None
+    description: "juju 1.24.0 bootstrap failure - Waiting for API to become available - Error connection is shutdown"
+    pipeline_deploy:
+      -
+        "console.txt":
+          regexp:
+          - "ERROR connection is shut down.{1,100}Calling .juju bootstrap. failed!"
+
+  "1421260":
+    category: None
+    description: "juju 1.21.1 bootstrap timeout"
+    pipeline_deploy:
+      -
+        "console.txt":
+          regexp:
+          - "Juju bootstrap timeout"
