@@ -34,15 +34,6 @@ bugs:
             regexp:
             - "No such file or directory.{1,5}artifacts.juju_status.yaml"
 
-  "1358393":
-    category: None
-    description: "prodstack: nvp-transport-node hook failed config-changed"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "nvp-transport-node.*hook failed:.*config-changed"
-
   "1346340":
     category: None
     description: "deployer fails with no route to host"
