@@ -1169,3 +1169,41 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
           regexp:
           - "Juju bootstrap timeout"
+
+  "1469159":
+    category: None
+    description: "error checking if loop0 is in use. open /dev/loop0 operation not permitted (tempest fail)"
+    test_tempest_smoke:
+      -
+        "openstack-dashboard_*_var_log_juju_machine-*-lxc*.log":
+          regexp:
+          - "ERROR juju.worker.diskmanager lsblk.go.{3,5} error checking if .loop.. is in use. open .dev.loop.. operation not permitted"
+
+  "1469161":
+    category: None
+    description: "MySQL server has gone away (tempest fail)"
+    test_tempest_smoke:
+      -
+        "mysql_*_var_log_syslog":
+          regexp:
+          - "ERROR 2006 .HY000. at line .{3,5} MySQL server has gone away"
+
+  "1469169":
+    category: None
+    description: "Unknown column services.disabled_reason in field list (tempest fail)"
+    test_tempest_smoke:
+      -
+        "cinder_*-cinder-vmware_*_var_log_cinder_cinder-volume.log":
+          regexp:
+          - "Unknown column .services.disabled_reason. in .field list."
+
+  "1469171":
+    category: None
+    description: "Table cinder.services doesn't exist (tempest fail)"
+    test_tempest_smoke:
+      -
+        "cinder_*-cinder-vmware_*_var_log_upstart_cinder-volume.log":
+          regexp:
+          - "ProgrammingError.{8,20}Table .cinder.services. doesn.t exist"
+
+
