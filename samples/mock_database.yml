@@ -351,15 +351,6 @@ bugs:
             regexp:
             - "agent-state-info. template container .juju-trusty-lxc-template. did not stop"
 
-  "1336316":
-    category: None
-    description: "prodstack: cinder-iscsi failing"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "cinder... machine... agent-state. error details. hook failed...config-changed"
-
 
   "1328950":
     category: None
@@ -1210,4 +1201,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
           regexp:
           - "ProgrammingError.{8,20}Table .cinder.services. doesn.t exist"
 
-
+  "1469309":
+    category: None
+    description: "cinder config-change hook failure:  Can't remove VGs when partial LVs exist"
+    pipeline_deploy:
+      -
+        "cinder_*_var_log_juju_unit-cinder-*.log":
+            regexp:
+            - "To remove them unconditionally use: vgreduce --removemissing --force."
