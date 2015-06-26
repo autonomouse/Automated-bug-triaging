@@ -621,6 +621,10 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "*ceph_*.oil_var_log_juju_unit-ceph-*.log":
             regexp:
             - "ERROR juju.worker.uniter uniter.go.{2,6} hook failed. exit status 1"
+      -
+        "*ceph_*.oil_var_log_juju_unit-ceph-*.log":
+            regexp:
+            - ".AGENT-STATUS. error. hook failed. .mon-relation-changed"
 
   "1398879":
     category: None
