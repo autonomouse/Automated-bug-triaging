@@ -1200,3 +1200,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "cinder_*_var_log_juju_unit-cinder-*.log":
             regexp:
             - "To remove them unconditionally use: vgreduce --removemissing --force."
+      -
+        "cinder_*_var_log_juju_unit-cinder-*.log":
+            regexp:
+            - "subprocess.CalledProcessError. Command ...vgreduce.. .--removemissing.. ..cinder-volume.... returned non-zero exit status 5"
+      -
+        "cinder_*_var_log_juju_unit-cinder-*.log":
+            regexp:
+            - "subprocess.CalledProcessError. Command ...vgcreate.. ..cinder-volumes[^n]* returned non-zero exit status 5"
+
