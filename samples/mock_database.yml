@@ -1209,3 +1209,24 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "subprocess.CalledProcessError. Command ...vgcreate.. ..cinder-volumes[^n]* returned non-zero exit status 5"
 
+  "1470241":
+    category: None
+    description: "Prodstack: nvp-transport-node/0 - error details: hook failed: config-changed - openvswitch-switch : Depends: openvswitch-common (= 2.3.2.42955) but it is not going to be installed"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "unit. nvp-transport-node/.. machine. agent-state. error details. hook failed. .config-changed"
+      -
+        "neutron-gateway_*-nvp-transport-node_*_var_log_juju_unit-nvp-transport-node-*.log":
+            regexp:
+            - "config-changed subprocess.CalledProcessError. Command ...apt-get., .--assume-yes., .--option=Dpkg..Options..=--force-confold', .install., u.openvswitch-datapath-dkms., u.openvswitch-switch., u.nicira-ovs-hypervisor-node.."
+
+  "1429891":
+    category: None
+    description: "Prodstack: bzr: ERROR: Connection closed: Unexpected end of message"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Could not branch.{100,200}ConnectionReset reading response for .BzrDir.open_2.1.{100,200}bzr. ERROR. Connection closed. Unexpected end of message. Please check connectivity and permissions, and report a bug if problems persist"
