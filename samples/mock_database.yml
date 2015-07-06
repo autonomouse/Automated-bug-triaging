@@ -892,7 +892,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "self.prepare_network.*NeutronClientException: 500-.+NeutronError.+message.+ u.Request Failed. internal server error while processing your request.*type.*HTTPInternalServerError"
 
-  "1444394":
+  "1342080":
     category: None
     description: "pipeline_prepare failure - CommunicationError: Error communicating with glance node"
     pipeline_prepare:
