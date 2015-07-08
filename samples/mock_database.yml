@@ -7,7 +7,6 @@ bugs:
         "console.txt":
             regexp:
             - "importer.py.. line.* in check_timeout"
-            - "oil_ci.deploy.oil_deployer. Deployment failed.{1,2000}Deployment failed"
       -
         "juju_debug_machine*.txt":
             regexp:
@@ -201,6 +200,14 @@ bugs:
             regexp:
             - "No more IP addresses available on network"
 
+  "1372997":
+    category: None
+    description: oil_ci.deploy.oil_deployer - Deployment timed-out and failed (pipeline_deploy fail)
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "oil_ci.deploy.oil_deployer. Deployment failed.{1,2000}Deployment failed"
 
   "1372970":
     category: None
