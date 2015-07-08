@@ -1085,7 +1085,8 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "BuildErrorException. Server ..server_id.s failed to build and is in ERROR status.*Details. Server .{5,60} failed to build and is in ERROR status"
+            - "BuildErrorException. Server ..server_id.s failed to build and is in ERROR status"
+            - "Server .{5,60} failed to build and is in ERROR status"
 
   "1461448":
     category: None
@@ -1237,3 +1238,21 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Could not branch.{100,200}ConnectionReset reading response for .BzrDir.open_2.1.{100,200}bzr. ERROR. Connection closed. Unexpected end of message. Please check connectivity and permissions, and report a bug if problems persist"
+
+  "1272283":
+    category: None
+    description: "error Errno 111 Connection refused"
+    test_tempest_smoke:
+      -
+        "console.txt":
+          regexp:
+          - "error...Errno 111. Connection refused.*tempest.thirdparty.boto.test_ec2_keys.EC2KeysTest"
+  
+  "1472602":
+    category: None
+    description: "error Errno 111 Connection refused"
+    test_tempest_smoke:
+      -
+        "console.txt":
+          regexp:
+          - "XMLSyntaxError. Start tag expected. .<. not found, line 1, column 1"
