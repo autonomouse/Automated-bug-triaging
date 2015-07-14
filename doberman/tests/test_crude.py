@@ -117,7 +117,7 @@ class CrudeAnalysisTests(CommonTestMethods):
             print("\nThe following bug(s) were not found:\n")
         for bug_num in failed_bugs:
             print(bug_num)
-        self.assertTrue(failed_bugs == [])
+        self.assertEqual([], failed_bugs)
 
     def test_date_passing(self):
         options_parser = OptionsParser()

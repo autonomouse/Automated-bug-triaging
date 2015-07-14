@@ -3,6 +3,7 @@ import yaml
 import tempfile
 import shutil
 from doberman.tests.test_utils import DobermanTestBase
+from doberman.tests.regex import generate_from_regex
 from doberman.common import utils
 from doberman.__init__ import __version__
 from collections import namedtuple
@@ -113,128 +114,5 @@ class CommonTestMethods(DobermanTestBase):
                     "{}{}{}\n{}\n{}".format(rarrow, msg, larrow, line, dashes)
         etree.ElementTree(root).write(xml_file, pretty_print=True)
 
-    def replace_or(self, text):
-        if '|' not in text:
-            return text
-        split_up = text.split('|')
-        add_to_next = ''
-        initial_replace_with = None
-        for num in range(0, len(split_up)-1):
-            replace_with = split_up[num].split('(')[-1]
-            if ')' in split_up[num+1]:
-                other = split_up[num+1].split(')')[0]
-                if add_to_next != '':
-                    other = add_to_next + other
-                    add_to_next = ''
-            else:
-                add_to_next = add_to_next + split_up[num+1] + '|'
-            if add_to_next != '':
-                if not initial_replace_with:
-                    initial_replace_with = replace_with
-            else:
-                initial_replace_with = (replace_with if initial_replace_with
-                                        is None else initial_replace_with)
-                replace_this = "(" + initial_replace_with + "|" + other + ")"
-                text = text.replace(replace_this, initial_replace_with)
-                initial_replace_with = None
-        return text
-
-    def strip_caret(self, text):
-        return text.replace('^', '')
-
-    def replace_x_asterisk(self, text):
-        if '*' not in text:
-            return text
-        last = text.rfind("*")
-
-        while last != -1:
-
-            if last == 0:
-                raise Exception("Invalid regex '%s': nothing to repeat." % (text))
-
-            if text[last - 1] != ')':
-                lastchar = text[last - 1]
-                repl_char = 'x' if lastchar is '.' else lastchar
-                text = text.replace(lastchar + '*', repl_char)
-            elif text[last - 1] == ')':
-                closed_paren = last - 1
-                # repeating a group! need to find the balanced open paren
-                # this is a huge hack and won't work in a lot of regexes.
-                # it has no idea about escaped parens.
-                depth = 1
-                open_paren = None
-                for i in range(closed_paren - 1, -1, -1):
-                    if text[i] == ')':
-                        depth += 1
-                        continue
-                    if text[i] == '(':
-                        depth -= 1
-                        if depth == 0:
-                            open_paren = i
-                            break
-                        if depth < 0:
-                            raise Exception("We can't handle this regex! "
-                                            "Check optional group parens balance.")
-
-                if open_paren is not None:
-                   text = "".join([
-                       text[:open_paren],
-                       text[open_paren+1:closed_paren],
-                       text[closed_paren+2:]])
-                else:
-                   raise Exception("We can't handle this regex! "
-                                   "Check optional group parens balance.")
-
-            last = text.rfind("*")
-        return text
-
-
-    def replace_x_plus(self, text):
-        if '+' not in text:
-            return text
-        split_up = text.split('+')
-        for num in range(0, len(split_up)-1):
-            lastchar = split_up[num][-1]
-            repl_char = 'x' if lastchar is '.' else lastchar
-            text = text.replace(lastchar + '+', repl_char)
-        return text
-
-    def replace_n_matching(self, text):
-        opening = '.{'
-        closing = '}'
-        for num in range(0,text.count(opening)):
-            try:
-                dot_curly = text.split(opening)[1]
-            except IndexError:
-                dot_curly = 0
-            if dot_curly != 0:
-                inside = dot_curly.split(closing)[0]
-                len_xs = inside if ',' not in inside else inside.split(',')[0]
-                replace_this = opening + inside + closing
-                text = text.replace(replace_this, 'x' * int(len_xs))
-        return text
-
-    def replace_space(self, text):
-        if '\s' not in text:
-            return text
-
-        result = " ".join(text.split('\s'))
-        return result
-
-    def replace_digits(self, text):
-        if '\d' not in text:
-            return text
-
-        result = "1".join(text.split('\d'))
-        return result
-
     def generate_text_from_regexp(self, regexp):
-        text_n = self.replace_n_matching(regexp)
-        no_spaces = self.replace_space(text_n)
-        no_digits = self.replace_digits(no_spaces)
-        text_n_a = self.replace_x_asterisk(no_digits)
-        text_n_a_p = self.replace_x_plus(text_n_a)
-        text_n_a_p_o = self.replace_or(text_n_a_p)
-        text = text_n_a_p_o
-        return self.strip_caret(text)
-
+        return generate_from_regex(regexp)
