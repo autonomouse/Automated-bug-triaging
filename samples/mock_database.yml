@@ -600,20 +600,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
 
   "1399810":
     category: None
-    description: "Prodstack unit ceph/0 machine 1 agent-state error details hook failed mon-relation-changed"
+    description: "Unit ceph/x: agent-state error details hook failed mon-relation-changed"
     pipeline_deploy:
       -
-        "console.txt":
+        "*ceph_*_var_log_juju_unit-ceph-*.log":
             regexp:
-            - "unit. ceph....machine... agent-state. error details. hook failed...mon-relation-changed"
-      -
-        "*ceph_*.oil_var_log_juju_unit-ceph-*.log":
-            regexp:
-            - "ERROR juju.worker.uniter uniter.go.{2,6} hook failed. exit status 1"
-      -
-        "*ceph_*.oil_var_log_juju_unit-ceph-*.log":
-            regexp:
-            - ".AGENT-STATUS. error. hook failed. .mon-relation-changed"
+            - 'OSError: .Errno 22. Invalid argument: ./var/lib/ceph/osd/ceph-\d+.'
 
   "1398879":
     category: None
