@@ -598,7 +598,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "cannot add unit ... to service .nova-compute.. cannot add unit to service .nova-compute.. Get http.{10,20}MAAS.api.{3,7}nodes"
 
-  "1399810":
+  "1474183":
     category: None
     description: "Unit ceph/x: agent-state error details hook failed mon-relation-changed"
     pipeline_deploy:
