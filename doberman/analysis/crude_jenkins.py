@@ -446,9 +446,10 @@ class Build(Common):
         if type(regexps) == list:
             if len(regexps) > 1:
                 regexp = '|'.join(regexps)
+                set_re = set([regexp])
             else:
                 regexp = regexps[0]
-            set_re = set(regexps)
+                set_re = set(regexps)
         else:
             regexp = regexps
             set_re = set([regexps])
@@ -456,7 +457,7 @@ class Build(Common):
         if regexp not in ['None', None, '']:
             matches = re.compile(regexp, re.DOTALL).findall(text)
             if matches:
-                if len(set_re) == len(set(matches)):
+                if len(set(matches)) >= len(set_re):
                     if '*' in orig_filename_in_db:
                         return {orig_filename_in_db: {'regexp': regexps}}
                     else:
