@@ -40,7 +40,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "ERROR.*Deployment failed:.*No route to host"
+            - "ERROR.*Deployment failed..*No route to host"
 
   "1352503":
     category: None
@@ -1248,3 +1248,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
           regexp:
           - "XMLSyntaxError. Start tag expected. .<. not found, line 1, column 1"
+
+  "1474688":
+    category: None
+    description: "Prodstack: HTTPInternalServerError: 500 Internal Server Error Failed to upload image"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "ERROR. glanceclient.common.http. Request returned failure status.{1,1300}HTTPInternalServerError. 500 Internal Server Error.{1,5}Failed to upload image"
