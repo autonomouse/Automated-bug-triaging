@@ -32,6 +32,10 @@ bugs:
         "console.txt":
             regexp:
             - "No such file or directory.{1,5}artifacts.juju_status.yaml"
+      -
+        "tempest_xunit.xml":
+            regexp:
+            - "cleanUp operation failed"
 
   "1346340":
     category: None
@@ -114,15 +118,14 @@ bugs:
             regexp:
             - "error executing .lxc-start.. The container failed to start.+To get more details, run the container in foreground mode.+Additional information can be obtained by setting the --logfile and --log-priority options"
 
-
   "1372941":
     category: None
-    description:
+    description: Prodstack. VolumeBuildErrorException. Volume <id> failed to build and is in ERROR status (tempest fail)
     test_tempest_smoke:
       -
-        "console.txt":
+        "tempest_xunit.xml":
             regexp:
-            - "failed to build and is in ERROR status"
+            - "Volume .{36} failed to build and is in ERROR status"
 
   "1372946":
     category: None
@@ -1077,8 +1080,14 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "BuildErrorException. Server ..server_id.s failed to build and is in ERROR status"
-            - "Server .{5,60} failed to build and is in ERROR status"
+            - "BuildErrorException. Server .{13,36} failed to build and is in ERROR status"
+            - "Server .{36} failed to build and is in ERROR status"
+      -
+        "tempest_xunit.xml":
+            regexp:
+            - "Server .{36} failed to build and is in ERROR status"
+            - "create_test_server raise ex BuildErrorException"
+
 
   "1461448":
     category: None
@@ -1239,15 +1248,23 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
           regexp:
           - "error...Errno 111. Connection refused.*tempest.thirdparty.boto.test_ec2_keys.EC2KeysTest"
-  
+      -
+        "tempest_xunit.xml":
+          regexp:
+          - "error. .Errno 111. Connection refused"
+
   "1472602":
     category: None
-    description: "error Errno 111 Connection refused"
+    description: "Start tag expected"
     test_tempest_smoke:
       -
         "console.txt":
           regexp:
           - "XMLSyntaxError. Start tag expected. .<. not found, line 1, column 1"
+      -
+        "tempest_xunit.xml":
+          regexp:
+          - "Start tag expected. .{1,2}<.{1,2} not found, line 1, column 1"
 
   "1474688":
     category: None
