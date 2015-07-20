@@ -3,11 +3,15 @@
 import sys
 import os
 import yaml
+import tempfile
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
 from refinery_cli import CLI
 
 # Matplotlib imports - The order is important to generate plots without X
+if not os.access(os.environ['HOME'], os.W_OK):
+    os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
+
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
