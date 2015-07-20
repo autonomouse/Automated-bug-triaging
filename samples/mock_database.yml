@@ -1209,14 +1209,24 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "cinder_*_var_log_juju_unit-cinder-*.log":
             regexp:
             - "To remove them unconditionally use: vgreduce --removemissing --force."
+
+  "1476418":
+    category: None
+    description: "cinder config-change hook failure: cinder-volumes already exists"
+    pipeline_deploy:
       -
         "cinder_*_var_log_juju_unit-cinder-*.log":
             regexp:
-            - "subprocess.CalledProcessError. Command ...vgreduce.. .--removemissing.. ..cinder-volume.... returned non-zero exit status 5"
+            - "A volume group called cinder-volumes already exists"
+
+  "1476426":
+    category: None
+    description: "cinder config-change hook failure: cinder-volumes not found"
+    pipeline_deploy:
       -
         "cinder_*_var_log_juju_unit-cinder-*.log":
             regexp:
-            - "subprocess.CalledProcessError. Command ...vgcreate.. ..cinder-volumes[^n]* returned non-zero exit status 5"
+                - 'Volume group "cinder-volumes" not found'
 
   "1470241":
     category: None
