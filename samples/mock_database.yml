@@ -1137,6 +1137,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
           regexp:
           - "Waiting for API to become available.*ERROR cannot get all blocks. EOF.*Calling .juju bootstrap. failed!"
+          - "ERROR connection is shut down.{1,100}Calling .juju bootstrap. failed!"
 
   "1468584":
     category: None
@@ -1146,15 +1147,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
           regexp:
           - "can.t get local.system.replset config from self or any seed .EMPTYCONFIG..*ERROR failed to bootstrap environment"
-
-  "1468586":
-    category: None
-    description: "juju 1.24.0 bootstrap failure - Waiting for API to become available - Error connection is shutdown"
-    pipeline_deploy:
-      -
-        "console.txt":
-          regexp:
-          - "ERROR connection is shut down.{1,100}Calling .juju bootstrap. failed!"
 
   "1421260":
     category: None
