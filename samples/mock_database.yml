@@ -57,12 +57,12 @@ bugs:
 
   "1352506":
     category: None
-    description: "prodstack: unit: nova-compute/1,2,3 hook failed \"ceph-relation-changed\""
+    description: "nova-compute: Failed to reconnect to the hypervisor"
     pipeline_deploy:
       -
-        "console.txt":
+        "nova-compute_*_var_log_juju_unit-nova-compute-*.log":
             regexp:
-            - "unit. nova-compute.*agent-state. error details. hook failed...ceph-relation-changed"
+            - "Failed to reconnect to the hypervisor"
 
   "1358326":
     category: None
