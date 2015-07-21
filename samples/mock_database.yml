@@ -1284,3 +1284,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "ERROR. glanceclient.common.http. Request returned failure status.{1,1300}HTTPInternalServerError. 500 Internal Server Error.{1,5}Failed to upload image"
+
+  "1461192":
+    category: None
+    description: "nova-compute: Failed to reconnect to the hypervisor"
+    pipeline_deploy:
+      -
+        "nova-compute_*_var_log_juju_unit-nova-compute-*.log":
+            regexp:
+            - "arg 2 must contain only strings"
