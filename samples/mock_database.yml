@@ -832,7 +832,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "AssertionError. State change timeout exceeded"
 
-  "1437056":
+  "1453872":
     category: None
     description: "Prodstack: bootstrap instance started but did not change to Deployed state"
     pipeline_deploy:
