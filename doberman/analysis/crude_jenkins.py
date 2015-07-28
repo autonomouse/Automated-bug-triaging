@@ -36,10 +36,14 @@ class Jenkins(Common):
 
         url = self.cli.jenkins_host
         remote = self.cli.run_remote
+        pysid = self.cli.pysid
         self.cli.LOG.debug('Connecting to jenkins @ {0} remote={1}'.format(url,
                            remote))
 
-        if remote:
+        if pysid:
+            self.cli.LOG.info("Using pysid for jenkins cookie: %s" % pysid)
+            self.cookie = {'pysid': pysid}
+        elif remote:
             self.cli.LOG.info("Fetching cookies for %s" % url)
             self.cookie = pycookiecheat.chrome_cookies(url)
         try:

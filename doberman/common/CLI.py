@@ -75,6 +75,9 @@ class CLI(Common):
         prsr.add_option('-p', '--logpipelines', action='store_true',
                         dest='logpipelines', default=False,
                         help='Record which pipelines were processed in a yaml')
+        prsr.add_option('-P', '--pysid', action='store',
+                        dest='pysid', default=None,
+                        help='pysid cookie value for jenkins remote server')
         prsr.add_option('-r', '--remote', action='store_true',
                         dest='run_remote', default=False,
                         help='set if running analysis remotely')
