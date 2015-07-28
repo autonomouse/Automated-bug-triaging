@@ -28,7 +28,7 @@ class TestCatalog(Common):
             if not self.cli.offline_mode:
                 self.cli.LOG.info("Connecting to test-catalog bug database")
                 self.bugs = \
-                    self.client.get_bug_info(force_refresh=True)['bugs']
+                    self.client.get_bug_info(force_refresh=False)['bugs']
             else:
                 emsg = "In offline mode, but no local database file provided!!"
                 self.cli.LOG.error(emsg)
