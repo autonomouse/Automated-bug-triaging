@@ -1,5 +1,5 @@
 #! /usr/bin/env python2
-
+import re
 import sys
 import os
 import yaml
@@ -455,19 +455,19 @@ class Refinery(CrudeAnalysis):
 
     def normalise_then_return_bug_feedback(self, bugs, bug_id, info_file=None,
                                            info=None):
-        """Get info on bug from additional info. Replace build number,
+        """
+        Get info on bug from additional info. Replace build number,
         pipeline id, date newlines, \ etc with blanks...
         """
         pipelines = [bugs[b].get('pipeline_id') for b in bugs]
 
-        additional_info = bugs[bug_id].get('additional info')
-        if info_file is None and additional_info is None:
-            msg = "No console data or info provided for bug id: {}."
-            self.cli.LOG.debug(msg.format(bug_id))
-            return
-
         if not info:
             if not info_file:
+                additional_info = bugs[bug_id].get('additional info')
+                if not additional_info:
+                    msg = "No console data or info provided for bug id: {}."
+                    self.cli.LOG.debug(msg.format(bug_id))
+                    return
                 info_file = additional_info.get('text')
 
             if info_file is None:
@@ -476,29 +476,37 @@ class Refinery(CrudeAnalysis):
                 return self.info_file_cache[info_file]
 
             # Temporarily load up the whole output file into memory:
-            try:
-                with open(info_file, 'r') as f:
-                    info = f.read()
-            except TypeError as e:
-                self.cli.LOG.error(e)
-                info = None
+            with open(info_file, 'r') as f:
+                info = f.read()
 
-        info = self.normalise_bug_details(pipelines, info)
+        # replace pipeline id(s) with placeholder:
+        pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
+        for pl in pipelines:
+            info = info.replace(pl, pl_placeholder) if info else ''
+
+        # replace numbers with 'X'
+        info = re.sub(r'\d', 'X', info) if info else ''
+
+        # Search for traceback:
         traceback_list = []
-        other_list = []
-
-        for pattern_type, signature in self.yield_error_signatures(info,
-                                                                   info_file):
-            if pattern_type == 'Python traceback':
-                traceback_list.append(signature)
-            else:
-                other_list.append(signature)
+        tb_split = info.split('Traceback')
+        for tb in tb_split[1:]:
+            dt_split = (tb.split('XXXX-XX-XX XX:XX:XX') if tb_split[0] != ''
+                        else '')
+            this_tb = 'Traceback' + dt_split[0] if dt_split != '' else ''
+            traceback_list.append(this_tb)
         traceback = " ".join([str(n) for n in set(traceback_list)])
+        errs = ''
+        fails = ''
+        if not traceback:
+            # Search for errors:
+            errs = sorted(re.findall('ERROR.*', info))
 
-        errs = sorted(set(other_list)) if not traceback else ''
+            # Search for failure:
+            fails = sorted(re.findall('fail.*', info, re.IGNORECASE))
 
-        bug_feedback = " ".join([str(n) for n in (traceback, errs)])
-        if (bug_feedback == ' []') or not bug_feedback.strip(' '):
+        bug_feedback = " ".join([str(n) for n in (traceback, errs, fails)])
+        if (bug_feedback == ' [] []') or not bug_feedback.strip(' '):
             self.info_file_cache[info_file] = None
             return
         else:

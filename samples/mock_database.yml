@@ -1285,3 +1285,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "deployer.charm. Could not branch.{1,100}to trusty.neutron-calico"
+
+  "1479380":
+    category: None
+    description: "juju.worker.upgrader from 1.24.2 to 1.24.3 fails - wants a restart (pipeline_deploy)"
+    pipeline_deploy:
+      -
+        "juju_debug_machine-*.txt":
+            regexp:
+            - "fatal .api.. must restart. an agent upgrade is available"
