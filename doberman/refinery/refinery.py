@@ -4,7 +4,6 @@ import sys
 import os
 import yaml
 import operator
-import re
 import shutil
 from jenkinsapi.custom_exceptions import *
 from doberman.analysis.analysis import CrudeAnalysis
@@ -13,6 +12,7 @@ from doberman.analysis.crude_test_catalog import TestCatalog
 from plotting import Plotting
 from difflib import SequenceMatcher
 from refinery_cli import CLI
+from datetime import datetime
 
 
 class Refinery(CrudeAnalysis):
@@ -27,6 +27,7 @@ class Refinery(CrudeAnalysis):
 
     def __init__(self, cli=False, make_plots=False, dont_print=False):
         """Overwriting CrudeAnalysis' __init__ method."""
+        doberman_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
         self.message = -1
         self.bug_rankings = {}
@@ -42,10 +43,12 @@ class Refinery(CrudeAnalysis):
             self.remove_dirs(self.cli.crude_job)
             [os.remove(os.path.join(self.cli.reportdir, bdict)) for bdict in
              os.listdir(self.cli.reportdir) if 'bugs_dict_' in bdict]
+        doberman_finish_time = datetime.now()
+        self.cli.LOG.info(self.report_time_taken(doberman_start_time,
+                                                 doberman_finish_time))
 
     def analyse_crude_output(self, make_plots, dont_print):
-        """ Get and analyse the crude output yamls.
-        """
+        """Get and analyse the crude output yamls."""
         other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
 
         # Get crude output:
@@ -121,7 +124,7 @@ class Refinery(CrudeAnalysis):
 
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
-        """ Download a particular artifact from jenkins. """
+        """Download a particular artifact from jenkins. """
 
         jenkins_job = self.jenkins.jenkins_api[job]
         build = jenkins_job.get_build(int(build_num))
@@ -210,8 +213,7 @@ class Refinery(CrudeAnalysis):
         shutil.rmtree(path_to_crude_folder)
 
     def unify_downloaded_triage_files(self, crude_job, marker, jobs):
-        """Unify the downloaded crude output yamls into a single dictionary.
-        """
+        """Unify the downloaded crude output yamls into a single dictionary."""
 
         bug_dict = {}
         job_specific_bugs_dict = {}
@@ -379,8 +381,7 @@ class Refinery(CrudeAnalysis):
 
     def calculate_bug_prevalence(self, unique_unfiled_bugs, unified_bugdict,
                                  job_specific_bugs_dict):
-        """Calculate_bug_prevalence
-        """
+        """Calculate_bug_prevalence."""
         self.cli.LOG.info("Analysing the downloaded crude output yamls.")
         bug_prevalence = {'all_bugs': {}}
         pipelines_affected_by_bug = {}
@@ -435,12 +436,13 @@ class Refinery(CrudeAnalysis):
             return self.get_single_pipeline_bug_info(bugs, bug_id)
 
     def get_single_pipeline_bug_info(self, bugs, bug_id):
-        return self.normalise_bug_details(bugs, bug_id)
+        return self.normalise_then_return_bug_feedback(bugs, bug_id)
 
     def get_multiple_pipeline_bug_info(self, bugs, bug_id):
         xmlclass, xmlname = self.get_xunit_class_and_name(bugs, bug_id)
         info = bugs[bug_id]['additional info'].get('text')
-        bug_feedback = self.normalise_bug_details(bugs, bug_id, info=info)
+        bug_feedback =\
+            self.normalise_then_return_bug_feedback(bugs, bug_id, info=info)
         return bug_feedback
 
     def get_xunit_class_and_name(self, bugs, bug_id):
@@ -451,20 +453,21 @@ class Refinery(CrudeAnalysis):
         except:
             return (None, None)
 
-    def normalise_bug_details(self, bugs, bug_id, info_file=None, info=None):
-        """
-        Get info on bug from additional info. Replace build number,
+    def normalise_then_return_bug_feedback(self, bugs, bug_id, info_file=None,
+                                           info=None):
+        """Get info on bug from additional info. Replace build number,
         pipeline id, date newlines, \ etc with blanks...
         """
         pipelines = [bugs[b].get('pipeline_id') for b in bugs]
 
+        additional_info = bugs[bug_id].get('additional info')
+        if info_file is None and additional_info is None:
+            msg = "No console data or info provided for bug id: {}."
+            self.cli.LOG.debug(msg.format(bug_id))
+            return
+
         if not info:
             if not info_file:
-                additional_info = bugs[bug_id].get('additional info')
-                if not additional_info:
-                    msg = "No console data or info provided for bug id: {}."
-                    self.cli.LOG.debug(msg.format(bug_id))
-                    return
                 info_file = additional_info.get('text')
 
             if info_file is None:
@@ -473,37 +476,29 @@ class Refinery(CrudeAnalysis):
                 return self.info_file_cache[info_file]
 
             # Temporarily load up the whole output file into memory:
-            with open(info_file, 'r') as f:
-                info = f.read()
+            try:
+                with open(info_file, 'r') as f:
+                    info = f.read()
+            except TypeError as e:
+                self.cli.LOG.error(e)
+                info = None
 
-        # replace pipeline id(s) with placeholder:
-        pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
-        for pl in pipelines:
-            info = info.replace(pl, pl_placeholder) if info else ''
-
-        # replace numbers with 'X'
-        info = re.sub(r'\d', 'X', info) if info else ''
-
-        # Search for traceback:
+        info = self.normalise_bug_details(pipelines, info)
         traceback_list = []
-        tb_split = info.split('Traceback')
-        for tb in tb_split[1:]:
-            dt_split = (tb.split('XXXX-XX-XX XX:XX:XX') if tb_split[0] != ''
-                        else '')
-            this_tb = 'Traceback' + dt_split[0] if dt_split != '' else ''
-            traceback_list.append(this_tb)
+        other_list = []
+
+        for pattern_type, signature in self.yield_error_signatures(info,
+                                                                   info_file):
+            if pattern_type == 'Python traceback':
+                traceback_list.append(signature)
+            else:
+                other_list.append(signature)
         traceback = " ".join([str(n) for n in set(traceback_list)])
-        errs = ''
-        fails = ''
-        if not traceback:
-            # Search for errors:
-            errs = sorted(re.findall('ERROR.*', info))
 
-            # Search for failure:
-            fails = sorted(re.findall('fail.*', info, re.IGNORECASE))
+        errs = sorted(set(other_list)) if not traceback else ''
 
-        bug_feedback = " ".join([str(n) for n in (traceback, errs, fails)])
-        if (bug_feedback == ' [] []') or not bug_feedback.strip(' '):
+        bug_feedback = " ".join([str(n) for n in (traceback, errs)])
+        if (bug_feedback == ' []') or not bug_feedback.strip(' '):
             self.info_file_cache[info_file] = None
             return
         else:
@@ -511,14 +506,6 @@ class Refinery(CrudeAnalysis):
             return bug_feedback
 
     def group_similar_unfiled_bugs(self, unified_bugdict):
-        """Group unfiled bugs together by similarity of error message. If the
-        string to compare is larger than the given max_sequence_size (default:
-        10000 characters), this strings are compared for an exact match,
-        otherwise, SequenceMatcher is used to determine if an error is close
-        enough (i.e. greater than the given threshold value) to be considered
-        a match.
-        """
-
         self.cli.LOG.info("Grouping unfiled bugs by error similarity.")
         unfiled_bugs = {}
         for pipeline in unified_bugdict:
@@ -545,9 +532,14 @@ class Refinery(CrudeAnalysis):
             else:
                 multiple_bugs_per_pipeline = False
 
-            info_a = \
-                self.get_identifying_bug_details(unfiled_bugs, unfiled_bug,
-                                                 multiple_bugs_per_pipeline)
+            info_a = unfiled_bugs[unfiled_bug].get('error pattern')
+
+            if info_a is None:
+                # if it has no 'error pattern' then it is an old style crude
+                # output and the following must be done instead:
+                info_a = (self.get_identifying_bug_details(
+                          unfiled_bugs, unfiled_bug,
+                          multiple_bugs_per_pipeline))
 
             # Have we seen this bug before?
             for already_seen in unique_bugs:

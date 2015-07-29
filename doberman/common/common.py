@@ -4,23 +4,24 @@ import os
 import bisect
 import time
 import yaml
+import re
 import parsedatetime as pdt
 from dateutil.parser import parse
 from datetime import datetime
 from jenkinsapi.custom_exceptions import *
+from collections import OrderedDict
 
 
 class Common(object):
-    """ Common methods
-    """
+    """ Common methods"""
 
-    def add_to_yaml(self, matching_bugs, build_status, existing_dict):
-        # TODO: Change this to take in the  pipeline and tc_host
+    def add_to_yaml(self, matching_bugs, existing_dict,
+                    build_status='Unknown'):
         """
         Creates a yaml dict and populates with data in the right format and
         merges with existing yaml dict.
-
         """
+        # TODO: Change this to take in the pipeline and tc_host
         # Make dict
         pipeline_dict = {}
         yaml_dict = {}
@@ -154,7 +155,6 @@ class Common(object):
         """ Adds dvalue to list in a given dictionary (self.oil_df/oil_nodes).
             Assumes that dictionary will be self.oil_df, self.oil_nodes, etc so
             nothing is returned.
-
         """
 
         if dkey not in dictionary:
@@ -229,3 +229,145 @@ class Common(object):
         param time: datetime object
         """
         return time.strftime('%Y%m%d-%H%M%S.%f')
+
+    def enlist(self, thing):
+        if type(thing) not in [list, tuple]:
+            return [thing]
+        elif type(thing) is tuple:
+            return list(thing)
+        else:
+            return thing
+
+    def find_indexes_of_occurrence(self, haystack, needle):
+        """Find the start of all (possibly overlapping) instances of needle in
+        haystack
+        """
+        offs = -1
+        while True:
+            offs = haystack.find(needle, offs + 1)
+            if offs == -1:
+                break
+            else:
+                yield offs
+
+    def normalise_bug_details(self, pipelines, content):
+        """Replace pipeline id with a placeholder pipeline id and then replace
+        the strings specified in doberman_normalisation.json with an
+        alternative, in the order given in that json file.
+        """
+        # replace pipeline id(s) with placeholder:
+        pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
+        if content:
+            for pipeline in self.enlist(pipelines):
+                content = re.sub(pipeline, pl_placeholder, content)
+        else:
+            content = ''
+
+        normalisers = self.cli.normalisers.get('normalisers')
+        if normalisers is None:
+            return content
+        ordered_normalisers = OrderedDict(sorted(normalisers.items(),
+                                          key=lambda t: t[1].get('order')))
+
+        nrmlsd_content = content
+        for name, normaliser in ordered_normalisers.items():
+            nrmlsd_content = re.sub(normaliser['replace'], normaliser['with'],
+                                    nrmlsd_content) if content else ''
+
+        return nrmlsd_content
+
+    def yield_error_signatures(self, full_text, file_to_scan, announce=True):
+        """A generator method that extracts and yields isolated sections of
+        content by matching sections of the given text to the error patterns
+        provided by the doberman_patterns.json (i.e. it looks for 'Traceback',
+        etc).
+        """
+        for pattern_type, details in self.cli.patterns['patterns'].items():
+
+            # json.load makes this unicode, but this can lead to
+            # UnicodeDecodeErrors, so convert to str object:
+            details['start of pattern'] = str(details['start of pattern'])
+
+            if not details["case sensitive"]:
+                original_start_pattern = details['start of pattern']
+                details['start of pattern'] = original_start_pattern.lower()
+                full_text = full_text.lower()
+
+            if details['start of pattern'] not in full_text:
+                continue
+
+            indexes = (self.find_indexes_of_occurrence(full_text,
+                       details['start of pattern']))
+            minlen = details["minimum pattern length"]
+
+            prev_index = 0
+
+            for index in indexes:
+                start_idx = index
+                error_text_prefix = ""
+                error_text_suffix = ""
+                error_text = None
+                if details["preceding lines"] > 0:
+                    # include n lines before start of pattern:
+                    error_text_prefix = \
+                        "".join(full_text[prev_index:start_idx].split('\n')
+                                [-details["preceding lines"]:])
+                elif not details["start inclusive"]:
+                    # if you don't want the pattern itself (only what follows):
+                    start_pattern_length = len(details["start of pattern"])
+                    start_idx = start_idx + start_pattern_length
+
+                # If end_idx is -1 then it means it will scan to the end of the
+                # file. To avoid this, multiple end patterns can be provided,
+                # and it will choose the one that results in the smallest text:
+                if type(details['end of pattern']) != list:
+                    end_patterns = [details['end of pattern']]
+                else:
+                    end_patterns = details['end of pattern']
+                for position, end_pattern_unicode in enumerate(end_patterns):
+                    end_pattern = str(end_pattern_unicode)
+                    if not end_pattern:
+                        end_idx = -1  # EOF
+                    else:
+                        st_ptrn = len(details["start of pattern"])
+                        end_idx = full_text[index + st_ptrn:].find(end_pattern)
+                        if end_idx != -1:
+                            end_idx = end_idx + index + st_ptrn
+                    if end_idx > 0 and details["following lines"] > 0:
+                        # include n lines after end of pattern:
+                        error_text_suffix = \
+                            "".join(full_text[end_idx:].split('\n')
+                                             [:details["following lines"]])
+                    elif end_idx > 0 and details["end inclusive"]:
+                        # if do want the end marker included in the pattern:
+                        end_pattern_length = len(end_pattern) + 1
+                        end_idx = end_idx + end_pattern_length
+
+                    proposed_error_text = (error_text_prefix + full_text
+                                           [index:end_idx] + error_text_suffix)
+
+                    # Make sure that the the number of letters is greater than
+                    # the minimum pattern length:
+                    if minlen not in [None, ""]:
+                        if len([ch for ch in proposed_error_text.lower() if ch
+                                in 'abcdefghijklmnopqrstuvwxyz']) < minlen:
+                            continue
+
+                    if error_text is None:
+                        error_text = proposed_error_text
+                    else:
+                        alt_error_text = proposed_error_text
+                        alt_shorter = len(alt_error_text) < len(error_text)
+                        if end_idx != -1 and alt_shorter:
+                            error_text = alt_error_text
+                if error_text is None:
+                    continue
+
+                prev_index = index
+                yield (pattern_type, error_text)
+
+    def report_time_taken(self, start_time, finish_time):
+        """Report length of time Doberman took to complete"""
+        time_taken = finish_time - start_time
+        time_str = ':'.join(str(time_taken).split(':')[:3])
+        return "Time to complete: {}".format(time_str)

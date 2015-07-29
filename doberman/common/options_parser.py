@@ -107,6 +107,12 @@ class OptionsParser(object):
 
         self.logpipelines = True if opts.logpipelines else False
 
+        try:
+            dont_scan = cfg.get('DEFAULT', 'dont_scan').split(' ')
+        except Exception:
+            dont_scan = []
+        self.dont_scan = tuple(dont_scan)
+
         # cli wins, then config, otherwise default to True
         if opts.unverified:
             self.verify = False
@@ -179,6 +185,13 @@ class OptionsParser(object):
         if not self.ids:
             if not self.use_date_range:
                 raise Exception("No pipeline IDs provided")
+
+        # Load Normalisers:
+        nrml = utils.find_config(config_filename='doberman_normalisation.json')
+        with open(nrml, 'r') as normaliser:
+            self.normalisers = json.load(normaliser)
+        if self.normalisers == {}:
+            raise Exception("Empty doberman_normalisers.json")
 
         return self
 

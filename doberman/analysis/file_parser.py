@@ -12,12 +12,16 @@ class FileParser(Common):
        - juju_status.yaml
     """
 
-    def __init__(self, path, filename):
+    def __init__(self, path, job):
         self.status = []
-        self.filename = filename
+        self.filenames = ['{}_console.txt'.format(job),
+                          'oil_nodes',
+                          'juju_status.yaml']
         self.path = path
-        self.path_to_file = os.path.join(self.path, self.filename)
+        self.extracted_info = {}
         self._process_data()
+        # TODO: Pull data in from dpkg file (this is a pipeline_start job)
+        # TODO: Then include maas logs/other plugin files (write them first)
 
     def _extract_information(self, ftype=None):
         try:
@@ -28,37 +32,40 @@ class FileParser(Common):
                     return f.read()
         except IOError as e:
             msg = "Problem reading {} from {} ({})"
-            self.status.append(msg.format(self.filename, self.path, e[1]))
+            filename = os.path.basename(self.path_to_file)
+            self.status.append(msg.format(filename, self.path, e[1]))
             return
 
     def _process_data(self):
-        if 'console.txt' in self.filename:
-            self._process_console_data()
-        if self.filename == 'oil_nodes':
-            self._process_oil_nodes_data()
-        if self.filename == 'juju_status.yaml':
-            self._process_juju_status_data()
+        for filename in self.filenames:
+            self.path_to_file = os.path.join(self.path, filename)
+            if 'console.txt' in filename:
+                self._process_console_data()
+            if filename == 'oil_nodes':
+                self._process_oil_nodes_data()
+            if filename == 'juju_status.yaml':
+                self._process_juju_status_data()
 
     def _process_console_data(self):
         self.data = self._extract_information('txt')
 
         # Set up defaults in case missing console.txt:
-        if not hasattr(self, 'bsnode'):
-            self.bsnode = {}
-        if not hasattr(self.bsnode, 'openstack release'):
-            self.bsnode["openstack release"] = "Unknown"
-        if not hasattr(self.bsnode, 'jenkins'):
-            self.bsnode["jenkins"] = "Unknown"
+        if 'bsnode' not in self.extracted_info:
+            self.extracted_info['bsnode'] = {}
+        if 'openstack release' not in self.extracted_info['bsnode']:
+            self.extracted_info['bsnode']["openstack release"] = "Unknown"
+        if 'jenkins' not in self.extracted_info['bsnode']:
+            self.extracted_info['bsnode']["jenkins"] = "Unknown"
         msg = "Unable to extract {} from {}."
 
         if self.data and 'OPENSTACK_RELEASE=' in self.data:
-            self.bsnode['openstack release'] = \
+            self.extracted_info['bsnode']['openstack release'] = \
                 self.data.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
         else:
             self.status.append(msg.format('openstack release', 'console'))
 
         if self.data and ' in workspace /var/lib/' in self.data:
-            self.bsnode['jenkins'] = \
+            self.extracted_info['bsnode']['jenkins'] = \
                 self.data.split('\n')[1].split(' in workspace /var/lib/')[0]
         else:
             self.status.append(msg.format('jenkins', 'console'))
@@ -67,7 +74,7 @@ class FileParser(Common):
         self.data = self._extract_information('yaml')
 
         # Set up defaults in case missing oil_nodes:
-        self.oil_nodes = {}
+        self.extracted_info['oil_nodes'] = {}
 
         if not self.data:
             msg = "Unable to extract {} from {}."
@@ -75,8 +82,8 @@ class FileParser(Common):
             return
 
         for key in self.data['oil_nodes'][0].keys():
-            [self.dictator(self.oil_nodes, key, node[key]) for node in
-             self.data['oil_nodes']]
+            [self.dictator(self.extracted_info['oil_nodes'], key, node[key])
+             for node in self.data['oil_nodes']]
 
     def _process_juju_status_data(self):
         self.data = self._extract_information('yaml')
@@ -84,24 +91,25 @@ class FileParser(Common):
         # Set up defaults in case missing juju_status.yaml:
         default_message = "Unknown"
 
-        if not hasattr(self, 'bsnode'):
-            self.bsnode = {}
-        if 'machine' not in self.bsnode:
-            self.bsnode["machine"] = "Unknown"
-        if 'state' not in self.bsnode:
-            self.bsnode["state"] = "Unknown"
+        if 'bsnode' not in self.extracted_info:
+            self.extracted_info['bsnode'] = {}
+        if 'machine' not in self.extracted_info['bsnode']:
+            self.extracted_info['bsnode']["machine"] = "Unknown"
+        if 'state' not in self.extracted_info['bsnode']:
+            self.extracted_info['bsnode']["state"] = "Unknown"
 
-        self.oil_df = {"vendor": [],
-                       "node": [],
-                       "service": [],
-                       "charm": [],
-                       "ports": [],
-                       "state": [],
-                       "slaves": []}
+        self.extracted_info['oil_df'] = {"vendor": [],
+                                         "node": [],
+                                         "service": [],
+                                         "charm": [],
+                                         "ports": [],
+                                         "state": [],
+                                         "slaves": []}
 
         # Get info for bootstrap node (machine 0):
-
-        if not hasattr(self.data, 'machines'):
+        if not hasattr(self, 'data') or self.data is None:
+            return
+        if 'machines' not in self.data:
             return
 
         machine_info = self.data['machines'].get('0') if self.data else None
@@ -113,8 +121,8 @@ class FileParser(Common):
         m_os = machine_info.get('series', 'Unknown')
         machine = m_os + " running " + m_name
         state = machine_info.get('agent-state', 'Unknown')
-        self.bsnode['machine'] = machine
-        self.bsnode['state'] = state
+        self.extracted_info['bsnode']['machine'] = machine
+        self.extracted_info['bsnode']['state'] = state
 
         row = 0
         for service in self.data['services']:
@@ -124,13 +132,13 @@ class FileParser(Common):
                 units = serv['units']
             else:
                 units = {}
-                self.dictator(self.oil_df, 'node', 'N/A')
-                self.dictator(self.oil_df, 'service', 'N/A')
-                self.dictator(self.oil_df, 'vendor', 'N/A')
-                self.dictator(self.oil_df, 'charm', charm)
-                self.dictator(self.oil_df, 'ports', 'N/A')
-                self.dictator(self.oil_df, 'state', 'N/A')
-                self.dictator(self.oil_df, 'slaves', 'N/A')
+                self.dictator(self.extracted_info['oil_df'], 'node', 'N/A')
+                self.dictator(self.extracted_info['oil_df'], 'service', 'N/A')
+                self.dictator(self.extracted_info['oil_df'], 'vendor', 'N/A')
+                self.dictator(self.extracted_info['oil_df'], 'charm', charm)
+                self.dictator(self.extracted_info['oil_df'], 'ports', 'N/A')
+                self.dictator(self.extracted_info['oil_df'], 'state', 'N/A')
+                self.dictator(self.extracted_info['oil_df'], 'slaves', 'N/A')
 
             for unit in units:
                 this_unit = units[unit]
@@ -175,15 +183,17 @@ class FileParser(Common):
                        if 'dns-name' in container else ""
                 machine_id = m_name + m_ip
                 machine = machine_id if machine_id else "Unknown"
-                self.dictator(self.oil_df, 'node', machine)
-                self.dictator(self.oil_df, 'service', unit)
-                self.dictator(self.oil_df, 'vendor', ', '.join(hardware))
-                self.dictator(self.oil_df, 'charm', charm)
-                self.dictator(self.oil_df, 'ports', ports)
-                self.dictator(self.oil_df, 'state', state)
-                self.dictator(self.oil_df, 'slaves', slave)
+                self.dictator(self.extracted_info['oil_df'], 'node', machine)
+                self.dictator(self.extracted_info['oil_df'], 'service', unit)
+                self.dictator(self.extracted_info['oil_df'], 'vendor',
+                              ', '.join(hardware))
+                self.dictator(self.extracted_info['oil_df'], 'charm', charm)
+                self.dictator(self.extracted_info['oil_df'], 'ports', ports)
+                self.dictator(self.extracted_info['oil_df'], 'state', state)
+                self.dictator(self.extracted_info['oil_df'], 'slaves', slave)
                 row += 1
 
-        for key in self.oil_df:
-            if not self.oil_df[key]:
-                self.dictator(self.oil_df, key, default_message)
+        for key in self.extracted_info['oil_df']:
+            if not self.extracted_info['oil_df'][key]:
+                self.dictator(self.extracted_info['oil_df'], key,
+                              default_message)

@@ -15,7 +15,7 @@ class FilingStation(CrudeAnalysis):
     """
 
     def __init__(self, cli=False):
-        """ Overwriting CrudeAnalysis' __init__ method """
+        """Overwriting CrudeAnalysis' __init__ method."""
         self.message = -1
 
         self.cli = CLI().populate_cli() if not cli else cli
@@ -24,8 +24,7 @@ class FilingStation(CrudeAnalysis):
         self.autofile()
 
     def autofile(self):
-        """ Get and analyse the crude output yamls.
-        """
+        """Get and analyse the crude output yamls."""
         # Get refinery output
         self.cli.LOG.info("Working on {0} as refinery output directory"
                           .format(self.cli.reportdir))

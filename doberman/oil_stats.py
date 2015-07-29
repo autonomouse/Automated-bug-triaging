@@ -29,13 +29,16 @@ def date_parse(string):
     """Use two different strtotime functions to return a datetime
     object when possible.
     """
+
+    string_spc = string.replace('_', ' ')
+
     try:
-        return pytz.utc.localize(parse(string))
+        return pytz.utc.localize(parse(string_spc))
     except:
         pass
 
     try:
-        val = pdt.Calendar(pdt.Constants(usePyICU=False)).parse(string)
+        val = pdt.Calendar(pdt.Constants(usePyICU=False)).parse(string_spc)
         if val[1] > 0:  # only do strict matching
             return pytz.utc.localize(datetime(*val[0][:6]))
     except:

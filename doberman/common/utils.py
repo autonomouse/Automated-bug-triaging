@@ -56,7 +56,7 @@ def get_logger(name='doberman', logfile=None):
     return logger
 
 
-def find_config(conf=None):
+def find_config(conf=None, config_filename='doberman.conf'):
     """Finds config file, allowing users to specify config via CLI or
     environment variable.  If neither, default config is returned
 
@@ -75,7 +75,7 @@ def find_config(conf=None):
 
     env_conf = os.getenv('DOBERMAN_ROOT', None)
     env_conf = (env_conf and
-                os.path.join(env_conf, 'etc', 'doberman', 'doberman.conf'))
+                os.path.join(env_conf, 'etc', 'doberman', config_filename))
     if env_conf and os.path.isfile(env_conf):
         return env_conf
 

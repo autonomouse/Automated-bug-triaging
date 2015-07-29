@@ -1285,4 +1285,3 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "deployer.charm. Could not branch.{1,100}to trusty.neutron-calico"
-

@@ -18,12 +18,12 @@ bugs:
             regexp:
             - "this line of text really shouldn't be in there"
             
-  "fake_bug_01":
+  "fake_bug_03":
     category: None
-    description: "A fake bug for testing purposes"
+    description: "A catch all bug"
     pipeline_deploy:
       -
         "console.txt":
             regexp:
-            - "chuck_timeout"
+            - "."
 

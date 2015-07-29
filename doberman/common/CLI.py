@@ -78,6 +78,8 @@ class CLI(Common):
         prsr.add_option('-P', '--pysid', action='store',
                         dest='pysid', default=None,
                         help='pysid cookie value for jenkins remote server')
+        prsr.add_option('-Q', '--profile', action='store', dest='profile',
+                        default=None, help='choose a custom actions profile')
         prsr.add_option('-r', '--remote', action='store_true',
                         dest='run_remote', default=False,
                         help='set if running analysis remotely')

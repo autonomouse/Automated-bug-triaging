@@ -1,0 +1,19 @@
+{
+    "normalisers": {
+        "tmp directory paths then space": {
+            "order": 1,
+            "replace": "/tmp/.{1,50} ",
+            "with": "<tmp dir> "
+        },
+        "tmp directory paths then new line": {
+            "order": 1,
+            "replace": "/tmp/.{1,50}\n",
+            "with": "<tmp dir>\n"
+        },
+        "all numbers except triple digit status codes": {
+            "order": 2,
+            "replace": " ^(?:(?!(?<!\\d)\\d{3}(?!\\d))[a-zA-Z\\d])+$ ",
+            "with": "X"
+        }
+    }
+}

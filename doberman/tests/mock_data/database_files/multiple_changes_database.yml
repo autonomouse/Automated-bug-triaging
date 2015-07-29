@@ -7,7 +7,7 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "moo run_config artifacts/run_config.parameter"
+            - "chuck_timeout"
             
   "fake_bug_02":
     category: None

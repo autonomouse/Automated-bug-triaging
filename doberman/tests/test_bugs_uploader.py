@@ -43,8 +43,7 @@ class BugsUploader(CommonTestMethods):
                                                             remote_db)
         newly_added = [('fake_bug_01', {'category': 'None', 'description': 
                        'A fake bug for testing purposes', 'pipeline_deploy': 
-                       [{'console.txt': {'regexp': 
-                       ['mv run_config artifacts/run_config.parameter']}}]})]
+                       [{'console.txt': {'regexp': ['check_timeout']}}]})]
         self.assertTrue(orphan_bugs == newly_added)
 
     def test_bug_changed(self):

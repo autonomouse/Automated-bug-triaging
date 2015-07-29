@@ -1,5 +1,6 @@
 import os
 import yaml
+import json
 import tempfile
 import shutil
 from doberman.tests.test_utils import DobermanTestBase
@@ -53,7 +54,7 @@ class CommonTestMethods(DobermanTestBase):
         except KeyError:
             return
 
-    def populate_cli_var(self, bugs_database, reportdir=mock_output_data):
+    def populate_cli_var(self, bugs_database, reportdir=mock_output_data): 
         cli = namedtuple('CLI', '')
         cli.crude_job = 'pipeline_start'
         cli.database = os.path.join(self.DB_files, bugs_database)
@@ -76,6 +77,7 @@ class CommonTestMethods(DobermanTestBase):
         cli.use_deploy = False
         cli.verify = True
         cli.xmls = ['tempest_xunit.xml']
+        cli.dont_scan = ".pyc .tar .gz wtmp"
         cli.multi_bugs_in_pl = "test_tempest_smoke"
         self.max_sequence_size = '10000'
         cli.bug_tracker_bugs_url = "https://bugs.launchpad.net/oil/+bug/{}"
@@ -85,6 +87,12 @@ class CommonTestMethods(DobermanTestBase):
         LOG = utils.get_logger('doberman.analysis')
         LOG.info("Doberman version {0}".format(__version__))
         cli.LOG = LOG
+
+        # Load Normalisers:
+        nrml = 'etc/doberman/doberman_normalisation.json'
+        with open(nrml, 'r') as normaliser:
+            cli.normalisers = json.load(normaliser)
+
         return cli
 
     def create_paabn_in_tmp_dir(self):
@@ -100,7 +108,7 @@ class CommonTestMethods(DobermanTestBase):
         dashes = "--------------------"
         larrow = "<<" + dashes
         rarrow = dashes + ">>"
-        msg = " begin captured logging " 
+        msg = " begin captured logging "
         for xml_file in add_to_xml_dict:
             root = etree.Element("root")
             testsuite = etree.SubElement(root, "testsuite")

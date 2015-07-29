@@ -46,21 +46,18 @@ class CrudeAnalysisTests(CommonTestMethods):
         analysis = CrudeAnalysis(cli)
         self.assertEqual(0, analysis.message)
 
-    def test_find_bug_in_glob_matched_filename(self):
-        cli = self.populate_cli_var("glob_matched_filename_bug_database.yml")
-        analysis = CrudeAnalysis(cli)
-        data = self.get_crude_output_data()
-        self.assertTrue('fake_bug_02' in data.get('bugs'))
-
     def test_create_bugs_from_latest_mock_database_and_find_them(self):
-        self.tmpdir = self.create_paabn_in_tmp_dir()
-        cli = self.populate_cli_var(self.real_db_yaml, reportdir=self.tmpdir)
 
-        cli.job_names = ['pipeline_start', 'test_tempest_smoke']
+        self.tmpdir = self.create_paabn_in_tmp_dir()
+        cli = self.populate_cli_var(self.real_db_yaml,
+                                    reportdir=self.tmpdir)
+        cli.job_names = ['pipeline_start', 'pipeline_deploy',
+                         'pipeline_prepare', 'test_tempest_smoke']
 
         real_DB = os.path.abspath(os.path.join(self.mock_output_data,
                                                self.real_db_yaml))
 
+        jobs = []
         with open(real_DB, 'r') as bugs_db:
             bugs = yaml.load(bugs_db).get('bugs')
 
@@ -71,7 +68,10 @@ class CrudeAnalysisTests(CommonTestMethods):
             bug_keys.remove('category')
             bug_keys.remove('description')
             for job in bug_keys:
-                job_dir = os.path.join(self.tmpdir, job, self.paabn_info[job])
+                if job not in jobs:
+                    jobs.append(job)
+                job_dir = os.path.join(self.tmpdir, job,
+                                       self.paabn_info[job])
                 if not os.path.exists(job_dir):
                     os.makedirs(job_dir)
                 for bug_details in bug[1][job]:
@@ -89,8 +89,8 @@ class CrudeAnalysisTests(CommonTestMethods):
                             add_to_xml_dict[tmpfile] = []
                         add_to_xml_dict[tmpfile].append((bug_number, text))
                     else:
-                        # yaml files need to be valid yaml; this makes it a 
-                        # list of strings.
+                        # yaml files need to be valid yaml;
+                        # this makes it a list of strings.
                         if 'juju_status.yaml' in tmpfile:
                             text = "- '%s'" % (text)
                         with open(tmpfile, 'a+') as f:
@@ -99,24 +99,21 @@ class CrudeAnalysisTests(CommonTestMethods):
             self.create_mock_xml_files(add_to_xml_dict)
 
         analysis = CrudeAnalysis(cli)
+
         bugs_found = []
-        deploy_data =\
-            self.get_crude_output_data(fname="triage_pipeline_deploy.yml",
-                                       output_data_dir=self.tmpdir)
-        bugs_found.extend(deploy_data.get('bugs').keys())
-        prepare_data =\
-            self.get_crude_output_data(fname="triage_pipeline_prepare.yml",
-                                       output_data_dir=self.tmpdir)
-        bugs_found.extend(prepare_data.get('bugs').keys())
-        tempest_data = \
-            self.get_crude_output_data(fname="triage_test_tempest_smoke.yml",
-                                 output_data_dir=self.tmpdir)
-        bugs_found.extend(tempest_data.get('bugs').keys())
+        for job in jobs:
+            fn = "triage_{}.yml".format(job)
+            data = self.get_crude_output_data(fname=fn,
+                                              output_data_dir=self.tmpdir)
+            bugs_found.extend(data.get('bugs').keys())
         failed_bugs = [b for b in bugs.keys() if b not in bugs_found]
         if failed_bugs:
-            print("\nThe following bug(s) were not found:\n")
-        for bug_num in failed_bugs:
-            print(bug_num)
+            if len(failed_bugs) == len(bugs):
+                print("\nNone of the bugs were found!\n")
+            else:
+                print("\nThe following bug(s) were not found:\n")
+                for bug_num in failed_bugs:
+                    print(bug_num)
         self.assertEqual([], failed_bugs)
 
     def test_date_passing(self):
@@ -127,3 +124,8 @@ class CrudeAnalysisTests(CommonTestMethods):
         response2 = options_parser.date_parse(input_str2)
         correct_response = datetime(1980, 12, 1, 0, 0, tzinfo=pytz.utc)
         self.assertEqual(response1, response2, correct_response)
+
+    def test_catch_all_bug_works(self):
+        cli = self.populate_cli_var("fake_bug_03_database.yml")
+        analysis = CrudeAnalysis(cli)
+        self.assertIn('fake_bug_03', analysis.test_catalog.bugs)

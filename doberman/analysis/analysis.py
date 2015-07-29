@@ -4,24 +4,37 @@ import shutil
 from datetime import datetime
 from jenkinsapi.custom_exceptions import *
 from doberman.common.common import Common
-from crude_jenkins import Jenkins, Deploy, Prepare, Tempest
+from crude_jenkins import Jenkins, Build
 from crude_test_catalog import TestCatalog
 from doberman.common.CLI import CLI
 
 
 class CrudeAnalysis(Common):
-    """
-
-    """
 
     def __init__(self, cli=False):
+        doberman_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
-        self.jenkins = Jenkins(self.cli)
         self.test_catalog = TestCatalog(self.cli)
+        self.cli.bugs = self.test_catalog.bugs
+        self.jenkins = Jenkins(self.cli)
         self.build_numbers = self.build_pl_ids_and_check()
-        self.pipeline_processor(self.build_numbers)
+        jobs_to_process = self.determine_jobs_to_process()
+        yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
+        self.generate_output_files(yamldict, problem_pipelines)
         if not self.cli.offline_mode:
             self.remove_dirs(self.cli.job_names)
+        doberman_finish_time = datetime.now()
+        self.cli.LOG.info(self.report_time_taken(doberman_start_time,
+                                                 doberman_finish_time))
+
+    def determine_jobs_to_process(self):
+        """Makes sure it does not process pipeline_start job."""
+        if 'crude_job' in self.cli.__dict__:
+            jobs_to_process = [j for j in self.cli.job_names
+                               if j != self.cli.crude_job]
+        else:
+            jobs_to_process = self.cli.job_names
+        return jobs_to_process
 
     def build_pl_ids_and_check(self):
         self.pipeline_ids = []
@@ -75,7 +88,8 @@ class CrudeAnalysis(Common):
                 self.pipeline_ids.append(pipeline)
 
             # Notify user of progress:
-            pgr = self.calculate_progress(pos, self.ids)
+            checkin = 5 if len(self.pipeline_ids) > 20 else None
+            pgr = self.calculate_progress(pos, self.ids, checkin)
             if pgr:
                 self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pgr))
         msg = "Pipeline lookup 100% complete: All pipelines checked. "
@@ -84,9 +98,8 @@ class CrudeAnalysis(Common):
         return self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
     def remove_dirs(self, folders_to_remove):
-        """ Remove data folders used to store untarred artifacts (just leaving
-            yaml files).
-
+        """Remove data folders used to store untarred artifacts (just leaving
+        yaml files).
         """
 
         if type(folders_to_remove) not in [list, tuple, dict]:
@@ -98,85 +111,78 @@ class CrudeAnalysis(Common):
                 if os.path.isdir(kill_me):
                     shutil.rmtree(kill_me)
 
-    def pipeline_processor(self, build_numbers):
-
-        self.message = 1
-        deploy_yamldict = {}
-        prepare_yamldict = {}
-        tempest_yamldict = {}
+    def pipeline_processor(self, jobs_to_process):
+        self.message = 0
+        yamldict = {}  # Dict containing info to be written to each job's yaml
         problem_pipelines = []
 
-        for pipeline_id in self.pipeline_ids:
-            deploy_dict = {}
-            prepare_dict = {}
-            tempest_dict = {}
+        if jobs_to_process:
+            for job_name in jobs_to_process:
+                yamldict[job_name] = {}
+        else:
+            yamldict['yamldict'] = {}
+
+        progmsg = "Scanning of files is {}% complete."
+
+        for pos, pipeline_id in enumerate(self.pipeline_ids):
+            job_dict = {}
             self.pipeline = pipeline_id
 
-            try:
-                # Get pipeline data then process each:
-                deploy_build = build_numbers[pipeline_id]['pipeline_deploy']
-                prepare_build = build_numbers[pipeline_id]['pipeline_prepare']
-                tempest_build = \
-                    build_numbers[pipeline_id]['test_tempest_smoke']
+            if self.build_numbers == {}:
+                raise Exception("Empty build numbers dictionary")
 
-                # Pull console and artifacts from jenkins:
-                deploy = Deploy(deploy_build, 'pipeline_deploy', self.jenkins,
-                                deploy_dict, self.cli,
-                                self.test_catalog.bugs, pipeline_id)
-                deploy_dict = deploy.yaml_dict
-                self.message = deploy.message
+            # Get pipeline data then process each:
+            build_numbers = self.build_numbers[pipeline_id]
 
-                if prepare_build:
-                    prepare = Prepare(prepare_build, 'pipeline_prepare',
-                                      self.jenkins, prepare_dict,
-                                      self.cli, self.test_catalog.bugs,
-                                      pipeline_id, deploy)
-                    prepare_dict = prepare.yaml_dict
-                    if self.message != 1:
-                        self.message = prepare.message
+            # Get pipeline data then process each:
+            prev_class = None
 
-                if tempest_build:
-                    tempest = Tempest(tempest_build, 'test_tempest_smoke',
-                                      self.jenkins, tempest_dict,
-                                      self.cli, self.test_catalog.bugs,
-                                      pipeline_id, prepare)
-                    tempest_dict = tempest.yaml_dict
-                    if self.message != 1:
-                        self.message = tempest.message
-
-            except Exception as e:
-                if 'deploy_build' not in locals():
-                    msg = "Cannot acquire pipeline deploy build number"
-                    msg += " (may be cookie related?)"
+            for job in jobs_to_process:
+                if build_numbers == '*':
+                    build_num = pipeline_id
                 else:
-                    probmsg = "Problem with {} - skipping "
-                    if deploy_build:
-                        probmsg += "(deploy_build: {})"
-                    self.cli.LOG.error(probmsg.format(pipeline_id,
-                                                      deploy_build))
-                    problem_pipelines.append((pipeline_id, deploy_build, e))
-                self.cli.LOG.exception(e)
+                    build_num = build_numbers.get(job)
+                if build_num is None:
+                    continue
+
+                jdict = job_dict[job] if job in job_dict else {}
+                # Pull console and artifacts from jenkins:
+
+                build_obj = Build(build_num, job, self.jenkins, jdict,
+                                  self.cli, pipeline_id, prev_class)
+                job_dict[job] = build_obj.yaml_dict
+                prev_class = build_obj
+
+                if self.message != 1:
+                    self.message = getattr(build_obj, 'message', self.message)
+
+            # Notify user of progress:
+            pgr = self.calculate_progress(pos, self.pipeline_ids)
+            if pgr:
+                self.cli.LOG.info(progmsg.format(pgr))
 
             pl_proc_msg = "CrudeAnalysis has finished processing pipline id: "
             pl_proc_msg += "{0} and is returning a value of {1}."
             self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
             # Merge dictionaries (necessary for multiple pipelines):
-            deploy_yamldict['pipeline'] = \
-                self.join_dicts(deploy_yamldict.get('pipeline', {}),
-                                deploy_dict.get('pipeline', {}))
-            prepare_yamldict['pipeline'] = \
-                self.join_dicts(prepare_yamldict.get('pipeline', {}),
-                                prepare_dict.get('pipeline', {}))
-            tempest_yamldict['pipeline'] = \
-                self.join_dicts(tempest_yamldict.get('pipeline', {}),
-                                tempest_dict.get('pipeline', {}))
+            for job_name in yamldict:
+                yd = yamldict[job_name].get('pipeline', {})
+                if job_name in job_dict:
+                    jd = job_dict[job_name].get('pipeline', {})
+                else:
+                    jd = {}
+                to_write_to_file = self.join_dicts(yd, jd)
+                yamldict[job_name]['pipeline'] = to_write_to_file
 
+        self.cli.LOG.info(progmsg.format(100))
+        return (yamldict, problem_pipelines)
+
+    def generate_output_files(self, yamldict, problem_pipelines):
         # Export to yaml:
         rdir = self.cli.reportdir
-        self.export_to_yaml(deploy_yamldict, 'pipeline_deploy', rdir)
-        self.export_to_yaml(prepare_yamldict, 'pipeline_prepare', rdir)
-        self.export_to_yaml(tempest_yamldict, 'test_tempest_smoke', rdir)
+        for job_name in yamldict:
+            self.export_to_yaml(yamldict[job_name], job_name, rdir)
 
         # Write to file any pipelines (+ deploy build) that failed processing:
         if not problem_pipelines == []:
@@ -189,8 +195,8 @@ class CrudeAnalysis(Common):
                 pp_file.write("\n" + str(datetime.now())
                               + "\n--------------------------\n")
                 for problem_pipeline in problem_pipelines:
-                    probs = "* %s (deploy build: %s):\n%s\n\n"
-                    pp_file.write(probs % problem_pipeline)
+                    probs = "* {} ({}: {}):\n{}\n\n"
+                    pp_file.write(probs.format(*problem_pipeline))
                 pp_file.write(existing_content)
                 errmsg = "There were some pipelines that could not be "
                 errmsg += "processed. This information was written to problem"
@@ -205,6 +211,22 @@ class CrudeAnalysis(Common):
         if not yaml_dict:
             yaml_dict['pipeline'] = {}
         self.write_output_yaml(reportdir, filename, yaml_dict)
+
+    def log_pipelines(self):
+        # Record which pipelines were processed in a yaml:
+        if self.cli.logpipelines:
+            file_path = os.path.join(self.cli.reportdir,
+                                     'pipelines_processed.yaml')
+            open(file_path, 'a').close()  # Create file if doesn't exist yet
+            with open(file_path, 'r+') as pp_file:
+                existing_content = pp_file.read()
+                pp_file.seek(0, 0)  # Put at beginning of file
+                pp_file.write("\n" + str(datetime.now())
+                              + "\n--------------------------\n")
+                pp_file.write(" ".join(self.pipeline_ids))
+                pp_file.write("\n" + existing_content)
+                info_msg = "All processed pipelines recorded to {0}"
+                self.cli.LOG.info(info_msg.format(file_path))
 
 
 def main():

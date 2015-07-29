@@ -17,7 +17,7 @@ bugs:
         "console.txt":
             regexp:
             - "this line of text really shouldn't be in there"
-            
+
   "fake_bug_01":
     category: None
     description: "A fake bug for testing purposes"
@@ -25,5 +25,4 @@ bugs:
       -
         "console.txt":
             regexp:
-            - "mv run_config artifacts/run_config.parameter"
-
+            - "check_timeout"
