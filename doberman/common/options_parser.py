@@ -57,6 +57,8 @@ class OptionsParser(object):
             job_names = cfg.get('DEFAULT', 'job_names')
         self.job_names = job_names.split(' ')
 
+        self.pysid = opts.pysid
+
         if opts.jenkins_host:
             self.jenkins_host = opts.jenkins_host
         else:
@@ -139,6 +141,7 @@ class OptionsParser(object):
 
         # Cookie for test-catalog:
         tc_auth = cfg.get('DEFAULT', 'tc_auth')
+
         if not self.offline_mode:
             try:
                 self.tc_auth = json.load(open(tc_auth))
