@@ -27,7 +27,7 @@ class OilSpill(Common):
         # the DB for the important files such as console and tempest_xunit.xml
         # FOR EACH JOB TYPE (i.e. pipeline_deploy, pipeline_prepare and
         # test_tempest_smoke).
-
+        info = {}
         parse_as_xml = self.cli.xmls
         xml_files_parsed = []
 
