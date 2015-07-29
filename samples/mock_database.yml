@@ -356,16 +356,6 @@ bugs:
   "1328950":
     category: None
     description: "[Prodstack] Prepare often fails on upload glance image"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "oil_ci.prepare.oil_prepper. Failed to prepare deployed cloud"
-
-
-  "1328950":
-    category: None
-    description: "[Prodstack] Prepare often fails on upload glance image"
     pipeline_prepare:
       -
         "console.txt":
@@ -1276,6 +1266,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "ERROR. glanceclient.common.http. Request returned failure status.{1,1300}HTTPInternalServerError. 500 Internal Server Error.{1,5}Failed to upload image"
+            - "ERROR. glanceclient.common.http. Request returned failure status.{1,1300}HTTPInternalServerError. HTTPInternalServerError .HTTP 500."
 
   "1461192":
     category: None
