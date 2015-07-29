@@ -1285,3 +1285,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "nova-compute_*_var_log_juju_unit-nova-compute-*.log":
             regexp:
             - "arg 2 must contain only strings"
+
+  "1479220":
+    category: None
+    description: "Prodstack: branch issue for neutron-calico charm"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "deployer.charm. Could not branch.{1,100}to trusty.neutron-calico"
+
