@@ -18,6 +18,7 @@ Build-Depends: debhelper (>= 8.0.0),
  python-testtools,
  python-yaml,
  python-matplotlib,
+ python-mock,
  test-catalog-common
 Standards-Version: 3.9.3
 XS-Python-Version: >= 2.6
