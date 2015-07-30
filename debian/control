@@ -33,6 +33,7 @@ Depends: jenkinsapi (>= 0.2.16),
  python-test-catalog,
  python-yaml,
  python-matplotlib,
+ python-mock,
  test-catalog-common,
  ${misc:Depends},
  ${python:Depends}
