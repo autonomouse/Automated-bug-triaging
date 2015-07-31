@@ -189,13 +189,6 @@ class OptionsParser(object):
             if not self.use_date_range:
                 raise Exception("No pipeline IDs provided")
 
-        # Load Normalisers:
-        nrml = utils.find_config(config_filename='doberman_normalisation.json')
-        with open(nrml, 'r') as normaliser:
-            self.normalisers = json.load(normaliser)
-        if self.normalisers == {}:
-            raise Exception("Empty doberman_normalisers.json")
-
         return self
 
     def date_parse(self, input_str):

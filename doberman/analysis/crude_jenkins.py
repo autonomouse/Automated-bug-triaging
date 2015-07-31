@@ -11,8 +11,6 @@ from jenkinsapi.custom_exceptions import *
 
 
 class Jenkins(Common):
-    """
-    """
 
     def __init__(self, cli):
         self._jenkins = []
