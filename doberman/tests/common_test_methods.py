@@ -88,11 +88,6 @@ class CommonTestMethods(DobermanTestBase):
         LOG.info("Doberman version {0}".format(__version__))
         cli.LOG = LOG
 
-        # Load Normalisers:
-        nrml = 'etc/doberman/doberman_normalisation.json'
-        with open(nrml, 'r') as normaliser:
-            cli.normalisers = json.load(normaliser)
-
         return cli
 
     def create_paabn_in_tmp_dir(self):
