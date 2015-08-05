@@ -1289,9 +1289,9 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "fatal .api.. must restart. an agent upgrade is available"
 
-  "1481663":
+  "1481484":
     category: None
-    description: "Neutron complains of too many connections (pipeline_deploy)"
+    description: "mysqld exceeds max connections limit"
     pipeline_deploy:
       -
         "neutron-api_*_var_log_upstart_neutron-server.log":
