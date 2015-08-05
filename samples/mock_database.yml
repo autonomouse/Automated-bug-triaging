@@ -1240,7 +1240,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "tempest_xunit.xml":
           regexp:
-          - "error. .Errno 111. Connection refused"
+          - "Connection.{1,5}refused"
 
   "1472602":
     category: None
@@ -1308,4 +1308,5 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "tempest_xunit.xml":
             regexp:
-            - "Invalid input for field .url.. The value is .url-tempest-/{10,20} .{1,2}code.. 400. .{1,2}title.. .{1,2}Bad Request"
+            - "Invalid input for field.{1,3}url.{1,5}The value is.{1,3}url-tempest-"
+
