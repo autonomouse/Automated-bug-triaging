@@ -118,15 +118,6 @@ bugs:
             regexp:
             - "error executing .lxc-start.. The container failed to start.+To get more details, run the container in foreground mode.+Additional information can be obtained by setting the --logfile and --log-priority options"
 
-  "1372941":
-    category: None
-    description: Prodstack. VolumeBuildErrorException. Volume <id> failed to build and is in ERROR status (tempest fail)
-    test_tempest_smoke:
-      -
-        "tempest_xunit.xml":
-            regexp:
-            - "Volume .{36} failed to build and is in ERROR status"
-
   "1372946":
     category: None
     description:
@@ -643,7 +634,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "tempest_xunit.xml":
             regexp:
-            - "EndpointNotFound. Endpoint not found"
+            - "Endpoint not found"
 
   "1414644":
     category: None
@@ -1063,21 +1054,19 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
            regexp:
                - 'agent-state: pending\s+(containers:\s+(\d+/lxc/\d+:\s+instance-id: pending\s+series: (trusty|precise))*)*\s+dns-name: hayward'
 
-  "1461438":
+  "1372941":
     category: None
-    description: "BuildErrorException - failed to build and is in ERROR status"
+    description: Prodstack. VolumeBuildErrorException. Volume <id> failed to build and is in ERROR status (tempest fail)
     test_tempest_smoke:
-      -
-        "console.txt":
-            regexp:
-            - "BuildErrorException. Server .{13,36} failed to build and is in ERROR status"
-            - "Server .{36} failed to build and is in ERROR status"
       -
         "tempest_xunit.xml":
             regexp:
-            - "Server .{36} failed to build and is in ERROR status"
+            - "failed to build and is in ERROR status"
             - "create_test_server raise ex BuildErrorException"
-
+      -
+        "console.xml":
+            regexp:
+            - "failed to build and is in ERROR status"
 
   "1461448":
     category: None
@@ -1182,6 +1171,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "cinder_*-cinder-vmware_*_var_log_upstart_cinder-volume.log":
           regexp:
           - "ProgrammingError.{8,20}Table .cinder.services. doesn.t exist"
+    pipeline_prepare:
+      -
+        "cinder_*-cinder-vnx_*_var_log_cinder_cinder-scheduler.log":
+          regexp:
+          - "ProgrammingError.{8,20}Table .cinder.services. doesn.t exist"
 
   "1469309":
     category: None
@@ -1239,11 +1233,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
           regexp:
-          - "error...Errno 111. Connection refused.*tempest.thirdparty.boto.test_ec2_keys.EC2KeysTest"
+          - "Connection.{0,5}refused"
       -
         "tempest_xunit.xml":
           regexp:
-          - "error. .Errno 111. Connection refused"
+          - "Connection.{0,5}refused"
 
   "1472602":
     category: None
@@ -1294,3 +1288,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "juju_debug_machine-*.txt":
             regexp:
             - "fatal .api.. must restart. an agent upgrade is available"
+
+  "1481663":
+    category: None
+    description: "Neutron complains of too many connections (pipeline_deploy)"
+    pipeline_deploy:
+      -
+        "neutron-api_*_var_log_upstart_neutron-server.log":
+            regexp:
+            - "OperationalError.{10}Too many connections"
