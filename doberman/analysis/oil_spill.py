@@ -48,10 +48,15 @@ class OilSpill(Common):
 
         unfiled_xml_fails = {}
         failed_to_hit_any_flag = True
+
         for bug_id in self.cli.bugs.keys():
             if self.jobname in self.cli.bugs[bug_id]:
                 # Any dict in self.cli.bugs[bug_id][self.jobname] can match(or)
                 or_dict = self.cli.bugs[bug_id][self.jobname]
+                files_to_scan = []
+                [files_to_scan.extend(and_dict.keys()) for and_dict in or_dict]
+                xmls_to_scan = set([xml for xml in files_to_scan if xml in
+                                    self.cli.xmls])
                 for and_dict in or_dict:
                     # Within the dictionary all have to match (and):
                     hit_dict = {}
@@ -78,7 +83,7 @@ class OilSpill(Common):
                                 target = target_location.split(os.sep)[-1]
                             except:
                                 target = target_file
-                            if not (target in parse_as_xml):
+                            if target not in parse_as_xml:
                                 with open(target_location, 'r') as grep_me:
                                     text = grep_me.read()
                                 hit = self.rematch(and_dict, target,
@@ -93,6 +98,8 @@ class OilSpill(Common):
                                     failed_to_hit_any_flag = True
 
                             else:
+                                if target in xmls_to_scan: 
+                                    xmls_to_scan.remove(target)
                                 if target in xml_files_parsed:
                                     xml_unparsed = False
                                 else:
@@ -205,7 +212,9 @@ class OilSpill(Common):
                         self.cli.LOG.info(hit_dict)
                         hit_dict = {}
                         bug_unmatched = False
-                        break
+                        # Only stop if there are not still xml files to scan:
+                        if len(xmls_to_scan) < 1:
+                            break
         matching_bugs = self.join_dicts(matching_bugs, unfiled_xml_fails)
 
         if bug_unmatched and (build_status == 'FAILURE' or
