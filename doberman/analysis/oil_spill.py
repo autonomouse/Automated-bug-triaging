@@ -55,8 +55,8 @@ class OilSpill(Common):
                 or_dict = self.cli.bugs[bug_id][self.jobname]
                 files_to_scan = []
                 [files_to_scan.extend(and_dict.keys()) for and_dict in or_dict]
-                xmls_to_scan = [xml for xml in files_to_scan if xml in
-                                self.cli.xmls]
+                xmls_to_scan = set([xml for xml in files_to_scan if xml in
+                                    self.cli.xmls])
                 for and_dict in or_dict:
                     # Within the dictionary all have to match (and):
                     hit_dict = {}
@@ -98,8 +98,8 @@ class OilSpill(Common):
                                     failed_to_hit_any_flag = True
 
                             else:
-                                xmls_to_scan = [xml for xml in xmls_to_scan
-                                                if xml != target]
+                                if target in xmls_to_scan: 
+                                    xmls_to_scan.remove(target)
                                 if target in xml_files_parsed:
                                     xml_unparsed = False
                                 else:
@@ -213,7 +213,7 @@ class OilSpill(Common):
                         hit_dict = {}
                         bug_unmatched = False
                         # Only stop if there are not still xml files to scan:
-                        if not len(xmls_to_scan):
+                        if len(xmls_to_scan) < 1:
                             break
         matching_bugs = self.join_dicts(matching_bugs, unfiled_xml_fails)
 
