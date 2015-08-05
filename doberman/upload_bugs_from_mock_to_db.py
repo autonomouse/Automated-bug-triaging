@@ -67,6 +67,7 @@ def get_new_or_bugs_to_edit(local_db, remote_db):
 
 def delete_orphan_bugs(client, db_location, orphan_bugs, force, dryrun=True):
     """Delete the bugs from the remote_db if they aren't in the local_db"""
+    confirmed = 'n'
     if orphan_bugs != []:
         print()
         print("The following bugs are in the database but not in {}:"
