@@ -125,7 +125,13 @@ bugs:
       -
         "tempest_xunit.xml":
             regexp:
-            - "Volume .{36} failed to build and is in ERROR status"
+            - "failed to build and is in ERROR status"
+            - "create_test_server raise ex BuildErrorException"
+      -
+        "console.txt":
+            regexp:
+            - "BuildErrorException. Server .{13,36} failed to build and is in ERROR status"
+            - "failed to build and is in ERROR status"
 
   "1372946":
     category: None
@@ -643,7 +649,8 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "tempest_xunit.xml":
             regexp:
-            - "EndpointNotFound. Endpoint not found"
+            - "Endpoint not found"
+            
 
   "1414644":
     category: None
@@ -1062,21 +1069,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
          "juju_status.yaml":
            regexp:
                - 'agent-state: pending\s+(containers:\s+(\d+/lxc/\d+:\s+instance-id: pending\s+series: (trusty|precise))*)*\s+dns-name: hayward'
-
-  "1461438":
-    category: None
-    description: "BuildErrorException - failed to build and is in ERROR status"
-    test_tempest_smoke:
-      -
-        "console.txt":
-            regexp:
-            - "BuildErrorException. Server .{13,36} failed to build and is in ERROR status"
-            - "Server .{36} failed to build and is in ERROR status"
-      -
-        "tempest_xunit.xml":
-            regexp:
-            - "Server .{36} failed to build and is in ERROR status"
-            - "create_test_server raise ex BuildErrorException"
 
 
   "1461448":
