@@ -1,3 +1,10 @@
+doberman (2.0.1-0ubuntu1) utopic; urgency=medium
+
+  * Fix for updatabase bug
+  * Fix for some tempest bugs being reported as unfiled when in database already
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 05 Aug 2015 17:32:15 +0100
+
 doberman (2.0.0-0ubuntu1) utopic; urgency=medium
 
   * Code refactor - Jobs are no longer hard-coded anywhere
