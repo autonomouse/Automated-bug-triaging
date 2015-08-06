@@ -227,15 +227,6 @@ bugs:
             regexp:
             - "Object not found.{1,2000}Details: No ResellerAdmin role found"
 
-  "1319855":
-    category: None
-    description: On pipeline deploy sometimes get hook failed. "shared-db-relation-changed"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "shared-db-relation-changed"
-
   "1373020":
     category: None
     description: oil_deployer Deployment failed - Name or service not known (pipeline_deploy fail)
