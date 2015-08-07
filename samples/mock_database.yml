@@ -1301,3 +1301,11 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "Invalid input for field.{1,3}url.{1,5}The value is.{1,3}url-tempest-"
 
+  "1482770":
+    category: None
+    description: "Prodstack [prepare]: IOError: [Errno 13] Permission denied: '/mnt/images/lxc/precise-server-cloudimg-amd64.img'"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Failed to prepare deployed cloud.{1,2000}IOError. .Errno 13. Permission denied. '/mnt/images/lxc/precise-server-cloudimg-amd64.img"
