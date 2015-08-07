@@ -1061,7 +1061,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
            regexp:
                - 'agent-state: pending\s+(containers:\s+(\d+/lxc/\d+:\s+instance-id: pending\s+series: (trusty|precise))*)*\s+dns-name: hayward'
 
-
   "1461448":
     category: None
     description: "Failed to prepare deployed cloud - raise BadStatusLine(line)"
@@ -1309,3 +1308,21 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Failed to prepare deployed cloud.{1,2000}IOError. .Errno 13. Permission denied. '/mnt/images/lxc/precise-server-cloudimg-amd64.img"
+
+  "1482790":
+    category: None
+    description: "Prodstack[Tempest]: subprocess.CalledProcessError - juju status returned non-zero exit status 124 while saving test artifacts"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "subprocess.CalledProcessError. Command ...timeout., .5., .juju., .status., .--format=json., .-e., u.ci-oil-slave.{1,2}... returned non-zero exit status 124"
+
+  "1482796":
+    category: None
+    description: "Prodstack[Tempest]: raise BadStatus Line while deleting glance image"
+    test_tempest_smoke:
+      -
+        "console.txt":
+            regexp:
+            - "raise BadStatusLine.line.{1,20}BadStatusLine"
