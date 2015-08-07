@@ -6,7 +6,10 @@ from jenkinsapi.custom_exceptions import *
 from doberman.common.common import Common
 from crude_jenkins import Jenkins, Build
 from crude_test_catalog import TestCatalog
-from doberman.common.CLI import CLI
+#from doberman.common.CLI import CLI
+# <ACTIONPOINT>
+from doberman.weebl_tools.weebl_specific_crude_cli import CLI
+from doberman.weebl_tools.weebl import Weebl
 
 
 class CrudeAnalysis(Common):
@@ -18,6 +21,9 @@ class CrudeAnalysis(Common):
         self.cli.bugs = self.test_catalog.bugs
         self.jenkins = Jenkins(self.cli)
         self.build_numbers = self.build_pl_ids_and_check()
+        # <ACTIONPOINT>
+        self.weebl = Weebl(self.cli)
+        # TODO: Check to see if environment exists in weebl (or raise error)
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
         self.generate_output_files(yamldict, problem_pipelines)
@@ -146,8 +152,8 @@ class CrudeAnalysis(Common):
                     continue
 
                 jdict = job_dict[job] if job in job_dict else {}
-                # Pull console and artifacts from jenkins:
 
+                # Pull console and artifacts from jenkins:
                 build_obj = Build(build_num, job, self.jenkins, jdict,
                                   self.cli, pipeline_id, prev_class)
                 job_dict[job] = build_obj.yaml_dict

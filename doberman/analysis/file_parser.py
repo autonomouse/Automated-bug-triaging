@@ -50,23 +50,23 @@ class FileParser(Common):
         self.data = self._extract_information('txt')
 
         # Set up defaults in case missing console.txt:
-        if 'bsnode' not in self.extracted_info:
-            self.extracted_info['bsnode'] = {}
-        if 'openstack release' not in self.extracted_info['bsnode']:
-            self.extracted_info['bsnode']["openstack release"] = "Unknown"
-        if 'jenkins' not in self.extracted_info['bsnode']:
-            self.extracted_info['bsnode']["jenkins"] = "Unknown"
+        if 'openstack release' not in self.extracted_info:
+            self.extracted_info["openstack release"] = "Unknown"
+        if 'build_executor' not in self.extracted_info:
+            self.extracted_info["build_executor"] = "Unknown"
         msg = "Unable to extract {} from {}."
 
         if self.data and 'OPENSTACK_RELEASE=' in self.data:
-            self.extracted_info['bsnode']['openstack release'] = \
+            self.extracted_info['openstack release'] = \
                 self.data.split('OPENSTACK_RELEASE=')[1].split('\n')[0]
         else:
             self.status.append(msg.format('openstack release', 'console'))
 
         if self.data and ' in workspace /var/lib/' in self.data:
-            self.extracted_info['bsnode']['jenkins'] = \
-                self.data.split('\n')[1].split(' in workspace /var/lib/')[0]
+            self.extracted_info['build_executor'] = (
+                self.data.split('\n')[1]
+                .split(' in workspace /var/lib/')[0]
+                .split(' ')[-1])
         else:
             self.status.append(msg.format('jenkins', 'console'))
 
@@ -91,12 +91,10 @@ class FileParser(Common):
         # Set up defaults in case missing juju_status.yaml:
         default_message = "Unknown"
 
-        if 'bsnode' not in self.extracted_info:
-            self.extracted_info['bsnode'] = {}
-        if 'machine' not in self.extracted_info['bsnode']:
-            self.extracted_info['bsnode']["machine"] = "Unknown"
-        if 'state' not in self.extracted_info['bsnode']:
-            self.extracted_info['bsnode']["state"] = "Unknown"
+        if 'machine' not in self.extracted_info:
+            self.extracted_info["machine"] = "Unknown"
+        if 'state' not in self.extracted_info:
+            self.extracted_info["state"] = "Unknown"
 
         self.extracted_info['oil_df'] = {"vendor": [],
                                          "node": [],
@@ -121,8 +119,8 @@ class FileParser(Common):
         m_os = machine_info.get('series', 'Unknown')
         machine = m_os + " running " + m_name
         state = machine_info.get('agent-state', 'Unknown')
-        self.extracted_info['bsnode']['machine'] = machine
-        self.extracted_info['bsnode']['state'] = state
+        self.extracted_info['machine'] = machine
+        self.extracted_info['state'] = state
 
         row = 0
         for service in self.data['services']:

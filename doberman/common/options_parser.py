@@ -107,6 +107,15 @@ class OptionsParser(object):
             self.keep_data = \
                 cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
 
+        # cli wins, then config, then just call it 'Unknown':
+        environment = cfg.get('DEFAULT', 'environment')
+        if opts.environment:
+            self.environment = opts.environment
+        elif environment not in ['None', 'none', None]:
+            self.environment = environment
+        else:
+            self.environment = "Unknown"
+
         self.logpipelines = True if opts.logpipelines else False
 
         try:
@@ -211,3 +220,4 @@ class OptionsParser(object):
 
         raise ValueError('Date format {0} not understood, try 2014-02-12'
                          .format(string))
+
