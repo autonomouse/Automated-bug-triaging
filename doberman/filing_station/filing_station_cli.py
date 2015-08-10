@@ -7,10 +7,9 @@ class CLI(CLI):
         self.set_up_parser()
         self.add_options_to_parser()
         self.add_filing_station_specific_options_to_parser()
-        self.LOG = self.set_up_logger('filing_station')
 
     def populate_cli(self):
-        options_parser = OptionsParser()
+        options_parser = OptionsParser('doberman.filing_station')
         return options_parser.parse_opts_and_args(self.opts, self.args)
 
     def add_filing_station_specific_options_to_parser(self):

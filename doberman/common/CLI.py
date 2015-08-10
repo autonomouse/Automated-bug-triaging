@@ -54,6 +54,9 @@ class CLI(Common):
                         help='set URI to bug/regex db: /path/to/mock_db.yaml')
         prsr.add_option('-e', '--end', action='store', dest='end',
                         default=None, help='ending date string. Default = now')
+        prsr.add_option('-E', '--environment', action='store', 
+                        dest='environment', default=None,
+                        help='Name of environment (e.g. production, staging)')
         prsr.add_option('-f', '--offline', action='store_true',
                         dest='offline_mode', default=False,
                         help='Offline mode must provide a local path using -o')
