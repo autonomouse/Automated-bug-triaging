@@ -63,14 +63,16 @@ class BugsUploader(CommonTestMethods):
             local_db = yaml.load(f2)
         altered_bugs, orphan_bugs = get_new_or_bugs_to_edit(local_db, 
                                                             remote_db)
-        newly_added = [('0000000', {'category': 'None', 'pipeline_prepare': 
-                       [{'console.txt': {'regexp': 
-                       ["this line of text really shouldn't be in there"]}}], 
-                       'pipeline_deploy': [{'console.txt': {'regexp': 
-                       ["this line of text really shouldn't be in there"]}}], 
-                       'description': 'test bug', 'test_tempest_smoke': 
-                       [{'console.txt': {'regexp': 
-                       ["this line of text really shouldn't be in there"]}}]})]
+        txt = "this line of text really shouldn't be in there"
+        newly_added = [(
+            '0000000', {
+                'category': 'None',
+                'description': 'test bug',
+                'pipeline_deploy': [{'console.txt': {'regexp': [txt]}}],
+                'pipeline_prepare': [{'console.txt': {'regexp': [txt]}}],
+                'test_bundletests': [{'console.txt': {'regexp': [txt]}}],
+                'test_cloud_image': [{'console.txt': {'regexp': [txt]}}],
+                'test_tempest_smoke': [{'console.txt': {'regexp': [txt]}}]})]
         self.assertTrue(orphan_bugs == newly_added)
         self.assertTrue(altered_bugs == ['fake_bug_01', 'fake_bug_02'])
         
