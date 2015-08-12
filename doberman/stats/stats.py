@@ -132,7 +132,7 @@ class Stats(Common):
                     artifacts = [
                         artifact for artifact in
                         jenkins_job[this_build['number']].get_artifacts()
-                        if 'tempest_xunit.xml>' in str(artifact)]
+                        if 'xunit' in str(artifact)]
                     artifact = artifacts[0] if artifacts else None
                     bld_artifacts[job][this_build['number']] = artifact
 
@@ -329,7 +329,7 @@ class Stats(Common):
 
         return results
 
-    def calculate_percentage(percentages_list):
+    def calculate_percentages(percentages_list):
         combined_percentage_pass = 100
         for pc in percentages_list:
             combined_percentage_pass *= (pc / 100.0)
