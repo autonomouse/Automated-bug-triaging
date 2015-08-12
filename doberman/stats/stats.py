@@ -16,38 +16,40 @@ from doberman.analysis.crude_test_catalog import TestCatalog
 class Stats(Common):
 
     def __init__(self, cli=False):
+        stats_start_time = arrow.now()
         self.cli = CLI().populate_cli() if not cli else cli
         self.test_catalog = TestCatalog(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
+        self.op_dirs = []
         self.main()
+        stats_finish_time = arrow.now()
+        self.cli.LOG.info(self.report_time_taken(
+            stats_start_time, stats_finish_time))
 
     def main(self):
         self.cli.LOG.info("Data for OIL Environment: {} (Jenkins host: {})"
                           .format(self.cli.environment, self.cli.jenkins_host))
-        self.op_dir = self.create_output_directory()
         self.build_numbers = self.build_pl_ids_and_check(
             self.jenkins, self.test_catalog)
 
         # Set up output dict:
         results = {'jobs': {}, 'overall': {}}
         totals = {}
-        triage = {}
 
         # Fetch data:
-        builds, actives, xml_artifacts = self.get_builds()
+        builds, actives, bld_artifacts = self.get_builds()
         for job in self.cli.job_names:
             if job == self.cli.crude_job:
                 self.cli.LOG.debug("Skipping {} job".format(job))
                 continue
             self.cli.LOG.debug("{}:".format(job))
             job_dict = self.populate_job_dict(
-                job, builds, actives, xml_artifacts)
+                job, builds, actives, bld_artifacts)
             results['jobs'][job] = job_dict
             # Calculate totals:
             totals[job] = {'total_builds': job_dict['build objects'],
                            'passing': job_dict.get('passes', 0)}
-            triage[job] = job_dict.get('fails', 0)
 
         # Calculate overall success rate
         results = self.calculate_overall_success_rates(totals, results)
@@ -70,19 +72,13 @@ class Stats(Common):
         self.generate_output_file(results)
         self.print_results(fname)
 
-        # Triage report
-        if self.cli.triage:
-            print('Running triage_report')
-            self.triage_report(triage, self.cli.start, self.cli.end,
-                               self.jenkins_api)
-
         # Clean up:
-        if not self.cli.keep_data:
+        if not self.cli.keep_data and not self.cli.triage:
             self.tidy_up()
 
-    def create_output_directory(self):
+    def create_output_directory(self, folder):
         op_dir = os.path.abspath(os.path.join(
-            self.cli.reportdir, "stats"))
+            self.cli.reportdir, folder))
         self.mkdir(op_dir)
         return op_dir
 
@@ -98,7 +94,7 @@ class Stats(Common):
         builds = {}
         actives = {}
         pipelines_to_remove = []
-        xml_artifacts = {}
+        bld_artifacts = {}
         for job in self.cli.job_names:
             if job == self.cli.crude_job:
                 self.cli.LOG.debug("Skipping {} job".format(job))
@@ -111,6 +107,12 @@ class Stats(Common):
                 build_number = build_dict[job]
                 if build_number is None:
                     continue
+
+                if self.cli.triage:
+                    op_dir = self.create_output_directory(job)
+                    self.op_dirs.append(op_dir)
+                    self.jenkins.get_triage_data(build_number, job, op_dir)
+
                 this_build = [b for b in all_builds[job] if b['number']
                               == int(build_number)][0]
                 if self.is_running(this_build):
@@ -120,16 +122,16 @@ class Stats(Common):
                                       .format(job, this_build['number']))
 
                 if job in self.cli.multi_bugs_in_pl:
-                    if job not in xml_artifacts:
-                        xml_artifacts[job] = {}
+                    if job not in bld_artifacts:
+                        bld_artifacts[job] = {}
                     self.cli.LOG.debug("Getting artifacts for {} build {}"
-                                      .format(job, this_build['number']))
+                                       .format(job, this_build['number']))
                     artifacts = [
                         artifact for artifact in
                         jenkins_job[this_build['number']].get_artifacts()
                         if 'tempest_xunit.xml>' in str(artifact)]
                     artifact = artifacts[0] if artifacts else None
-                    xml_artifacts[job][this_build['number']] = artifact
+                    bld_artifacts[job][this_build['number']] = artifact
 
         for pipeline in set(pipelines_to_remove):
             self.build_numbers.pop(pipeline)
@@ -143,7 +145,7 @@ class Stats(Common):
                 if bs[job] is not None]
             builds[job] = [b for b in all_builds[job] if b['number'] in
                            completed_builds]
-        return builds, actives, xml_artifacts
+        return builds, actives, bld_artifacts
 
     def get_start_idx_num_and_date(self, builds,
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
@@ -174,7 +176,7 @@ class Stats(Common):
 
         return (end_idx, end_num, end_date)
 
-    def populate_job_dict(self, job, all_builds, all_actives, xml_artifacts):
+    def populate_job_dict(self, job, all_builds, all_actives, bld_artifacts):
         job_dict = {}
         builds = all_builds[job]
         num_active = len(all_actives[job])
@@ -195,20 +197,19 @@ class Stats(Common):
         nr_builds = len(all_builds[job])
         job_dict['build objects'] = nr_builds + num_active
         job_dict = self.get_passes_and_fails(
-            job, job_dict, builds, xml_artifacts)
+            job, job_dict, builds, bld_artifacts)
         msg = "There are {} {} builds"
         if num_active != 0:
             msg += " (ignoring {} builds that are still active)"
         self.cli.LOG.info(msg.format(nr_builds, job, num_active))
         return job_dict
 
-    def get_passes_and_fails(self, job, job_dict, build_objs, xml_artifacts):
+    def get_passes_and_fails(self, job, job_dict, build_objs, bld_artifacts):
         if job not in self.cli.multi_bugs_in_pl:
             return self.get_passes_fails_from_non_xml_job(job_dict, build_objs)
         else:
-            self.cli.LOG.info("Downloading artifacts for {}".format(job))
             return self.get_passes_fails_from_xml_job(
-                job_dict, build_objs, xml_artifacts[job])
+                job, job_dict, build_objs, bld_artifacts[job])
 
     def get_passes_fails_from_non_xml_job(self, job_dict, build_objs):
         # TODO: handle case where we don't have active, good or bad builds
@@ -229,20 +230,24 @@ class Stats(Common):
 
         return job_dict
 
-    def get_passes_fails_from_xml_job(self, job_dict, build_objs,
-                                      xml_artifacts):
+    def get_passes_fails_from_xml_job(self, job, job_dict, build_objs,
+                                      bld_artifacts):
+        self.cli.LOG.info("Downloading artifacts for {}".format(job))
         tests = []
         errors = []
         failures = []
         skip = []
         for this_build in build_objs:
             build = this_build['number']
-            artifact = xml_artifacts.get(build)
+            artifact = bld_artifacts.get(build)
             if artifact:
+                op_dir = self.create_output_directory(
+                    os.path.join(job, str(build)))
+                self.op_dirs.append(op_dir)
                 artifact_name = str(artifact).split('/')[-1].strip('>')
-                xml_file = os.path.join(self.op_dir, artifact_name)
+                xml_file = os.path.join(op_dir, artifact_name)
                 if not os.path.exists(xml_file):
-                    artifact.save_to_dir(self.op_dir)
+                    artifact.save_to_dir(op_dir)
                 with open(xml_file):
                     parser = etree.XMLParser(huge_tree=True)
                     try:
@@ -273,9 +278,10 @@ class Stats(Common):
         return job_dict
 
     def tidy_up(self):
-        if os.path.isdir(self.op_dir):
-            self.cli.LOG.info("{} deleted".format(self.op_dir))
-            shutil.rmtree(self.op_dir)
+        for op_dir in self.op_dirs:
+            if os.path.isdir(op_dir):
+                self.cli.LOG.info("{} deleted".format(op_dir))
+                shutil.rmtree(op_dir)
 
     def find_build_newer_than(self, builds, timestamp):
         """Finds builds newer than timestamp. It assumes that builds has first
@@ -298,47 +304,6 @@ class Stats(Common):
 
     def build_was_successful(self, build):
         return (not self.is_running(build) and build['result'] == 'SUCCESS')
-
-    def triage_report(self, triage, start, end, jenkins,
-                      ts_format='YYYY-MMM-DD HH:mm:ss'):
-        """Collect data on failed builds
-        for each job in the triage dictionary
-            look at each job and extract:
-                - console text
-                - all artifacts
-        write out report to oil-triage-START-END/<job>/<buildno>/<artifacts>
-
-        param triage: dictionary with job names as keys, value
-                      is a list of jenkins build objects
-        """
-        self.cli.LOG.info('Collecting debugging data...')
-        srtdate = Arrow.utcfromtimestamp(
-            arrow.get(self.cli.start).timestamp).format(ts_format)
-        enddate = Arrow.utcfromtimestamp(
-            arrow.get(self.cli.end).timestamp).format(ts_format)
-
-        report_subdir = "oil-triage-{}-{}".format(srtdate, enddate)
-        report_loc = os.path.join(self.op_dir, report_subdir)
-        for job in triage.keys():
-            jenkins_job = jenkins[job]
-            for b in triage[job]:
-                build = jenkins_job.get_build(b['number'])
-                outdir = os.path.join(report_loc, job, str(b['number']))
-                try:
-                    os.makedirs(outdir)
-                except OSError:
-                    if not os.path.isdir(outdir):
-                        raise
-                with open(os.path.join(outdir, "console.txt"), "w") as c:
-                    self.cli.LOG.info('Saving console @ {} to {}'.format(
-                        build.baseurl, outdir))
-                    console = build.get_console()
-                    c.write(console)
-                    c.write('\n')
-                    c.flush()
-
-                for a in build.get_artifacts():
-                    a.save_to_dir(outdir)
 
     def calculate_overall_success_rates(self, totals, results):
         all_success_rates = []
@@ -397,7 +362,7 @@ class Stats(Common):
                        .format(results['overall']['combined_non_xml_sr']))
             expl = "{}".format(", ".join(self.cli.subset_success_rate_jobs))
             idx = expl.rfind(',')
-            expl = "".join([expl[:idx], " &", expl[idx+1:]])
+            expl = "".join([expl[:idx], " &", expl[idx + 1:]])
             fout.write("Overall Success Rate (mean of {}): {}%\n"
                        .format(expl, results['overall']['combined_subset_sr']))
 
