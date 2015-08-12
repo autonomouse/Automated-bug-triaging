@@ -21,6 +21,7 @@ class Jenkins(Common):
             self.connect_to_jenkins()
             try:
                 self._jenkins.append(self.jenkins_api)
+                self.cli.LOG.info("Succesfully connected to Jenkins")
             except:
                 msg = "Problem connecting to Jenkins (try refreshing cookies?)"
                 self.cli.LOG.error(msg)

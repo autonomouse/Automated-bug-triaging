@@ -56,7 +56,8 @@ class Refinery(CrudeAnalysis):
         self.jenkins = Jenkins(self.cli)
         if not self.cli.offline_mode:
             self.test_catalog = TestCatalog(self.cli)
-            self.build_numbers = self.build_pl_ids_and_check()
+            self.build_numbers = self.build_pl_ids_and_check(
+                self.jenkins, self.test_catalog)
             self.download_triage_files(self.cli.crude_job, marker,
                                        self.cli.reportdir)
         else:

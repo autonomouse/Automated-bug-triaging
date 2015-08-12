@@ -91,6 +91,66 @@ class Common(object):
         if current_position in progress:
             return str(report_at[progress.index(current_position)])
 
+    def build_pl_ids_and_check(self, ci_server, buildtracker):
+        self.pipeline_ids = []
+        self.ids = self.cli.ids
+
+        if self.cli.offline_mode:
+            self.cli.LOG.info(" *** Offline mode *** ")
+            build_numbers = buildtracker.get_pipelines_from_paabn()
+            self.ids = build_numbers.keys()
+
+        elif self.cli.use_deploy:
+            # If using build numbers instead of pipelines, get pipeline:
+            msg = "Looking up pipeline ids for the following jenkins "
+            msg += "pipeline_deploy build numbers: %s"
+            self.cli.LOG.info(msg % ", ".join([str(i) for i in self.cli.ids]))
+
+            # Expand out id numbers if a range has been used:
+            exp_ids = []
+            for idn in self.ids:
+                if '-' in idn:
+                    range_start = int(idn.split('-')[0])
+                    range_end = int(idn.split('-')[-1]) + 1
+                    exp_range = [str(b) for b in range(range_start, range_end)]
+                    exp_ids.extend(exp_range)
+                else:
+                    exp_ids.append(idn)
+            self.ids = set(exp_ids)
+
+        elif self.cli.use_date_range:
+            # If using a date range instead of pipelines, get pipeline:
+            msg = "Getting pipeline ids for between {0} and {1} (this locale)"
+            self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
+                                         self.cli.end.strftime('%c')))
+            self.ids = buildtracker.get_pipelines_from_date_range()
+
+        for pos, idn in enumerate(self.ids):
+            if self.cli.use_deploy:
+                try:
+                    pipeline = buildtracker.get_pipeline_from_deploy_build(idn)
+                except:
+                    # Fall back to jenkins if test-catalog is down:
+                    pipeline = ci_server.get_pipeline_from_deploy_build(idn)
+            else:
+                pipeline = idn
+            # Quickly cycle through to check all pipelines are real:
+            if not ci_server.pipeline_check(pipeline):
+                msg = "Pipeline ID \"%s\" is an unrecognised format" % pipeline
+                self.cli.LOG.error(msg)
+            else:
+                self.pipeline_ids.append(pipeline)
+
+            # Notify user of progress:
+            checkin = 5 if len(self.pipeline_ids) > 20 else None
+            pgr = self.calculate_progress(pos, self.ids, checkin)
+            if pgr:
+                self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pgr))
+        msg = "Pipeline lookup 100% complete: All pipelines checked. "
+        msg += "Now polling jenkins and processing data."
+        self.cli.LOG.info(msg)
+        return buildtracker.get_all_pipelines(self.pipeline_ids)
+
     def write_output_yaml(self, output_dir, filename, yaml_dict, verbose=True):
         """
         """
@@ -199,36 +259,6 @@ class Common(object):
 
         print("No job newer than %s" % (start))
         return None
-
-    def is_running(self, build):
-        """
-        From oil-stats.
-
-        Jenkins job helper.
-
-        """
-        return build['duration'] == 0
-
-    def is_good(self, build):
-        """
-        From oil-stats.
-
-        Jenkins job helper.
-
-        """
-        return (not is_running(build) and build['result'] == 'SUCCESS')
-
-    def time_format(self, time):
-        """
-        From oil-stats.
-
-        Jenkins job helper.
-
-        Use strftime to convert to spaceless string
-
-        param time: datetime object
-        """
-        return time.strftime('%Y%m%d-%H%M%S.%f')
 
     def enlist(self, thing):
         if type(thing) not in [list, tuple]:

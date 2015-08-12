@@ -12,13 +12,13 @@ from doberman.__init__ import __version__
 class OptionsParser(object):
 
     def __init__(self, log_as='doberman.analysis'):
-        self.LOG = utils.get_logger(log_as)            
-    
+        self.LOG = utils.get_logger(log_as)
+
     def parse_opts_and_args(self, opts, args=None):
         """ A method to parse opts and args (from whatever source, CLI, tests
             or even a GUI should someone wish to code one) and replace the
             values in the config file.
-        """        
+        """
         self.LOG.info("Doberman version {0}".format(__version__))
 
         # cli override of config values
