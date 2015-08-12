@@ -269,12 +269,15 @@ class Stats(Common):
                     os.rename(xml_file, xml_file.replace(artifact_name,
                                                          artifact_rename))
         n_total = (sum(tests) - sum(skip))
-        n_good = n_total - (sum(errors) + sum(failures))
+        n_bad = sum(errors) + sum(failures)
+        n_good = n_total - n_bad
         success_rate = (round((float(n_good) / n_total) * 100, 2)
                         if n_total else 0)
         job_dict['good builds'] = n_good
-        job_dict['total'] = n_total
-        job_dict['total without skipped'] = sum(tests)
+        job_dict['fails'] = n_bad
+        job_dict['passes'] = n_good
+        job_dict['total'] = sum(tests)
+        job_dict['total without skipped'] = n_total
         job_dict['skipped'] = sum(skip)
         job_dict['success rate'] = success_rate
         return job_dict
