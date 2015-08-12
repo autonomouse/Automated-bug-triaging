@@ -25,12 +25,21 @@ class CLI(CLI):
         prsr.add_option('-H', '--host', action='store', dest='host',
                         default=JENKINS_URL,
                         help="URL to Jenkins host. Default: " + JENKINS_URL)
+        prsr.add_option('-m', '--multibug', action='store', dest='multibugppl',
+                        default=None, help=('jenkins job names with multiple' +
+                                            ' jobs per pipeline (must be in ' +
+                                            'quotes, seperated by spaces)'))
         prsr.add_option('-N', '--nosummary', action='store_false',
                         dest='summary', default=True,
                         help='Disable printing summary output')
         prsr.add_option('-t', '--triage', action='store_true', dest='triage',
                         default=False,
                         help='Dump info on failed jobs for triage')
+        prsr.add_option('-S', '--subset_sr_jobs', action='store',
+                        dest='subset_success_rate_jobs', default=None,
+                        help=('jenkins job names to be included in subset ' +
+                              'success rate calulation (must be in quotes, ' +
+                              'seperated by spaces)'))
         (self.opts, self.args) = self.parser.parse_args()
 
 
@@ -53,11 +62,27 @@ class OptionsParser(OptionsParser):
 
         self.summary = True if opts.summary else False
 
+        if opts.multibugppl:
+            multi_bugs_in_pl = opts.multibugppl
+        else:
+            multi_bugs_in_pl = cfg.get('DEFAULT', 'multi_bugs_in_pl')
+        self.multi_bugs_in_pl = multi_bugs_in_pl.split(' ')
+
         self.triage = True if opts.triage else False
 
         if opts.report_dir:
             self.reportdir = opts.report_dir
         else:
             self.reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
+
+        if opts.subset_success_rate_jobs:
+            subset_success_rate_jobs = opts.subset_success_rate_jobs
+        else:
+            subset_success_rate_jobs = cfg.get('DEFAULT',
+                                               'subset_success_rate_jobs')
+        if subset_success_rate_jobs is None:
+            self.subset_success_rate_jobs = []
+        else:
+            self.subset_success_rate_jobs = subset_success_rate_jobs.split(' ')
 
         return self

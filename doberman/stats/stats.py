@@ -34,18 +34,23 @@ class Stats(Common):
         totals = {}
         triage = {}
 
-        # Calculate totals:
-        builds = self.get_builds()
+        # Fetch data:
+        builds, actives, xml_artifacts = self.get_builds()
         for job in self.cli.job_names:
             if job == self.cli.crude_job:
                 self.cli.LOG.debug("Skipping {} job".format(job))
                 continue
             self.cli.LOG.debug("{}:".format(job))
-            job_dict, nr_nab = self.populate_job_dict(job, builds[job])
+            job_dict = self.populate_job_dict(
+                job, builds, actives, xml_artifacts)
             results['jobs'][job] = job_dict
-            totals[job] = {'total_builds': nr_nab,
+            # Calculate totals:
+            totals[job] = {'total_builds': job_dict['build objects'],
                            'passing': job_dict.get('passes', 0)}
             triage[job] = job_dict.get('fails', 0)
+
+        # Calculate overall success rate
+        results = self.calculate_overall_success_rates(totals, results)
 
         # Report results:
         fname = os.path.join(self.cli.reportdir, "stats.txt")
@@ -58,11 +63,11 @@ class Stats(Common):
             self.write_to_results_file(fname, results, job)
 
         # Overall success:
-        self.write_summary_to_results_file(fname, totals, results)
+        if self.cli.summary:
+            self.write_summary_to_results_file(fname, totals, results)
 
         # Save results to file:
         self.generate_output_file(results)
-
         self.print_results(fname)
 
         # Triage report
@@ -91,7 +96,9 @@ class Stats(Common):
     def get_builds(self):
         all_builds = {}
         builds = {}
+        actives = {}
         pipelines_to_remove = []
+        xml_artifacts = {}
         for job in self.cli.job_names:
             if job == self.cli.crude_job:
                 self.cli.LOG.debug("Skipping {} job".format(job))
@@ -99,6 +106,7 @@ class Stats(Common):
             jenkins_job = self.jenkins_api[job]
             self.cli.LOG.info("Polling Jenkins for {} data".format(job))
             all_builds[job] = jenkins_job._poll()['builds']
+            actives[job] = []
             for pipeline, build_dict in self.build_numbers.items():
                 build_number = build_dict[job]
                 if build_number is None:
@@ -106,9 +114,23 @@ class Stats(Common):
                 this_build = [b for b in all_builds[job] if b['number']
                               == int(build_number)][0]
                 if self.is_running(this_build):
+                    actives[job].append(this_build)
                     pipelines_to_remove.append(pipeline)
                     self.cli.LOG.info("{} build {} is still running"
                                       .format(job, this_build['number']))
+
+                if job in self.cli.multi_bugs_in_pl:
+                    if job not in xml_artifacts:
+                        xml_artifacts[job] = {}
+                    self.cli.LOG.debug("Getting artifacts for {} build {}"
+                                      .format(job, this_build['number']))
+                    artifacts = [
+                        artifact for artifact in
+                        jenkins_job[this_build['number']].get_artifacts()
+                        if 'tempest_xunit.xml>' in str(artifact)]
+                    artifact = artifacts[0] if artifacts else None
+                    xml_artifacts[job][this_build['number']] = artifact
+
         for pipeline in set(pipelines_to_remove):
             self.build_numbers.pop(pipeline)
 
@@ -121,7 +143,7 @@ class Stats(Common):
                 if bs[job] is not None]
             builds[job] = [b for b in all_builds[job] if b['number'] in
                            completed_builds]
-        return builds
+        return builds, actives, xml_artifacts
 
     def get_start_idx_num_and_date(self, builds,
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
@@ -152,80 +174,76 @@ class Stats(Common):
 
         return (end_idx, end_num, end_date)
 
-    def get_num_builds_and_active(self, builds, start_idx, end_idx):
-        builds_to_check = [r['number'] for r in builds[start_idx:end_idx]]
-
-        build_objs = [b for b in builds if b['number'] in builds_to_check]
-        active = filter(lambda x: self.is_running(x) is True, build_objs)
-
-        return len(builds_to_check), len(active), build_objs
-
-    def populate_job_dict(self, job, builds):
+    def populate_job_dict(self, job, all_builds, all_actives, xml_artifacts):
         job_dict = {}
+        builds = all_builds[job]
+        num_active = len(all_actives[job])
+        job_dict['still_running'] = num_active
         if builds is None:
-            nr_nab = 0
-            return job_dict, nr_nab
+            job_dict['build objects'] = 0 + num_active
+            return job_dict
 
         start_idx, start_num, start_date =\
             self.get_start_idx_num_and_date(builds)
-        end_idx, end_num, end_date = self.get_end_idx_num_and_date(builds)
         job_dict['start job'] = start_num
-        job_dict['end job'] = end_num
         job_dict['start date'] = start_date
+
+        end_idx, end_num, end_date = self.get_end_idx_num_and_date(builds)
+        job_dict['end job'] = end_num
         job_dict['end date'] = end_date
 
-        # From idx to end:
-        nr_builds, num_active, build_objs = self.get_num_builds_and_active(
-            builds, start_idx, end_idx)
-        job_dict['build objects'] = nr_builds
-        if job not in self.cli.xmls:
-            job_dict = self.get_passes_fails_from_non_xml_job(
-                job_dict, build_objs, num_active)
-        else:
-            job_dict = self.get_passes_fails_from_xml_job(job_dict)
-
-        nr_nab = job_dict['build objects'] - num_active
+        nr_builds = len(all_builds[job])
+        job_dict['build objects'] = nr_builds + num_active
+        job_dict = self.get_passes_and_fails(
+            job, job_dict, builds, xml_artifacts)
         msg = "There are {} {} builds"
         if num_active != 0:
-            msg += "(ignoring {} builds that are still active)"
-        self.cli.LOG.info(msg.format(nr_nab, job, num_active))
-        return job_dict, nr_nab
+            msg += " (ignoring {} builds that are still active)"
+        self.cli.LOG.info(msg.format(nr_builds, job, num_active))
+        return job_dict
 
-    def get_passes_fails_from_non_xml_job(self, job_dict, build_objs,
-                                          num_active):
+    def get_passes_and_fails(self, job, job_dict, build_objs, xml_artifacts):
+        if job not in self.cli.multi_bugs_in_pl:
+            return self.get_passes_fails_from_non_xml_job(job_dict, build_objs)
+        else:
+            self.cli.LOG.info("Downloading artifacts for {}".format(job))
+            return self.get_passes_fails_from_xml_job(
+                job_dict, build_objs, xml_artifacts[job])
+
+    def get_passes_fails_from_non_xml_job(self, job_dict, build_objs):
         # TODO: handle case where we don't have active, good or bad builds
-
-        good = filter(lambda x: self.is_good(x), build_objs)
-        bad = filter(lambda x: self.is_good(x) is False and
+        good = filter(lambda x: self.build_was_successful(x), build_objs)
+        bad = filter(lambda x: self.build_was_successful(x) is False and
                      self.is_running(x) is False, build_objs)
-        nr_nab = job_dict['build objects'] - num_active
-        success_rate = (float(len(good)) / float(nr_nab) * 100.0
-                        if nr_nab else 0)
-        # pipeline_deploy 11 active, 16/31 = 58.68% passing
-        # Total: 31 builds, 12 active, 2 failed, 17 pass.
-        # Success rate: 17 / (31 - 12) = 89%
+        nr_nab = job_dict['build objects'] - job_dict['still_running']
         job_dict['passes'] = len(good)
         job_dict['fails'] = len(bad)
         job_dict['completed builds'] = nr_nab
+
+        # pipeline_deploy 11 active, 16/31 = 58.68% passing
+        # Total: 31 builds, 12 active, 2 failed, 17 pass.
+        # Success rate: 17 / (31 - 12) = 89%
+        success_rate = (float(len(good)) / float(nr_nab) * 100.0
+                        if nr_nab else 0)
         job_dict['success rate'] = success_rate
 
         return job_dict
 
-    def get_passes_fails_from_xml_job(self, job_dict):
+    def get_passes_fails_from_xml_job(self, job_dict, build_objs,
+                                      xml_artifacts):
         tests = []
         errors = []
         failures = []
         skip = []
-        import pdb; pdb.set_trace()
-        for build in [bld['number'] for bld in builds[start_idx:end_idx]]:
-            this_build = jenkins_job.get_build(build)
-            artifacts = [b for b in this_build.get_artifacts()
-                         if 'tempest_xunit.xml>' in str(b)]
-            artifact = artifacts[0] if artifacts else None
+        for this_build in build_objs:
+            build = this_build['number']
+            artifact = xml_artifacts.get(build)
             if artifact:
                 artifact_name = str(artifact).split('/')[-1].strip('>')
                 xml_file = os.path.join(self.op_dir, artifact_name)
-                with open(artifact.save_to_dir(self.op_dir)):
+                if not os.path.exists(xml_file):
+                    artifact.save_to_dir(self.op_dir)
+                with open(xml_file):
                     parser = etree.XMLParser(huge_tree=True)
                     try:
                         doc = etree.parse(xml_file, parser).getroot()
@@ -278,7 +296,7 @@ class Stats(Common):
     def is_running(self, build):
         return build['duration'] == 0
 
-    def is_good(self, build):
+    def build_was_successful(self, build):
         return (not self.is_running(build) and build['result'] == 'SUCCESS')
 
     def triage_report(self, triage, start, end, jenkins,
@@ -322,16 +340,34 @@ class Stats(Common):
                 for a in build.get_artifacts():
                     a.save_to_dir(outdir)
 
+    def calculate_overall_success_rates(self, totals, results):
+        all_success_rates = []
+        non_xml_success_rates = []
+        subset_success_rate = []
+        for job, result in results['jobs'].items():
+            all_success_rates.append(result.get('success rate', 0))
+            if job not in self.cli.multi_bugs_in_pl:
+                non_xml_success_rates.append(result.get('success rate', 0))
+            if job in self.cli.subset_success_rate_jobs:
+                subset_success_rate.append(result.get('success rate', 0))
+
+        results['overall']['combined_sr'] = round(
+            sum(all_success_rates) / float(len(all_success_rates)), 2)
+        results['overall']['combined_non_xml_sr'] = round(
+            sum(non_xml_success_rates) / float(len(non_xml_success_rates)), 2)
+        results['overall']['combined_subset_sr'] = round(
+            sum(subset_success_rate) / float(len(subset_success_rate)), 2)
+
+        return results
+
     def write_to_results_file(self, fname, results, job):
         job_dict = results['jobs'][job]
-
-        success_rate = round(job_dict.get('success rate', 0), 2)
 
         # Write to file:
         with open(fname, 'a') as fout:
             fout.write('\n')
             fout.write("* {} success rate was {}%\n"
-                       .format(job, success_rate))
+                       .format(job, job_dict.get('success rate')))
             fout.write("    - Start Job: {} (Date: {})\n"
                        .format(job_dict.get('start job'),
                                job_dict.get('start date')))
@@ -352,33 +388,24 @@ class Stats(Common):
                                    job_dict.get('skipped')))
 
     def write_summary_to_results_file(self, fname, totals, results):
-        success_rate = self.calculate_overall_success_rate(totals, results)
-
         # Write to file:
         with open(fname, 'a') as fout:
             fout.write('\n')
-            fout.write("Overall Success Rate: {}%\n".format(success_rate))
-            fout.write("    - {} tempest builds out of {} total jobs\n"
-                       .format(results['overall'].get('tempest builds'),
-                               results['overall'].get('total jobs')))
+            fout.write("Overall Success Rate (mean of all jobs): {}%\n"
+                       .format(results['overall']['combined_sr']))
+            fout.write("Overall Success Rate (mean of all non-xml jobs): {}%\n"
+                       .format(results['overall']['combined_non_xml_sr']))
+            expl = "{}".format(", ".join(self.cli.subset_success_rate_jobs))
+            idx = expl.rfind(',')
+            expl = "".join([expl[:idx], " &", expl[idx+1:]])
+            fout.write("Overall Success Rate (mean of {}): {}%\n"
+                       .format(expl, results['overall']['combined_subset_sr']))
 
     def print_results(self, fname):
         """Read back that file and print to console"""
         with open(fname, 'r') as fin:
             print fin.read()
 
-    def calculate_overall_success_rate(self, totals, results):
-        if self.cli.summary:
-            tt = totals['test_tempest_smoke']['total_builds']
-            td = totals['pipeline_deploy']['total_builds']
-            overall = (float(tt) / float(td) * 100.0) if td else 0
-
-            results['overall']['success rate'] = overall
-            results['overall']['tempest builds'] = tt
-            results['overall']['total jobs'] = td
-        unrounded_success_rate = results['overall'].get('success rate')
-        sr = round(unrounded_success_rate, 2) if unrounded_success_rate else 0
-        return sr
 
 if __name__ == '__main__':
     Stats()
