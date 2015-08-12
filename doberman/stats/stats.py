@@ -1,6 +1,7 @@
 #! /usr/bin/env python2
 
 import os
+import sys
 import yaml
 import arrow
 import bisect
@@ -16,18 +17,20 @@ from doberman.analysis.crude_test_catalog import TestCatalog
 class Stats(Common):
 
     def __init__(self, cli=False):
+        self.message = 1
         stats_start_time = arrow.now()
         self.cli = CLI().populate_cli() if not cli else cli
         self.test_catalog = TestCatalog(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
         self.op_dirs = []
-        self.main()
+        self.run_stats()
         stats_finish_time = arrow.now()
         self.cli.LOG.info(self.report_time_taken(
             stats_start_time, stats_finish_time))
+        self.message = 0
 
-    def main(self):
+    def run_stats(self):
         self.cli.LOG.info("Data for OIL Environment: {} (Jenkins host: {})"
                           .format(self.cli.environment, self.cli.jenkins_host))
         self.build_numbers = self.build_pl_ids_and_check(
@@ -372,5 +375,10 @@ class Stats(Common):
             print fin.read()
 
 
-if __name__ == '__main__':
-    Stats()
+def main():
+    stats = Stats()
+    return stats.message
+
+
+if __name__ == "__main__":
+    sys.exit(main())
