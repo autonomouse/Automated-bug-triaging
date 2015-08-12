@@ -283,7 +283,7 @@ class Stats(Common):
     def tidy_up(self):
         for op_dir in self.op_dirs:
             if os.path.isdir(op_dir):
-                self.cli.LOG.info("{} deleted".format(op_dir))
+                self.cli.LOG.debug("{} deleted".format(op_dir))
                 shutil.rmtree(op_dir)
 
     def find_build_newer_than(self, builds, timestamp):
