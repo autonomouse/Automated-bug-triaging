@@ -318,15 +318,22 @@ class Stats(Common):
                 non_xml_success_rates.append(result.get('success rate', 0))
             if job in self.cli.subset_success_rate_jobs:
                 subset_success_rate.append(result.get('success rate', 0))
-
-        results['overall']['combined_sr'] = round(
+        results['overall']['average_percentage_sr'] = (
             sum(all_success_rates) / float(len(all_success_rates)), 2)
+        results['overall']['combined_sr'] = round(
+            self.calulate_percentages(all_success_rates), 2)
         results['overall']['combined_non_xml_sr'] = round(
-            sum(non_xml_success_rates) / float(len(non_xml_success_rates)), 2)
+            self.calulate_percentages(non_xml_success_rates), 2)
         results['overall']['combined_subset_sr'] = round(
-            sum(subset_success_rate) / float(len(subset_success_rate)), 2)
+            self.calulate_percentages(subset_success_rate), 2)
 
         return results
+
+    def calculate_percentage(percentages_list):
+        combined_percentage_pass = 100
+        for pc in percentages_list:
+            combined_percentage_pass *= (pc / 100.0)
+        return combined_percentage_pass
 
     def write_to_results_file(self, fname, results, job):
         job_dict = results['jobs'][job]
@@ -359,14 +366,16 @@ class Stats(Common):
         # Write to file:
         with open(fname, 'a') as fout:
             fout.write('\n')
-            fout.write("Overall Success Rate (mean of all jobs): {}%\n"
+            fout.write("Average Success Rate (mean of all jobs): {}%\n"
+                       .format(results['overall']['average_percentage_sr']))
+            fout.write("Overall Success Rate (pass rate on all jobs): {}%\n"
                        .format(results['overall']['combined_sr']))
-            fout.write("Overall Success Rate (mean of all non-xml jobs): {}%\n"
+            fout.write("Overall Success Rate (pass rate on non-xml job): {}%\n"
                        .format(results['overall']['combined_non_xml_sr']))
             expl = "{}".format(", ".join(self.cli.subset_success_rate_jobs))
             idx = expl.rfind(',')
             expl = "".join([expl[:idx], " &", expl[idx + 1:]])
-            fout.write("Overall Success Rate (mean of {}): {}%\n"
+            fout.write("Overall Success Rate (pass rate on {} jobs): {}%\n"
                        .format(expl, results['overall']['combined_subset_sr']))
 
     def print_results(self, fname):
