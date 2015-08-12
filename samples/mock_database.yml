@@ -1335,3 +1335,10 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "do_verification_test.{0,6}raise e.{0,6}TypeError. .Tenant. object.{0,15} has no attribute .__getitem__"
+            - "oil_ci.cli.api.py.. line 518. in do_verification_test"
+    test_cloud_image:
+      -
+        "console.txt":
+            regexp:
+            - "do_verification_test.{0,6}raise e.{0,6}TypeError. .Tenant. object.{0,15} has no attribute .__getitem__"
+            - "oil_ci.cli.api.py.. line 518. in do_verification_test"
