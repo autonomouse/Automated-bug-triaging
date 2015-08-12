@@ -203,7 +203,7 @@ class Stats(Common):
             job, job_dict, builds, bld_artifacts)
         msg = "There are {} {} builds"
         if num_active != 0:
-            msg += " (ignoring {} builds that are still active)"
+            msg += " (ignoring the {} builds that are still active)"
         self.cli.LOG.info(msg.format(nr_builds, job, num_active))
         return job_dict
 
@@ -230,7 +230,6 @@ class Stats(Common):
         success_rate = (float(len(good)) / float(nr_nab) * 100.0
                         if nr_nab else 0)
         job_dict['success rate'] = success_rate
-
         return job_dict
 
     def get_passes_fails_from_xml_job(self, job, job_dict, build_objs,
@@ -318,18 +317,17 @@ class Stats(Common):
                 non_xml_success_rates.append(result.get('success rate', 0))
             if job in self.cli.subset_success_rate_jobs:
                 subset_success_rate.append(result.get('success rate', 0))
-        results['overall']['average_percentage_sr'] = (
+        results['overall']['average_percentage_sr'] = round(
             sum(all_success_rates) / float(len(all_success_rates)), 2)
         results['overall']['combined_sr'] = round(
-            self.calulate_percentages(all_success_rates), 2)
+            self.calculate_percentages(all_success_rates), 2)
         results['overall']['combined_non_xml_sr'] = round(
-            self.calulate_percentages(non_xml_success_rates), 2)
+            self.calculate_percentages(non_xml_success_rates), 2)
         results['overall']['combined_subset_sr'] = round(
-            self.calulate_percentages(subset_success_rate), 2)
-
+            self.calculate_percentages(subset_success_rate), 2)
         return results
 
-    def calculate_percentages(percentages_list):
+    def calculate_percentages(self, percentages_list):
         combined_percentage_pass = 100
         for pc in percentages_list:
             combined_percentage_pass *= (pc / 100.0)
