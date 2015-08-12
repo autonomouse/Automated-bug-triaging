@@ -79,10 +79,11 @@ class Stats(Common):
         if not self.cli.keep_data and not self.cli.triage:
             self.tidy_up()
 
-    def create_output_directory(self, folder):
+    def create_output_directory(self, subfolder):
         op_dir = os.path.abspath(os.path.join(
-            self.cli.reportdir, folder))
+            self.cli.reportdir, subfolder))
         self.mkdir(op_dir)
+        self.op_dirs.append(op_dir)
         return op_dir
 
     def generate_output_file(self, results):
@@ -113,7 +114,6 @@ class Stats(Common):
 
                 if self.cli.triage:
                     op_dir = self.create_output_directory(job)
-                    self.op_dirs.append(op_dir)
                     self.jenkins.get_triage_data(build_number, job, op_dir)
 
                 this_build = [b for b in all_builds[job] if b['number']
@@ -242,10 +242,10 @@ class Stats(Common):
         for this_build in build_objs:
             build = this_build['number']
             artifact = bld_artifacts.get(build)
+            op_dir = self.create_output_directory(job)
             if artifact:
                 op_dir = self.create_output_directory(
                     os.path.join(job, str(build)))
-                self.op_dirs.append(op_dir)
                 artifact_name = str(artifact).split('/')[-1].strip('>')
                 xml_file = os.path.join(op_dir, artifact_name)
                 if not os.path.exists(xml_file):
@@ -280,10 +280,10 @@ class Stats(Common):
         return job_dict
 
     def tidy_up(self):
-        for op_dir in self.op_dirs:
+        for op_dir in set(self.op_dirs):
             if os.path.isdir(op_dir):
-                self.cli.LOG.debug("{} deleted".format(op_dir))
                 shutil.rmtree(op_dir)
+                self.cli.LOG.debug("{} deleted".format(op_dir))
 
     def find_build_newer_than(self, builds, timestamp):
         """Finds builds newer than timestamp. It assumes that builds has first
