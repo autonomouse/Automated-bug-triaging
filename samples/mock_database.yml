@@ -1326,3 +1326,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "raise BadStatusLine.line.{1,20}BadStatusLine"
+
+  "1484119":
+    category: None
+    description: "TypeError in oil-ci's api module - complains that 'Tenant' object has no attribute '__getitem__'"
+    test_bundletests:
+      -
+        "console.txt":
+            regexp:
+            - "do_verification_test.{0,6}raise e.{0,6}TypeError. .Tenant. object.{0,15} has no attribute .__getitem__"

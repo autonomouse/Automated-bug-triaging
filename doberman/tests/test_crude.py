@@ -52,7 +52,8 @@ class CrudeAnalysisTests(CommonTestMethods):
         cli = self.populate_cli_var(self.real_db_yaml,
                                     reportdir=self.tmpdir)
         cli.job_names = ['pipeline_start', 'pipeline_deploy',
-                         'pipeline_prepare', 'test_tempest_smoke']
+                         'pipeline_prepare', 'test_tempest_smoke',
+                         'test_cloud_image', 'test_bundletests']
 
         real_DB = os.path.abspath(os.path.join(self.mock_output_data,
                                                self.real_db_yaml))

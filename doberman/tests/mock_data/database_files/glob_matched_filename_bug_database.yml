@@ -17,6 +17,16 @@ bugs:
         "console.txt":
             regexp:
             - "this line of text really shouldn't be in there"
+    test_cloud_image:
+      -
+        "console.txt":
+            regexp:
+            - "this line of text really shouldn't be in there"
+    test_bundletests:
+      -
+        "console.txt":
+            regexp:
+            - "this line of text really shouldn't be in there"
             
   "fake_bug_02":
     category: None

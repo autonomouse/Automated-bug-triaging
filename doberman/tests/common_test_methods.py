@@ -21,13 +21,17 @@ class CommonTestMethods(DobermanTestBase):
     paabn_info = {'pipeline_deploy': '00001',
                   'pipeline_prepare': '00002',
                   'pipeline_start': '00000',
-                  'test_tempest_smoke': '00003'}
+                  'test_tempest_smoke': '00003',
+                  'test_cloud_image': '00004',
+                  'test_bundletests': '00005'}
 
     def tidy_up(self):
         files_to_ditch = ["pipelines_processed.yaml",
                           "triage_pipeline_deploy.yml",
                           "triage_pipeline_prepare.yml",
-                          "triage_test_tempest_smoke.yml"]
+                          "triage_test_tempest_smoke.yml",
+                          "triage_test_cloud_image.yml",
+                          "triage_test_bundletests.yml"]
         for filename in files_to_ditch:
             path_to_file = os.path.join(self.reportdir, filename)
             if os.path.exists(path_to_file):
@@ -36,14 +40,17 @@ class CommonTestMethods(DobermanTestBase):
             shutil.rmtree(self.tmpdir)
 
     def get_output_data(self, fname, output_data_dir):
-        with open(os.path.join(output_data_dir, fname),'r') as f:
-            return yaml.load(f)
+        try:
+            with open(os.path.join(output_data_dir, fname),'r') as f:
+                return yaml.load(f)
+        except IOError:
+            return
 
     def get_crude_output_data(self, fname="triage_pipeline_deploy.yml",
                         output_data_dir=mock_output_data):
         try:
             data = self.get_output_data(fname, output_data_dir)
-            return data['pipeline'][self.pipeline_id]
+            return None if data is None else data['pipeline'][self.pipeline_id]
         except KeyError:
             return {'bugs': {}}
 
@@ -63,7 +70,8 @@ class CommonTestMethods(DobermanTestBase):
         cli.ids = set(['doberman/tests/test_crude.py'])
         cli.jenkins_host = 'http://oil-jenkins.canonical.com'
         cli.job_names = ['pipeline_start', 'pipeline_deploy',
-                              'pipeline_prepare', 'test_tempest_smoke']
+                         'pipeline_prepare', 'test_tempest_smoke',
+                         'test_cloud_image', 'test_bundletests']
         cli.keep_data = False
         cli.logpipelines = False
         cli.match_threshold = '0.965'
