@@ -55,10 +55,15 @@ class Common(object):
         return yaml_dict
 
     def join_dicts(self, old_dict, new_dict):
-        """ Merge matching_bugs dictionaries. """
-        earlier_items = list(old_dict.items())
-        current_items = list(new_dict.items())
-        return dict(earlier_items + current_items)
+        """Merge matching_bugs dictionaries."""
+        combined_dict = old_dict.copy()
+        for new_pipeline, new_pl_dict in new_dict.items():
+            if new_pipeline not in combined_dict:
+                combined_dict[new_pipeline] = new_pl_dict
+            else:
+                combined_dict[new_pipeline] = dict(
+                    old_dict[new_pipeline].items() + new_pl_dict.items())
+        return combined_dict
 
     def calculate_progress(self, current_position, prog_list,
                            percentage_to_report_at=None):
