@@ -624,7 +624,7 @@ class Refinery(CrudeAnalysis):
             print("-----------------------------------")
             print
             job_ranking = bug_rankings.get(job)
-            if job_ranking:
+            if job_ranking not in [None, {}]:
                 generic_bugs[job] = \
                     self.count_generic_bugs(job_ranking, generic_bugs, job)
                 for bug in job_ranking[:10]:
