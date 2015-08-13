@@ -126,9 +126,9 @@ class OilSpill(Common):
                                     if not self.cli.reduced_output_text:
                                             info['text'] = pre_log
                                     info['target file'] = target
-                                    info['xunit class'] = \
+                                    info['xunit class'] =\
                                         fail.getparent().get('classname')
-                                    info['xunit name'] = \
+                                    info['xunit name'] =\
                                         fail.getparent().get('name')
                                     hit = self.rematch(and_dict, target,
                                                        target_file, pre_log)

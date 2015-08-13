@@ -116,8 +116,12 @@ class Stats(Common):
                     op_dir = self.create_output_directory(job)
                     self.jenkins.get_triage_data(build_number, job, op_dir)
 
-                this_build = [b for b in all_builds[job] if b['number']
-                              == int(build_number)][0]
+                try:
+                    this_build = [b for b in all_builds[job] if b['number']
+                                  == int(build_number)][0]
+                except IndexError:
+                    continue
+                
                 if self.is_running(this_build):
                     actives[job].append(this_build)
                     pipelines_to_remove.append(pipeline)
@@ -305,7 +309,7 @@ class Stats(Common):
         return None
 
     def is_running(self, build):
-        return build['duration'] == 0
+        return build.get('duration') == 0
 
     def build_was_successful(self, build):
         return (not self.is_running(build) and build['result'] == 'SUCCESS')
