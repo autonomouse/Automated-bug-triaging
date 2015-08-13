@@ -627,6 +627,8 @@ class Refinery(CrudeAnalysis):
             if job_ranking not in [None, {}]:
                 generic_bugs[job] = \
                     self.count_generic_bugs(job_ranking, generic_bugs, job)
+                if job_ranking == []:
+                    print("No non-generic bugs found.")
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
@@ -647,6 +649,7 @@ class Refinery(CrudeAnalysis):
             for gjob in generic_bugs:
                 target_type = ("test" if gjob in self.cli.multi_bugs_in_pl
                                else "pipeline")
+                #import pdb; pdb.set_trace()
                 num_generics = generic_bugs[gjob]
                 plural = 's' if num_generics > 1 else ''
                 if num_generics > 0:
