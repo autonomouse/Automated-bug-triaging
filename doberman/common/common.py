@@ -56,6 +56,13 @@ class Common(object):
 
     def join_dicts(self, old_dict, new_dict):
         """Merge matching_bugs dictionaries."""
+        bad_dicts = [None, {}, '']
+        if old_dict in bad_dicts and new_dict in bad_dicts:
+            return {}
+        elif old_dict in bad_dicts:
+            return new_dict
+        elif new_dict in bad_dicts:
+            return old_dict
         combined_dict = old_dict.copy()
         for new_pipeline, new_pl_dict in new_dict.items():
             if new_pipeline not in combined_dict:
