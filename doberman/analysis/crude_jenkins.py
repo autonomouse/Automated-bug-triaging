@@ -207,9 +207,14 @@ class Build(OilSpill):
 
         # <ACTIONPOINT>
         build_executor = file_parser.extracted_info['build_executor']
-        pipeline_id = Weebl(self.cli).create_pipeline(self.pipeline, 
-                                                      build_executor)
-        
+        weebl = Weebl(self.cli, self.jenkins.jenkins_api)
+        pipeline_id = weebl.create_pipeline(self.pipeline, build_executor)
+        if pipeline_id != self.pipeline:
+            msg = ("Pipeline created on weebl does not match: {} != {}"
+                   .format(pipeline_id, self.pipeline))
+            self.cli.LOG.error(msg)
+            raise Exception(msg)
+        #
         matching_bugs = self.oil_survey(path, self.pipeline,
                                         file_parser.extracted_info)
         self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)

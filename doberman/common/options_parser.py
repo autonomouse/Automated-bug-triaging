@@ -166,6 +166,15 @@ class OptionsParser(object):
                 msg = "No pipeline IDs provided, defaulting to past 24 hours"
                 self.LOG.info(msg)
 
+        # Unique identifier of environment:
+        uuid = cfg.get('DEFAULT', 'uuid')
+        if opts.uuid:
+            self.uuid = opts.uuid
+        elif uuid is None:
+            self.uuid = None
+        else:
+            self.uuid = uuid
+
         # Start and end datetimes:
         if opts.start or opts.end:
             if self.use_deploy:

@@ -22,7 +22,7 @@ class CrudeAnalysis(Common):
         self.jenkins = Jenkins(self.cli)
         self.build_numbers = self.build_pl_ids_and_check()
         # <ACTIONPOINT>
-        self.weebl = Weebl(self.cli)
+        self.weebl = Weebl(self.cli, self.jenkins.jenkins_api)
         # TODO: Check to see if environment exists in weebl (or raise error)
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)

@@ -16,12 +16,15 @@ class CLI(CLI):
 
     def add_weebl_specific_options_to_parser(self):
         prsr = self.parser
-        prsr.add_option('-w', '--weebl_ip', action='store', dest='weebl_ip',
-                        default='http://10.245.0.14',
-                        help=('IP address of the weebl server'))
         prsr.add_option('-a', '--auth', action='store',
                         dest='weebl_auth', default=None,
                         help=('Auth creds for weebl - username and password'))
+        prsr.add_option('-A', '--weebl_api_ver', action='store', 
+                        dest='weebl_api_ver', default='v1',
+                        help=('API version, e.g. "v1"'))
+        prsr.add_option('-w', '--weebl_ip', action='store', dest='weebl_ip',
+                        default='http://10.245.0.14',
+                        help=('IP address of the weebl server'))
         (self.opts, self.args) = self.parser.parse_args()
 
 
@@ -36,15 +39,20 @@ class OptionsParser(OptionsParser):
         else:
             cfg = utils.get_config()
 
-        if opts.weebl_ip:
-            self.weebl_ip = opts.weebl_ip
-        else:
-            self.weebl_ip = cfg.get('DEFAULT', 'weebl_ip')
-
         if opts.weebl_auth:
             weebl_auth = opts.weebl_auth
         else:
             weebl_auth = cfg.get('DEFAULT', 'weebl_auth')
         self.weebl_auth = tuple(weebl_auth.split(' '))
+
+        if opts.weebl_api_ver:
+            self.weebl_api_ver = opts.weebl_api_ver
+        else:
+            self.weebl_api_ver = cfg.get('DEFAULT', 'weebl_api_ver')
+
+        if opts.weebl_ip:
+            self.weebl_ip = opts.weebl_ip
+        else:
+            self.weebl_ip = cfg.get('DEFAULT', 'weebl_ip')
 
         return self
