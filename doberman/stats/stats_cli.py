@@ -17,7 +17,7 @@ class CLI(CLI):
         self.add_stats_specific_options_to_parser()
 
     def populate_cli(self):
-        options_parser = OptionsParser('doberman.stats')
+        options_parser = OptionsParser(log_as='doberman.stats')
         return options_parser.parse_opts_and_args(self.opts, self.args)
 
     def add_stats_specific_options_to_parser(self):
@@ -30,7 +30,7 @@ class CLI(CLI):
                                             ' jobs per pipeline (must be in ' +
                                             'quotes, seperated by spaces)'))
         prsr.add_option('-N', '--nosummary', action='store_false',
-                        dest='summary', default=True,
+                        dest='nosummary', default=True,
                         help='Disable printing summary output')
         prsr.add_option('-t', '--triage', action='store_true', dest='triage',
                         default=False,
@@ -60,7 +60,7 @@ class OptionsParser(OptionsParser):
         else:
             self.jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
-        self.summary = True if opts.summary else False
+        self.summary = False if opts.nosummary else True
 
         if opts.multibugppl:
             multi_bugs_in_pl = opts.multibugppl

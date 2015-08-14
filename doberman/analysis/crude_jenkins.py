@@ -75,12 +75,6 @@ class Jenkins(Common):
                 self.cli.LOG.error(msg)
                 raise Exception(msg)
 
-    def pipeline_check(self, pipeline_id):
-        try:
-            return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
-        except:
-            return False
-
     def write_console_to_file(self, build, outdir, jobname):
         console_path = os.path.join(outdir, "{}_console.txt".format(jobname))
         with open(console_path, "w") as cnsl:

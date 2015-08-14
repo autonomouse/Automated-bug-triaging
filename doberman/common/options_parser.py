@@ -139,7 +139,7 @@ class OptionsParser(object):
         if opts.xmls:
             xmls = opts.xmls
         else:
-            xmls = cfg.get('DEFAULT', 'xmls_to_defer')
+            xmls = cfg.get('DEFAULT', 'multi_bug_stats_files')
         self.xmls = xmls.replace(' ', '').split(',')
 
         if self.jenkins_host in [None, 'None', 'none', '']:

@@ -9,6 +9,7 @@ import shutil
 from lxml import etree
 from arrow import Arrow
 from stats_cli import CLI
+from pprint import pprint
 from doberman.common.common import Common
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
@@ -36,16 +37,17 @@ class Stats(Common):
         self.build_numbers = self.build_pl_ids_and_check(
             self.jenkins, self.test_catalog)
 
+        # Make a list of jobs that aren't the crude job:
+        self.non_crude_job_names = [job for job in self.cli.job_names if
+                                    job != self.cli.crude_job]
+
         # Set up output dict:
         results = {'jobs': {}, 'overall': {}}
         totals = {}
 
         # Fetch data:
         builds, actives, bld_artifacts = self.get_builds()
-        for job in self.cli.job_names:
-            if job == self.cli.crude_job:
-                self.cli.LOG.debug("Skipping {} job".format(job))
-                continue
+        for job in self.non_crude_job_names:
             self.cli.LOG.debug("{}:".format(job))
             job_dict = self.populate_job_dict(
                 job, builds, actives, bld_artifacts)
@@ -60,9 +62,7 @@ class Stats(Common):
         # Report results:
         fname = os.path.join(self.cli.reportdir, "stats.txt")
         open(fname, 'w').close
-        for job in self.cli.job_names:
-            if job == self.cli.crude_job:
-                continue
+        for job in self.non_crude_job_names:
             # I wanted to do "for job in results.keys():" here, but then they
             # wouldn't be reported in the correct order.
             self.write_to_results_file(fname, results, job)
@@ -99,10 +99,7 @@ class Stats(Common):
         actives = {}
         pipelines_to_remove = []
         bld_artifacts = {}
-        for job in self.cli.job_names:
-            if job == self.cli.crude_job:
-                self.cli.LOG.debug("Skipping {} job".format(job))
-                continue
+        for job in self.non_crude_job_names:
             jenkins_job = self.jenkins_api[job]
             self.cli.LOG.info("Polling Jenkins for {} data".format(job))
             all_builds[job] = jenkins_job._poll()['builds']
@@ -121,7 +118,7 @@ class Stats(Common):
                                   == int(build_number)][0]
                 except IndexError:
                     continue
-                
+
                 if self.is_running(this_build):
                     actives[job].append(this_build)
                     pipelines_to_remove.append(pipeline)
@@ -133,20 +130,21 @@ class Stats(Common):
                         bld_artifacts[job] = {}
                     self.cli.LOG.debug("Getting artifacts for {} build {}"
                                        .format(job, this_build['number']))
-                    artifacts = [
-                        artifact for artifact in
-                        jenkins_job[this_build['number']].get_artifacts()
-                        if 'xunit' in str(artifact)]
-                    artifact = artifacts[0] if artifacts else None
-                    bld_artifacts[job][this_build['number']] = artifact
+                    all_artifacts = []
+                    for xml in self.cli.xmls:
+                        artifacts = [
+                            artifact for artifact in
+                            jenkins_job[this_build['number']].get_artifacts()
+                            if xml in str(artifact)]
+
+                        all_artifacts.append(artifacts)
+                    bld_artifacts[job][this_build['number']] =\
+                        all_artifacts if all_artifacts else []
 
         for pipeline in set(pipelines_to_remove):
             self.build_numbers.pop(pipeline)
 
-        for job in self.cli.job_names:
-            if job == self.cli.crude_job:
-                self.cli.LOG.debug("Skipping {} job".format(job))
-                continue
+        for job in self.non_crude_job_names:
             completed_builds = [
                 int(bs[job]) for pl, bs in self.build_numbers.items()
                 if bs[job] is not None]
@@ -158,12 +156,10 @@ class Stats(Common):
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
         start_idx = self.find_build_newer_than(builds, self.cli.start)
         end_idx = self.find_build_newer_than(builds, self.cli.end)
-
-        # end date is newer than we have builds, just use
-        # the most recent build.
         if end_idx is None and start_idx is None:
-            start_idx = builds.index(builds[-1])
-
+            msg = "There were no builds in this time range."
+            self.cli.LOG.error(msg)
+            raise Exception(msg)
         start_num = builds[start_idx]['number']
         start_in_ms = builds[start_idx]['timestamp'] / 1000
         start_date = Arrow.utcfromtimestamp(start_in_ms).format(ts_format)
@@ -238,6 +234,7 @@ class Stats(Common):
 
     def get_passes_fails_from_xml_job(self, job, job_dict, build_objs,
                                       bld_artifacts):
+        warnings = []
         self.cli.LOG.info("Downloading artifacts for {}".format(job))
         tests = []
         errors = []
@@ -245,38 +242,44 @@ class Stats(Common):
         skip = []
         for this_build in build_objs:
             build = this_build['number']
-            artifact = bld_artifacts.get(build)
-            op_dir = self.create_output_directory(job)
-            if artifact:
-                op_dir = self.create_output_directory(
-                    os.path.join(job, str(build)))
-                artifact_name = str(artifact).split('/')[-1].strip('>')
-                xml_file = os.path.join(op_dir, artifact_name)
-                if not os.path.exists(xml_file):
-                    artifact.save_to_dir(op_dir)
-                with open(xml_file):
-                    parser = etree.XMLParser(huge_tree=True)
-                    try:
-                        doc = etree.parse(xml_file, parser).getroot()
-                        tests.append(int(doc.attrib.get('tests', 0)))
-                        errors.append(int(doc.attrib.get('errors', 0)))
-                        failures.append(int(doc.attrib.get('failures', 0)))
-                        skip.append(int(doc.attrib.get('skip', 0)))
-                    except Exception, e:
-                        print("'{0}' for build {1}".format(e, build))
-                        print("Consider a re-run to avoid incorrect stats")
-                        continue
-                    artifact_rename = ("{0}_{1}.{2}".format(
-                                       artifact_name.split('.')[0],
-                                       str(build),
-                                       artifact_name.split('.')[-1]))
-                    os.rename(xml_file, xml_file.replace(artifact_name,
-                                                         artifact_rename))
+            for artifacts in bld_artifacts:
+                artifacts = bld_artifacts.get(build)
+                for artifact in artifacts:
+                    op_dir = self.create_output_directory(job)
+                    if artifact:
+                        op_dir = self.create_output_directory(
+                            os.path.join(job, str(build)))
+                        artifact_name = str(artifact).split('/')[-1].strip('>')
+                        xml_file = os.path.join(op_dir, artifact_name)
+                        if not os.path.exists(xml_file):
+                            artifact.save_to_dir(op_dir)
+                        with open(xml_file):
+                            parser = etree.XMLParser(huge_tree=True)
+                            try:
+                                doc = etree.parse(xml_file, parser).getroot()
+                                tests.append(int(doc.attrib.get('tests', 0)))
+                                errors.append(int(doc.attrib.get('errors', 0)))
+                                failures.append(
+                                    int(doc.attrib.get('failures', 0)))
+                                skip.append(int(doc.attrib.get('skip', 0)))
+                            except Exception, e:
+                                warnings.append("'{0}' for build {1}"
+                                                .format(e, build))
+                                continue
+                            artifact_rename = ("{0}_{1}.{2}".format(
+                                               artifact_name.split('.')[0],
+                                               str(build),
+                                               artifact_name.split('.')[-1]))
+                            os.rename(xml_file, xml_file.replace(
+                                artifact_name, artifact_rename))
+        if len(warnings) > 0:
+            print("The following issue(s) occurred:")
+            pprint(warnings)
+            print("Consider a re-run to avoid incorrect stats.")
         n_total = (sum(tests) - sum(skip))
         n_bad = sum(errors) + sum(failures)
         n_good = n_total - n_bad
-        success_rate = (round((float(n_good) / n_total) * 100, 2)
-                        if n_total else 0)
+        success_rate = ((float(n_good) / n_total) * 100) if n_total else 0
         job_dict['good builds'] = n_good
         job_dict['fails'] = n_bad
         job_dict['passes'] = n_good

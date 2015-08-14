@@ -9,10 +9,7 @@ from filing_station_cli import CLI
 
 
 class FilingStation(CrudeAnalysis):
-    """
-    A pun too far...?
-
-    """
+    """A pun too far...?"""
 
     def __init__(self, cli=False):
         """Overwriting CrudeAnalysis' __init__ method."""
@@ -40,9 +37,6 @@ class FilingStation(CrudeAnalysis):
             self.create_lp_bugs(bugs_to_file)
 
     def create_lp_bugs(self, bugs_to_file):
-        """
-        """
-
         for pl in bugs_to_file:
             for bug in bugs_to_file[pl]:
                 bug_to_file = bugs_to_file[pl][bug]

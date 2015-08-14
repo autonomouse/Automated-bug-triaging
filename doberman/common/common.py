@@ -123,7 +123,8 @@ class Common(object):
             msg = "Getting pipeline ids for between {0} and {1} (this locale)"
             self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
                                          self.cli.end.strftime('%c')))
-            self.ids = buildtracker.get_pipelines_from_date_range()
+            self.ids = buildtracker.get_pipelines_from_date_range(
+                self.cli.start, self.cli.end)
 
         for pos, idn in enumerate(self.ids):
             if self.cli.use_deploy:
@@ -147,7 +148,7 @@ class Common(object):
             if pgr:
                 self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pgr))
         msg = "Pipeline lookup 100% complete: All pipelines checked. "
-        msg += "Now polling jenkins and processing data."
+        msg += "Now downloading and processing data."
         self.cli.LOG.info(msg)
         return buildtracker.get_all_pipelines(self.pipeline_ids)
 
@@ -395,6 +396,12 @@ class Common(object):
 
                 prev_index = index
                 yield (pattern_type, error_text)
+
+    def pipeline_check(self, pipeline_id):
+        try:
+            return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
+        except:
+            return False
 
     def report_time_taken(self, start_time, finish_time):
         """Report length of time Doberman took to complete"""

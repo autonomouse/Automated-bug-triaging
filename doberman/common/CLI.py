@@ -6,22 +6,7 @@ from doberman.__init__ import __version__
 
 
 class CLI(Common):
-    """ Command line interface for crude_analysis...
-
-    Attributes:
-        self.database:  A string representing the path to mock database or None
-                        for a real DB...
-        self.use_deploy:
-        self.jenkins_host:
-        self.run_remote:
-        self.reportdir:
-        self.tc_host:
-        self.keep_data:
-        self.xmls:
-        self.ids:       A string or list of pipeline ids or deploy build
-                        numbers...
-
-    """
+    """Command line interface for crude_analysis."""
 
     def __init__(self):
         self.set_up_parser()
@@ -60,9 +45,6 @@ class CLI(Common):
         prsr.add_option('-f', '--offline', action='store_true',
                         dest='offline_mode', default=False,
                         help='Offline mode must provide a local path using -o')
-        prsr.add_option('-i', action='store', dest='jobnames',
-                        default=None, help=('jenkins job names (must be in ' +
-                                            'quotes, seperated by spaces)'))
         prsr.add_option('-j', '--jobnames', action='store', dest='jobnames',
                         default=None, help=('jenkins job names (must be in ' +
                                             'quotes, seperated by spaces)'))

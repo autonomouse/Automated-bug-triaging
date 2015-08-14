@@ -20,7 +20,6 @@ setup(
     entry_points={
         "console_scripts": [
             'stats = doberman.stats.stats:main',
-            'oil-stats = doberman.stats.stats:main',
             'oil-cookie = doberman.oil_cookie:main',
             'crude-analysis = doberman.analysis.analysis:main',
             'refinery = doberman.refinery.refinery:main',
