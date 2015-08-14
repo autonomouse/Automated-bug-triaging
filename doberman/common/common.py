@@ -6,6 +6,7 @@ import time
 import yaml
 import re
 import parsedatetime as pdt
+from copy import deepcopy
 from dateutil.parser import parse
 from datetime import datetime
 from jenkinsapi.custom_exceptions import *
@@ -63,7 +64,7 @@ class Common(object):
             return new_dict
         elif new_dict in bad_dicts:
             return old_dict
-        combined_dict = old_dict.copy()
+        combined_dict = deepcopy(old_dict)
         for new_pipeline, new_pl_dict in new_dict.items():
             if new_pipeline not in combined_dict:
                 combined_dict[new_pipeline] = new_pl_dict

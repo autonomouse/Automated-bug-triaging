@@ -649,7 +649,6 @@ class Refinery(CrudeAnalysis):
             for gjob in generic_bugs:
                 target_type = ("test" if gjob in self.cli.multi_bugs_in_pl
                                else "pipeline")
-                #import pdb; pdb.set_trace()
                 num_generics = generic_bugs[gjob]
                 plural = 's' if num_generics > 1 else ''
                 if num_generics > 0:
