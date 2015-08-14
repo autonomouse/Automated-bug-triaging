@@ -5,7 +5,7 @@ import os
 import yaml
 import tempfile
 from jenkinsapi.custom_exceptions import *
-from doberman.analysis.analysis import CrudeAnalysis
+from doberman.common.base import DobermanBase
 from refinery_cli import CLI
 
 # Matplotlib imports - The order is important to generate plots without X
@@ -19,9 +19,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from pylab import xticks, gca, title
 
 
-class Plotting(CrudeAnalysis):
-    """
-    """
+class Plotting(DobermanBase):
 
     def __init__(self, cli=False):
         """  """

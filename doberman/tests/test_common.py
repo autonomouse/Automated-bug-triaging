@@ -1,5 +1,5 @@
 from common_test_methods import CommonTestMethods
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 
 
 class CommonMethodsTests(CommonTestMethods):
@@ -31,7 +31,7 @@ class CommonMethodsTests(CommonTestMethods):
                     'pipeline2': {'bug4': {'j': 'j',
                                            'k': 'k',
                                            'l': 'l',},}}
-        testdict = Common().join_dicts(old_dict, new_dict)
+        testdict = DobermanBase().join_dicts(old_dict, new_dict)
         self.assertEqual(gooddict, testdict)
 
     def test_join_bad_dicts(self):
@@ -51,9 +51,9 @@ class CommonMethodsTests(CommonTestMethods):
                     'pipeline2': {'bug4': {'j': 'j',
                                            'k': 'k',
                                            'l': 'l',},}}
-        testdict1 = Common().join_dicts(old_dict, new_dict1)
+        testdict1 = DobermanBase().join_dicts(old_dict, new_dict1)
         self.assertEqual(gooddict, testdict1)
-        testdict2 = Common().join_dicts(old_dict, new_dict2)
+        testdict2 = DobermanBase().join_dicts(old_dict, new_dict2)
         self.assertEqual(gooddict, testdict2)
-        testdict2 = Common().join_dicts(None, None)
+        testdict2 = DobermanBase().join_dicts(None, None)
         self.assertEqual({}, testdict2)

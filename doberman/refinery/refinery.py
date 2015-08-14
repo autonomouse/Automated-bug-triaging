@@ -6,7 +6,7 @@ import yaml
 import operator
 import shutil
 from jenkinsapi.custom_exceptions import *
-from doberman.analysis.analysis import CrudeAnalysis
+from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
 from plotting import Plotting
@@ -15,7 +15,7 @@ from refinery_cli import CLI
 from datetime import datetime
 
 
-class Refinery(CrudeAnalysis):
+class Refinery(DobermanBase):
     """A post-analysis class that processes the yaml output file from
     CrudeAnalysis and collates number of machine affected by each bug, provides
     percentages of failures that are auto-triaged successfully and will

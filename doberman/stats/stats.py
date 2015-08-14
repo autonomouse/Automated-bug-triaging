@@ -10,12 +10,12 @@ from lxml import etree
 from arrow import Arrow
 from stats_cli import CLI
 from pprint import pprint
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
 
 
-class Stats(Common):
+class Stats(DobermanBase):
 
     def __init__(self, cli=False):
         self.message = 1

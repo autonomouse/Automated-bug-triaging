@@ -3,12 +3,12 @@
 import sys
 import os
 import yaml
-from doberman.analysis.analysis import CrudeAnalysis
+from doberman.common.base import DobermanBase
 from pprint import pprint
 from filing_station_cli import CLI
 
 
-class FilingStation(CrudeAnalysis):
+class FilingStation(DobermanBase):
     """A pun too far...?"""
 
     def __init__(self, cli=False):

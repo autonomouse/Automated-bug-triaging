@@ -1,11 +1,11 @@
 import optparse
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 from doberman.common.options_parser import OptionsParser
 from doberman.common import utils
 from doberman.__init__ import __version__
 
 
-class CLI(Common):
+class CLI(DobermanBase):
     """Command line interface for crude_analysis."""
 
     def __init__(self):

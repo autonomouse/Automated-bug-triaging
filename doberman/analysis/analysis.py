@@ -1,15 +1,14 @@
 import sys
 import os
-import shutil
 from datetime import datetime
 from jenkinsapi.custom_exceptions import *
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 from crude_jenkins import Jenkins, Build
 from crude_test_catalog import TestCatalog
 from doberman.common.CLI import CLI
 
 
-class CrudeAnalysis(Common):
+class CrudeAnalysis(DobermanBase):
 
     def __init__(self, cli=False):
         doberman_start_time = datetime.now()
@@ -36,20 +35,6 @@ class CrudeAnalysis(Common):
         else:
             jobs_to_process = self.cli.job_names
         return jobs_to_process
-
-    def remove_dirs(self, folders_to_remove):
-        """Remove data folders used to store untarred artifacts (just leaving
-        yaml files).
-        """
-
-        if type(folders_to_remove) not in [list, tuple, dict]:
-            folders_to_remove = [folders_to_remove]
-
-        if not self.cli.keep_data:
-            for folder in folders_to_remove:
-                kill_me = os.path.join(self.cli.reportdir, folder)
-                if os.path.isdir(kill_me):
-                    shutil.rmtree(kill_me)
 
     def pipeline_processor(self, jobs_to_process):
         self.message = 0

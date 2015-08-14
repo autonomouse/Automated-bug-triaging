@@ -1,9 +1,9 @@
 import os
 import yaml
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 
 
-class FileParser(Common):
+class FileParser(DobermanBase):
     """
     An object to extract relevant information from the following file-types
     currently used in OIL:

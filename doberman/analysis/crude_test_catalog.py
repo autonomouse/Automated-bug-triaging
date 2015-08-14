@@ -4,11 +4,11 @@ import yaml
 from test_catalog.client.api import TCClient
 from test_catalog.client.base import TCCTestPipeline
 from doberman.common import pycookiecheat
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 from jenkinsapi.custom_exceptions import *
 
 
-class TestCatalog(Common):
+class TestCatalog(DobermanBase):
     """
     """
 

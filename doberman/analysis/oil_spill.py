@@ -1,6 +1,6 @@
 import os
 from lxml import etree
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 from jenkinsapi.custom_exceptions import *
 import re
 import uuid
@@ -8,7 +8,7 @@ from jenkinsapi.custom_exceptions import *
 from glob import glob
 
 
-class OilSpill(Common):
+class OilSpill(DobermanBase):
     """Failure detection class"""
 
     def __init__(self, build_number, jobname, yaml_dict, cli, pipeline):

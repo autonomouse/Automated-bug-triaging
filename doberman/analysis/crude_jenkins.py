@@ -5,12 +5,12 @@ import time
 from doberman.analysis.file_parser import FileParser
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 from doberman.analysis.oil_spill import OilSpill
 from jenkinsapi.custom_exceptions import *
 
 
-class Jenkins(Common):
+class Jenkins(DobermanBase):
 
     def __init__(self, cli):
         self._jenkins = []

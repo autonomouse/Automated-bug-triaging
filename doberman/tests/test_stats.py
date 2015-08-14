@@ -2,7 +2,7 @@ import os
 import yaml
 import pytz
 from common_test_methods import CommonTestMethods
-from doberman.analysis.analysis import CrudeAnalysis
+from doberman.stats.stats import Stats
 from doberman.common.options_parser import OptionsParser
 from datetime import datetime
 
