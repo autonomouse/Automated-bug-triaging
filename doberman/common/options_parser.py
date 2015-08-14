@@ -11,12 +11,14 @@ from doberman.__init__ import __version__
 
 class OptionsParser(object):
 
+    def __init__(self, log_as='doberman.analysis'):
+        self.LOG = utils.get_logger(log_as)
+
     def parse_opts_and_args(self, opts, args=None):
         """ A method to parse opts and args (from whatever source, CLI, tests
             or even a GUI should someone wish to code one) and replace the
             values in the config file.
         """
-        self.LOG = utils.get_logger('doberman.analysis')
         self.LOG.info("Doberman version {0}".format(__version__))
 
         # cli override of config values
@@ -107,6 +109,15 @@ class OptionsParser(object):
             self.keep_data = \
                 cfg.get('DEFAULT', 'keep_data').lower() in ['true', 'yes']
 
+        # cli wins, then config, then just call it 'Unknown':
+        environment = cfg.get('DEFAULT', 'environment')
+        if opts.environment:
+            self.environment = opts.environment
+        elif environment not in ['None', 'none', None]:
+            self.environment = environment
+        else:
+            self.environment = "Unknown"
+
         self.logpipelines = True if opts.logpipelines else False
 
         try:
@@ -128,7 +139,7 @@ class OptionsParser(object):
         if opts.xmls:
             xmls = opts.xmls
         else:
-            xmls = cfg.get('DEFAULT', 'xmls_to_defer')
+            xmls = cfg.get('DEFAULT', 'multi_bug_stats_files')
         self.xmls = xmls.replace(' ', '').split(',')
 
         if self.jenkins_host in [None, 'None', 'none', '']:

@@ -21,6 +21,7 @@ class Jenkins(Common):
             self.connect_to_jenkins()
             try:
                 self._jenkins.append(self.jenkins_api)
+                self.cli.LOG.info("Succesfully connected to Jenkins")
             except:
                 msg = "Problem connecting to Jenkins (try refreshing cookies?)"
                 self.cli.LOG.error(msg)
@@ -73,12 +74,6 @@ class Jenkins(Common):
                 msg = "Pipeline ID \"%s\" is an unrecognised format" % pl
                 self.cli.LOG.error(msg)
                 raise Exception(msg)
-
-    def pipeline_check(self, pipeline_id):
-        try:
-            return [8, 4, 4, 4, 12] == [len(x) for x in pipeline_id.split('-')]
-        except:
-            return False
 
     def write_console_to_file(self, build, outdir, jobname):
         console_path = os.path.join(outdir, "{}_console.txt".format(jobname))

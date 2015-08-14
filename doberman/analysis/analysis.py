@@ -17,7 +17,8 @@ class CrudeAnalysis(Common):
         self.test_catalog = TestCatalog(self.cli)
         self.cli.bugs = self.test_catalog.bugs
         self.jenkins = Jenkins(self.cli)
-        self.build_numbers = self.build_pl_ids_and_check()
+        self.build_numbers = self.build_pl_ids_and_check(
+            self.jenkins, self.test_catalog)
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
         self.generate_output_files(yamldict, problem_pipelines)
@@ -35,67 +36,6 @@ class CrudeAnalysis(Common):
         else:
             jobs_to_process = self.cli.job_names
         return jobs_to_process
-
-    def build_pl_ids_and_check(self):
-        self.pipeline_ids = []
-        self.ids = self.cli.ids
-
-        if self.cli.offline_mode:
-            self.cli.LOG.info(" *** Offline mode *** ")
-            build_numbers = self.test_catalog.get_pipelines_from_paabn()
-            self.ids = build_numbers.keys()
-
-        elif self.cli.use_deploy:
-            # If using build numbers instead of pipelines, get pipeline:
-            msg = "Looking up pipeline ids for the following jenkins "
-            msg += "pipeline_deploy build numbers: %s"
-            self.cli.LOG.info(msg % ", ".join([str(i) for i in self.cli.ids]))
-
-            # Expand out id numbers if a range has been used:
-            exp_ids = []
-            for idn in self.ids:
-                if '-' in idn:
-                    range_start = int(idn.split('-')[0])
-                    range_end = int(idn.split('-')[-1]) + 1
-                    exp_range = [str(b) for b in range(range_start, range_end)]
-                    exp_ids.extend(exp_range)
-                else:
-                    exp_ids.append(idn)
-            self.ids = set(exp_ids)
-
-        elif self.cli.use_date_range:
-            # If using a date range instead of pipelines, get pipeline:
-            msg = "Getting pipeline ids for between {0} and {1} (this locale)"
-            self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
-                                         self.cli.end.strftime('%c')))
-            self.ids = self.test_catalog.get_pipelines_from_date_range()
-
-        for pos, idn in enumerate(self.ids):
-            if self.cli.use_deploy:
-                try:
-                    pipeline = \
-                        self.test_catalog.get_pipeline_from_deploy_build(idn)
-                except:
-                    # Fall back to jenkins if test-catalog is down:
-                    pipeline = self.jenkins.get_pipeline_from_deploy_build(idn)
-            else:
-                pipeline = idn
-            # Quickly cycle through to check all pipelines are real:
-            if not self.jenkins.pipeline_check(pipeline):
-                msg = "Pipeline ID \"%s\" is an unrecognised format" % pipeline
-                self.cli.LOG.error(msg)
-            else:
-                self.pipeline_ids.append(pipeline)
-
-            # Notify user of progress:
-            checkin = 5 if len(self.pipeline_ids) > 20 else None
-            pgr = self.calculate_progress(pos, self.ids, checkin)
-            if pgr:
-                self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pgr))
-        msg = "Pipeline lookup 100% complete: All pipelines checked. "
-        msg += "Now polling jenkins and processing data."
-        self.cli.LOG.info(msg)
-        return self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
     def remove_dirs(self, folders_to_remove):
         """Remove data folders used to store untarred artifacts (just leaving

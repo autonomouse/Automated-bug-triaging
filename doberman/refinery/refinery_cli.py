@@ -8,10 +8,9 @@ class CLI(CLI):
         self.set_up_parser()
         self.add_options_to_parser()
         self.add_refinery_specific_options_to_parser()
-        self.LOG = self.set_up_logger('refinery')
 
     def populate_cli(self):
-        options_parser = OptionsParser()
+        options_parser = OptionsParser(log_as='doberman.refinery')
         return options_parser.parse_opts_and_args(self.opts, self.args)
 
     def add_refinery_specific_options_to_parser(self):

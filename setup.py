@@ -19,7 +19,7 @@ setup(
         "Intended Audience :: Developers"],
     entry_points={
         "console_scripts": [
-            'oil-stats = doberman.oil_stats:main',
+            'stats = doberman.stats.stats:main',
             'oil-cookie = doberman.oil_cookie:main',
             'crude-analysis = doberman.analysis.analysis:main',
             'refinery = doberman.refinery.refinery:main',
