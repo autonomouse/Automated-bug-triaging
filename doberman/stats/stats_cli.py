@@ -3,13 +3,6 @@ from doberman.common.options_parser import OptionsParser
 from doberman.common import utils
 
 
-_config = utils.get_config()
-
-JENKINS_URL = _config.get('DEFAULT', 'jenkins_url')
-ENVIRONMENT = _config.get('DEFAULT', 'environment')
-NETLOC = _config.get('DEFAULT', 'netloc')
-
-
 class CLI(CLI):
     def __init__(self):
         self.set_up_parser()
@@ -22,9 +15,6 @@ class CLI(CLI):
 
     def add_stats_specific_options_to_parser(self):
         prsr = self.parser
-        prsr.add_option('-H', '--host', action='store', dest='host',
-                        default=JENKINS_URL,
-                        help="URL to Jenkins host. Default: " + JENKINS_URL)
         prsr.add_option('-m', '--multibug', action='store', dest='multibugppl',
                         default=None, help=('jenkins job names with multiple' +
                                             ' jobs per pipeline (must be in ' +
@@ -53,12 +43,6 @@ class OptionsParser(OptionsParser):
             cfg = utils.get_config(opts.configfile)
         else:
             cfg = utils.get_config()
-
-        self.jenkins_host = None
-        if opts.host:
-            self.jenkins_host = opts.host
-        else:
-            self.jenkins_host = cfg.get('DEFAULT', 'jenkins_url')
 
         self.summary = False if opts.nosummary else True
 

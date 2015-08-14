@@ -21,6 +21,10 @@ class Stats(DobermanBase):
         self.message = 1
         stats_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
+        self.intro = ("Data for OIL Environment: {} (Jenkins host: {})"
+                      .format(self.cli.environment,
+                              self.cli.external_jenkins_url))
+        self.cli.LOG.info(self.intro)
         self.test_catalog = TestCatalog(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
@@ -32,8 +36,6 @@ class Stats(DobermanBase):
         self.message = 0
 
     def run_stats(self):
-        self.cli.LOG.info("Data for OIL Environment: {} (Jenkins host: {})"
-                          .format(self.cli.environment, self.cli.jenkins_host))
         self.build_numbers = self.build_pl_ids_and_check(
             self.jenkins, self.test_catalog)
 
@@ -61,7 +63,7 @@ class Stats(DobermanBase):
 
         # Report results:
         fname = os.path.join(self.cli.reportdir, "stats.txt")
-        open(fname, 'w').close
+        self.write_intro_to_results_file(fname)
         for job in self.non_crude_job_names:
             # I wanted to do "for job in results.keys():" here, but then they
             # wouldn't be reported in the correct order.
@@ -342,6 +344,10 @@ class Stats(DobermanBase):
         for pc in percentages_list:
             combined_percentage_pass *= (pc / 100.0)
         return combined_percentage_pass
+
+    def write_intro_to_results_file(self, fname):
+        with open(fname, 'w') as fout:
+            fout.write(self.intro)
 
     def write_to_results_file(self, fname, results, job):
         job_dict = results['jobs'][job]
