@@ -1,18 +1,18 @@
 import json
 import requests
+import subprocess
+from weebl_specific_crude_cli import CLI
 from doberman.common.common import Common
 
 
 class Weebl(Common):
     """Weebl API wrapper class."""
 
-    def __init__(self, cli=False, ci_server_api=None):
+    def __init__(self, cli=False, report=True):
         self.cli = CLI().populate_cli() if not cli else cli
         self.headers = {"content-type": "application/json"}
         self.base_url = "{}/api/{}".format(self.cli.weebl_ip,
                                            self.cli.weebl_api_ver)
-        self.weeblify_environment(ci_server_api)
-
 
     def get(self, url, expected_st_code):
         response = requests.get(url,
@@ -20,7 +20,6 @@ class Weebl(Common):
                                 auth=self.cli.weebl_auth)
         success = True if response.status_code == expected_st_code else False
         return success, response
-
 
     def post(self, url, data, expected_st_code):
         response = requests.post(url,
@@ -30,7 +29,6 @@ class Weebl(Common):
         success = True if response.status_code == expected_st_code else False
         return success, response
 
-
     def put(self, url, data, expected_st_code):
         response = requests.put(url,
                                 headers=self.headers,
@@ -39,14 +37,12 @@ class Weebl(Common):
         success = True if response.status_code == expected_st_code else False
         return success, response
 
-
     def delete(self, url, expected_st_code):
         response = requests.delete(url,
                                    headers=self.headers,
                                    auth=self.cli.weebl_auth)
         success = True if response.status_code == expected_st_code else False
         return success, response
-
 
     def get_instances(self, obj, expected=200):
         url = "{}/{}/".format(self.base_url, obj)
@@ -55,62 +51,24 @@ class Weebl(Common):
             self.unexpected(response.status_code, expected, response.text)
         return json.loads(response.text).get('objects')
 
-
-    def unexpected(self, status_code, expected, rtext):
+    def unexpected(self, status_code, expected, rtext, raise_exception=True):
         msg = "Request returned a status code of {}, not {}:\n\n {}\n"
-        raise Exception(msg.format(status_code, expected, rtext))
+        if raise_exception:
+            raise Exception(msg.format(status_code, expected, rtext))
 
+    def weeblify_environment(self, ci_server_api=None, report=True):
+        self.set_up_new_environment(report=report)
+        self.set_up_new_jenkins(report=report)
+        if ci_server_api is not None:
+            self.set_up_new_build_executors(ci_server_api)
 
-    def create_pipeline(self, pipeline_id, build_executor_name, expected=201):
-        url = "{}/pipeline/".format(self.base_url)
-        build_executor = self.get_build_executor_uuid_from_name(
-            build_executor_name)
-        data = {'build_executor': build_executor}
-        successful, response = self.post(url, data, expected)
-        if not successful:
-            self.unexpected(response.status_code, expected, response.text)
-        return json.loads(response.text).get('uuid')
-
-
-    def get_env_uuid_from_name(self, name, expected=200):
-        url = "{}/environment/by_name/{}/".format(self.base_url, name)
-        successful, response = self.get(url, expected)
-        if not successful:
-            self.unexpected(response.status_code, expected, response.text)
-        return json.loads(response.text).get('uuid')
-
-
-    def get_build_executor_uuid_from_name(self, build_executor_name, expected=200):
-        env_uuid = self.get_env_uuid_from_name(self.cli.environment)
-        url = "{}/build_executor/".format(self.base_url)
-        url_with_args = "{}?jenkins={}&name={}".format(url, env_uuid,
-                                                       build_executor_name)
-        successful, response = self.get(url_with_args, expected)
-        if not successful:
-            self.unexpected(response.status_code, expected, response.text)
-        objects = json.loads(response.text)['objects']
-
-        if objects == []:
-            return
-        else:
-            return objects[0].get('uuid')
-
-
-    def get_internal_url_of_this_machine(self):
-        return subprocess.check_output(["hostname", "-I"]).split()[0]
-
-
-    def weeblify_environment(self, ci_server_api):
-        self.set_up_new_environment()
-        self.set_up_new_jenkins()
-        self.set_up_new_build_executors(ci_server_api)
-
-    def set_up_new_environment(self, expected=201):
+    def set_up_new_environment(self, expected=201, report=True):
         # Check to see if environment already exists:
         environment_instances = self.get_instances("environment")
         if self.cli.uuid in [env.get('uuid') for env in environment_instances]:
-            self.cli.LOG.info("Environment exists with UUID: {}"
-                              .format(self.cli.uuid))
+            if report:
+                self.cli.LOG.info("Environment exists with UUID: {}"
+                                  .format(self.cli.uuid))
             self.env_uuid = self.cli.uuid
             self.env_name = self.cli.environment
             return
@@ -127,14 +85,14 @@ class Weebl(Common):
         self.cli.LOG.info("Set up new {} environment: {}".format(
             self.cli.environment, self.env_uuid))
 
-
-    def set_up_new_jenkins(self, expected=201):
+    def set_up_new_jenkins(self, expected=201, report=True):
         # Check to see if jenkins already exists:
         jkns_instances = self.get_instances("jenkins")
         if jkns_instances is not None:
             if self.cli.uuid in [jkns.get('uuid') for jkns in jkns_instances]:
-                self.cli.LOG.info("Jenkins exists with UUID: {}"
-                              .format(self.cli.uuid))
+                if report:
+                    self.cli.LOG.info("Jenkins exists with UUID: {}"
+                                      .format(self.cli.uuid))
                 return
 
         # Create new jenkins:
@@ -146,7 +104,6 @@ class Weebl(Common):
         if not successful:
             self.unexpected(response.status_code, expected, response.text)
         self.cli.LOG.info("Set up new jenkins: {}".format(self.cli.uuid))
-
 
     def set_up_new_build_executors(self, ci_server_api, expected=201):
         build_executor_instances = self.get_instances("build_executor")
@@ -172,10 +129,58 @@ class Weebl(Common):
             self.cli.LOG.info(msg.format(self.env_name,
                                          newly_created_build_executors))
 
-
     def check_in_to_jenkins(self, ci_server_api, expected=200):
         url = "{}/jenkins/{}/".format(self.base_url, self.env_uuid)
         successful, response = self.put(url, expected)
         if not successful:
             self.unexpected(response.status_code, expected, response.text)
         return json.loads(response.text).get('uuid')
+
+    def create_pipeline(self, pipeline_id, build_executor_name, expected=201):
+        # Check to see if jenkins already exists:
+        pipeline_instances = self.get_instances("pipeline")
+        if pipeline_instances is not None:
+            if pipeline_id in [pl.get('uuid') for pl in pipeline_instances]:
+                return pipeline_id
+
+        # Get Build Executor:
+        build_executor = self.get_build_executor_uuid_from_name(
+            build_executor_name)
+
+        # Create pipeline:
+        url = "{}/pipeline/".format(self.base_url)
+        data = {'build_executor': build_executor,
+                'pipeline': pipeline_id}
+        successful, response = self.post(url, data, expected)
+        if not successful:
+            self.unexpected(response.status_code, expected, response.text)
+        else:
+            self.cli.LOG.info("Pipeline {} successfully created in Weebl db"
+                              .format(pipeline_id))
+        return json.loads(response.text).get('uuid')
+
+    def get_env_uuid_from_name(self, name, expected=200):
+        url = "{}/environment/by_name/{}/".format(self.base_url, name)
+        successful, response = self.get(url, expected)
+        if not successful:
+            self.unexpected(response.status_code, expected, response.text)
+        return json.loads(response.text).get('uuid')
+
+    def get_build_executor_uuid_from_name(self, build_executor_name,
+                                          expected=200):
+        env_uuid = self.get_env_uuid_from_name(self.cli.environment)
+        url = "{}/build_executor/".format(self.base_url)
+        url_with_args = "{}?jenkins={}&name={}".format(url, env_uuid,
+                                                       build_executor_name)
+        successful, response = self.get(url_with_args, expected)
+        if not successful:
+            self.unexpected(response.status_code, expected, response.text)
+        objects = json.loads(response.text)['objects']
+
+        if objects == []:
+            return
+        else:
+            return objects[0].get('uuid')
+
+    def get_internal_url_of_this_machine(self):
+        return subprocess.check_output(["hostname", "-I"]).split()[0]

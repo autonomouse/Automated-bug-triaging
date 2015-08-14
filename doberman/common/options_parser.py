@@ -116,6 +116,16 @@ class OptionsParser(object):
         else:
             self.environment = "Unknown"
 
+        # WEEBL
+        use_weebl = cfg.get('DEFAULT', 'use_weebl').lower() in ['true', 'yes']
+        if opts.use_weebl:
+            self.use_weebl = opts.use_weebl
+        elif use_weebl:
+            self.use_weebl = use_weebl
+        else:
+            self.use_weebl = False
+        #
+
         self.logpipelines = True if opts.logpipelines else False
 
         try:
@@ -229,4 +239,3 @@ class OptionsParser(object):
 
         raise ValueError('Date format {0} not understood, try 2014-02-12'
                          .format(string))
-

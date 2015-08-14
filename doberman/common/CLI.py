@@ -54,7 +54,7 @@ class CLI(Common):
                         help='set URI to bug/regex db: /path/to/mock_db.yaml')
         prsr.add_option('-e', '--end', action='store', dest='end',
                         default=None, help='ending date string. Default = now')
-        prsr.add_option('-E', '--environment', action='store', 
+        prsr.add_option('-E', '--environment', action='store',
                         dest='environment', default=None,
                         help='Name of environment (e.g. production, staging)')
         prsr.add_option('-f', '--offline', action='store_true',
@@ -100,6 +100,10 @@ class CLI(Common):
                         help='Unique identifier of environment.')
         prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
                         default=False, help='Reduced text in output yaml.')
+        #
+        prsr.add_option('-W', '--weebl', action='store_true', dest='use_weebl',
+                        default=False, help='Send data to Weebl.')
+        #
         prsr.add_option('-x', '--xmls', action='store', dest='xmls',
                         default=None,
                         help='XUnit files to parse as XML, not as plain text')

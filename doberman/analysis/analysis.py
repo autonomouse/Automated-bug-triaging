@@ -6,11 +6,15 @@ from jenkinsapi.custom_exceptions import *
 from doberman.common.common import Common
 from crude_jenkins import Jenkins, Build
 from crude_test_catalog import TestCatalog
-#from doberman.common.CLI import CLI
-# <ACTIONPOINT>
-from doberman.weebl_tools.weebl_specific_crude_cli import CLI
-from doberman.weebl_tools.weebl import Weebl
 
+# <ACTIONPOINT>
+from doberman.common.CLI import CLI
+try:
+    from doberman.weebl_tools.weebl import Weebl
+    from doberman.weebl_tools.weebl_specific_crude_cli import CLI
+except ImportError as e:
+    print(e)
+#
 
 class CrudeAnalysis(Common):
 
@@ -22,8 +26,11 @@ class CrudeAnalysis(Common):
         self.jenkins = Jenkins(self.cli)
         self.build_numbers = self.build_pl_ids_and_check()
         # <ACTIONPOINT>
-        self.weebl = Weebl(self.cli, self.jenkins.jenkins_api)
-        # TODO: Check to see if environment exists in weebl (or raise error)
+        if self.cli.use_weebl:
+            self.weebl = Weebl(self.cli)
+            self.weebl.weeblify_environment(self.jenkins.jenkins_api, 
+                                            report=True)
+        #
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
         self.generate_output_files(yamldict, problem_pipelines)
@@ -99,7 +106,7 @@ class CrudeAnalysis(Common):
             if pgr:
                 self.cli.LOG.info("Pipeline lookup {0}% complete.".format(pgr))
         msg = "Pipeline lookup 100% complete: All pipelines checked. "
-        msg += "Now polling jenkins and processing data."
+        msg += "Now polling jenkins and processing data.\n\n"
         self.cli.LOG.info(msg)
         return self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
@@ -168,7 +175,7 @@ class CrudeAnalysis(Common):
                 self.cli.LOG.info(progmsg.format(pgr))
 
             pl_proc_msg = "CrudeAnalysis has finished processing pipline id: "
-            pl_proc_msg += "{0} and is returning a value of {1}."
+            pl_proc_msg += "{0} and is returning a value of {1}.\n\n"
             self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
             # Merge dictionaries (necessary for multiple pipelines):

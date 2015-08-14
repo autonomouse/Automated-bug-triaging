@@ -19,7 +19,7 @@ class CLI(CLI):
         prsr.add_option('-a', '--auth', action='store',
                         dest='weebl_auth', default=None,
                         help=('Auth creds for weebl - username and password'))
-        prsr.add_option('-A', '--weebl_api_ver', action='store', 
+        prsr.add_option('-A', '--weebl_api_ver', action='store',
                         dest='weebl_api_ver', default='v1',
                         help=('API version, e.g. "v1"'))
         prsr.add_option('-w', '--weebl_ip', action='store', dest='weebl_ip',
