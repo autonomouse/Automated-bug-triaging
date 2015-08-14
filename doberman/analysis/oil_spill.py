@@ -98,7 +98,7 @@ class OilSpill(Common):
                                     failed_to_hit_any_flag = True
 
                             else:
-                                if target in xmls_to_scan: 
+                                if target in xmls_to_scan:
                                     xmls_to_scan.remove(target)
                                 if target in xml_files_parsed:
                                     xml_unparsed = False

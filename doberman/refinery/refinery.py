@@ -404,6 +404,8 @@ class Refinery(CrudeAnalysis):
                     job = unified_bugdict[pipeline][bug_no]['job']
                     if job not in bug_prevalence:
                         bug_prevalence[job] = {}
+                    if 'all_bugs' not in bug_prevalence:
+                        bug_prevalence['all_bugs'] = {}
                     if 'filed_bugs_only' not in bug_prevalence:
                         bug_prevalence['filed_bugs_only'] = {}
                     if bug_no not in bug_prevalence[job]:
@@ -415,6 +417,9 @@ class Refinery(CrudeAnalysis):
                     if bug_no not in pipelines_affected_by_bug:
                         pipelines_affected_by_bug[bug_no] = []
                     pipelines_affected_by_bug[bug_no].append(pipeline)
+        bug_prevalence['all_bugs'] = self.join_dicts(
+            bug_prevalence.get('filed_bugs_only'),
+            bug_prevalence.get('all_bugs'))
 
         bug_rankings = {}
         for job_or_all in bug_prevalence:
@@ -619,9 +624,11 @@ class Refinery(CrudeAnalysis):
             print("-----------------------------------")
             print
             job_ranking = bug_rankings.get(job)
-            if job_ranking:
+            if job_ranking not in [None, {}]:
                 generic_bugs[job] = \
                     self.count_generic_bugs(job_ranking, generic_bugs, job)
+                if job_ranking == []:
+                    print("No non-generic bugs found.")
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
