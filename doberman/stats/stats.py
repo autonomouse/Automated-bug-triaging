@@ -157,7 +157,7 @@ class Stats(Common):
         start_idx = self.find_build_newer_than(builds, self.cli.start)
         end_idx = self.find_build_newer_than(builds, self.cli.end)
         if end_idx is None and start_idx is None:
-            msg = "There were no builds in this time range."
+            msg = "There were no (completed) builds in this time range."
             self.cli.LOG.error(msg)
             raise Exception(msg)
         start_num = builds[start_idx]['number']
