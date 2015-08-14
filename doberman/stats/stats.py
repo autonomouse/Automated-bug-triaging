@@ -3,11 +3,11 @@
 import os
 import sys
 import yaml
-import arrow
+import time
 import bisect
 import shutil
 from lxml import etree
-from arrow import Arrow
+from datetime import datetime
 from stats_cli import CLI
 from pprint import pprint
 from doberman.common.base import DobermanBase
@@ -19,14 +19,14 @@ class Stats(DobermanBase):
 
     def __init__(self, cli=False):
         self.message = 1
-        stats_start_time = arrow.now()
+        stats_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
         self.test_catalog = TestCatalog(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
         self.op_dirs = []
         self.run_stats()
-        stats_finish_time = arrow.now()
+        stats_finish_time = datetime.now()
         self.cli.LOG.info(self.report_time_taken(
             stats_start_time, stats_finish_time))
         self.message = 0
@@ -137,7 +137,7 @@ class Stats(DobermanBase):
                             jenkins_job[this_build['number']].get_artifacts()
                             if xml in str(artifact)]
 
-                        all_artifacts.append(artifacts)
+                        all_artifacts.extend(artifacts)
                     bld_artifacts[job][this_build['number']] =\
                         all_artifacts if all_artifacts else []
 
@@ -162,7 +162,7 @@ class Stats(DobermanBase):
             raise Exception(msg)
         start_num = builds[start_idx]['number']
         start_in_ms = builds[start_idx]['timestamp'] / 1000
-        start_date = Arrow.utcfromtimestamp(start_in_ms).format(ts_format)
+        start_date = datetime.fromtimestamp(start_in_ms)
 
         return (start_idx, start_num, start_date)
 
@@ -175,7 +175,7 @@ class Stats(DobermanBase):
 
         end_num = builds[end_idx]['number']
         end_in_ms = builds[end_idx]['timestamp'] / 1000
-        end_date = Arrow.utcfromtimestamp(end_in_ms).format(ts_format)
+        end_date = datetime.fromtimestamp(end_in_ms)
 
         return (end_idx, end_num, end_date)
 
@@ -303,7 +303,7 @@ class Stats(DobermanBase):
         keys = [r.get('timestamp') for r in builds]
 
         # make a micro timestamp from input
-        timestamp_in_ms = arrow.get(timestamp).timestamp * 1000
+        timestamp_in_ms = int(time.mktime(timestamp.timetuple())) * 1000
 
         # find leftmost item greater than or equal to start
         idx = bisect.bisect_left(keys, timestamp_in_ms)

@@ -19,7 +19,6 @@ Build-Depends: debhelper (>= 8.0.0),
  python-yaml,
  python-matplotlib,
  python-mock,
- python-arrow,
  test-catalog-common
 Standards-Version: 3.9.3
 XS-Python-Version: >= 2.6
@@ -36,7 +35,6 @@ Depends: jenkinsapi (>= 0.2.16),
  python-yaml,
  python-matplotlib,
  python-mock,
- python-arrow,
  test-catalog-common,
  ${misc:Depends},
  ${python:Depends}
