@@ -1342,3 +1342,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "do_verification_test.{0,6}raise e.{0,6}TypeError. .Tenant. object.{0,15} has no attribute .__getitem__"
             - "oil_ci.cli.api.py.. line 518. in do_verification_test"
+
+  "1484983":
+    category: None
+    description: "Prodstack[test_cloud_image]: runs out of floating IPs"
+    test_cloud_image:
+      -
+        "console.txt":
+            regexp:
+            - "No more floating ips in pool ext-net"
+
