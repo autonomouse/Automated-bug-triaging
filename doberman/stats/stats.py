@@ -24,7 +24,7 @@ class Stats(DobermanBase):
         self.intro = ("Data for OIL Environment: {} (Jenkins host: {})"
                       .format(self.cli.environment,
                               self.cli.external_jenkins_url))
-        self.cli.LOG.info(self.intro + ":\n")
+        self.cli.LOG.info(self.intro)
         self.test_catalog = TestCatalog(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
@@ -347,7 +347,7 @@ class Stats(DobermanBase):
 
     def write_intro_to_results_file(self, fname):
         with open(fname, 'w') as fout:
-            fout.write(self.intro)
+            fout.write(self.intro + ":\n")
 
     def write_to_results_file(self, fname, results, job):
         job_dict = results['jobs'][job]
