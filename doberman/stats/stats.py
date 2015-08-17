@@ -367,7 +367,7 @@ class Stats(DobermanBase):
         with open(fname, 'a') as fout:
             fout.write('\n')
             fout.write("* {} success rate was {}%\n"
-                       .format(job, job_dict.get('success rate')))
+                       .format(job, job_dict.get('success rate', 0)))
             fout.write("    - Start Job: {} (Date: {})\n"
                        .format(job_dict.get('start job'),
                                job_dict.get('start date')))
@@ -376,16 +376,16 @@ class Stats(DobermanBase):
                                job_dict.get('end date')))
             if job not in self.cli.xmls:
                 fout.write("    - {} jobs, {} active, {} pass, {} fail\n"
-                           .format(job_dict.get('build objects'),
-                                   job_dict.get('still running'),
-                                   job_dict.get('passes'),
-                                   job_dict.get('fails')))
+                           .format(job_dict.get('build objects', 0),
+                                   job_dict.get('still running', 0),
+                                   job_dict.get('passes', 0),
+                                   job_dict.get('fails', 0)))
             else:
                 fout.write("    - {} good / {} ({} total - {} skip)\n"
-                           .format(job_dict.get('good builds'),
-                                   job_dict.get('total'),
-                                   job_dict.get('total without skipped'),
-                                   job_dict.get('skipped')))
+                           .format(job_dict.get('good builds', 0),
+                                   job_dict.get('total', 0),
+                                   job_dict.get('total without skipped', 0),
+                                   job_dict.get('skipped', 0)))
 
     def write_summary_to_results_file(self, fname, totals, results):
         # Write to file:
