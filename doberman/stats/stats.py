@@ -13,6 +13,7 @@ from pprint import pprint
 from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
+from doberman.common.exception import NoCompletedBuilds
 
 
 class Stats(DobermanBase):
@@ -154,14 +155,15 @@ class Stats(DobermanBase):
                            completed_builds]
         return builds, actives, bld_artifacts
 
-    def get_start_idx_num_and_date(self, builds,
+    def get_start_idx_num_and_date(self, builds, job,
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
         start_idx = self.find_build_newer_than(builds, self.cli.start)
         end_idx = self.find_build_newer_than(builds, self.cli.end)
+
         if end_idx is None and start_idx is None:
-            msg = "There were no (completed) builds in this time range."
-            self.cli.LOG.error(msg)
-            raise Exception(msg)
+            msg = "There were no (completed) {} builds in this time range."
+            self.cli.LOG.error(msg.format(job))
+            raise NoCompletedBuilds(msg.format(job))
         start_num = builds[start_idx]['number']
         start_in_ms = builds[start_idx]['timestamp'] / 1000
         start_date = datetime.fromtimestamp(start_in_ms)
@@ -189,9 +191,12 @@ class Stats(DobermanBase):
         if builds is None:
             job_dict['build objects'] = 0 + num_active
             return job_dict
-
-        start_idx, start_num, start_date =\
-            self.get_start_idx_num_and_date(builds)
+        try:
+            start_idx, start_num, start_date =\
+                self.get_start_idx_num_and_date(builds, job)
+        except NoCompletedBuilds:
+            job_dict['build objects'] = 0
+            return job_dict
         job_dict['start job'] = start_num
         job_dict['start date'] = start_date
 
@@ -329,14 +334,20 @@ class Stats(DobermanBase):
                 non_xml_success_rates.append(result.get('success rate', 0))
             if job in self.cli.subset_success_rate_jobs:
                 subset_success_rate.append(result.get('success rate', 0))
-        results['overall']['average_percentage_sr'] = round(
-            sum(all_success_rates) / float(len(all_success_rates)), 2)
-        results['overall']['combined_sr'] = round(
-            self.calculate_percentages(all_success_rates), 2)
-        results['overall']['combined_non_xml_sr'] = round(
+
+        avg = round(sum(all_success_rates) / float(len(all_success_rates)), 2)
+        results['overall']['average_percentage_sr'] = avg if avg else 0
+
+        combined_sr = round(self.calculate_percentages(all_success_rates), 2)
+        results['overall']['combined_sr'] = combined_sr if combined_sr else 0
+
+        no_x_sr = round(
             self.calculate_percentages(non_xml_success_rates), 2)
-        results['overall']['combined_subset_sr'] = round(
-            self.calculate_percentages(subset_success_rate), 2)
+        results['overall']['combined_non_xml_sr'] = no_x_sr if no_x_sr else 0
+
+        subset = round(self.calculate_percentages(subset_success_rate), 2)
+        results['overall']['combined_subset_sr'] = subset if subset else 0
+
         return results
 
     def calculate_percentages(self, percentages_list):
