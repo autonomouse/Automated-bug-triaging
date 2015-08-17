@@ -24,7 +24,7 @@ class Stats(DobermanBase):
         self.intro = ("Data for OIL Environment: {} (Jenkins host: {})"
                       .format(self.cli.environment,
                               self.cli.external_jenkins_url))
-        self.cli.LOG.info(self.intro)
+        self.cli.LOG.info(self.intro + ":\n")
         self.test_catalog = TestCatalog(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
