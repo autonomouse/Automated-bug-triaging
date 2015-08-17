@@ -1050,7 +1050,16 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
          "juju_status.yaml":
            regexp:
-               - 'failed\s+to\s+retrieve\s+the\s+template\s+to\s+clone:\s+lxc\s+container\s+creation\s+failed:\s+error\s+executing\s+"lxc-create"'
+               - 'wget:\s+unable\s+to\s+resolve\s+host\s+address'
+
+  "1485784":
+    category: None
+    description: "Error creating container juju-trusty-lxc-template; Failed to parse config"
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+               - 'Failed to parse config:\s+lxc.include\s+=\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
 
   "1456933":
     category: None
