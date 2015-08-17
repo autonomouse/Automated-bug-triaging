@@ -19,7 +19,7 @@ from doberman.common.exception import NoCompletedBuilds
 class Stats(DobermanBase):
 
     def __init__(self, cli=False):
-        self.message = 0
+        self.message = 1  # Jenkins regards a non-zero exit status as a fail.
         stats_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
         self.intro = ("Data for OIL Environment: {} (Jenkins host: {})"
@@ -34,7 +34,7 @@ class Stats(DobermanBase):
         stats_finish_time = datetime.now()
         self.cli.LOG.info(self.report_time_taken(
             stats_start_time, stats_finish_time))
-        self.message = 1
+        self.message = 1  # Jenkins regards a zero exit status as a pass.
 
     def run_stats(self):
         self.build_numbers = self.build_pl_ids_and_check(

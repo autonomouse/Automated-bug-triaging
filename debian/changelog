@@ -4,7 +4,6 @@ doberman (2.1.2-0ubuntu1) utopic; urgency=medium
   * Removed use of python-arrow as it is not available on precise :-(
   * Better output format for Stats
   * Fixed summary boolean
-  * Fixed output message
 
  -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 05 Aug 2015 09:09:34 +0100
 
