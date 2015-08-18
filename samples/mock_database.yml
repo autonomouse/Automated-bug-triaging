@@ -1050,7 +1050,16 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
          "juju_status.yaml":
            regexp:
-               - 'failed\s+to\s+retrieve\s+the\s+template\s+to\s+clone:\s+lxc\s+container\s+creation\s+failed:\s+error\s+executing\s+"lxc-create"'
+               - 'wget:\s+unable\s+to\s+resolve\s+host\s+address'
+
+  "1485784":
+    category: None
+    description: "Error creating container juju-trusty-lxc-template; Failed to parse config"
+    pipeline_deploy:
+      -
+         "juju_status.yaml":
+           regexp:
+               - 'Failed to parse config:\s+lxc.include\s+=\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
 
   "1456933":
     category: None
@@ -1111,7 +1120,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
           - "Waiting for API to become available.*ERROR cannot get all blocks. EOF.*Calling .juju bootstrap. failed!"
           - "ERROR connection is shut down.{1,100}Calling .juju bootstrap. failed!"
 
-  "1468584":
+  "1412621":
     category: None
     description: "juju bootstrap failed - cannot initiate replica set: cannot get replica set status: can't get local.system.replset config from self or any seed (EMPTYCONFIG)"
     pipeline_deploy:
@@ -1188,7 +1197,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "A volume group called cinder-volumes already exists"
 
-  "1476426":
+  "1473446":
     category: None
     description: "cinder config-change hook failure: cinder-volumes not found"
     pipeline_deploy:
