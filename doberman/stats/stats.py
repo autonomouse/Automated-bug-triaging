@@ -34,7 +34,7 @@ class Stats(DobermanBase):
         stats_finish_time = datetime.now()
         self.cli.LOG.info(self.report_time_taken(
             stats_start_time, stats_finish_time))
-        self.message = 1  # Jenkins regards a zero exit status as a pass.
+        self.message = 0  # Jenkins regards a zero exit status as a pass.
 
     def run_stats(self):
         self.build_numbers = self.build_pl_ids_and_check(
