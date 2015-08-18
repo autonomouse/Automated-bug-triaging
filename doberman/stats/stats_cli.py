@@ -20,7 +20,7 @@ class CLI(CLI):
                                             ' jobs per pipeline (must be in ' +
                                             'quotes, seperated by spaces)'))
         prsr.add_option('-N', '--nosummary', action='store_false',
-                        dest='nosummary', default=False,
+                        dest='nosummary', default=True,
                         help='Disable printing summary output')
         prsr.add_option('-t', '--triage', action='store_true', dest='triage',
                         default=False,

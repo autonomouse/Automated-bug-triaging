@@ -13,13 +13,12 @@ from pprint import pprint
 from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
-from doberman.common.exception import NoCompletedBuilds
 
 
 class Stats(DobermanBase):
 
     def __init__(self, cli=False):
-        self.message = 1  # Jenkins regards a non-zero exit status as a fail.
+        self.message = 1
         stats_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
         self.intro = ("Data for OIL Environment: {} (Jenkins host: {})"
@@ -34,7 +33,7 @@ class Stats(DobermanBase):
         stats_finish_time = datetime.now()
         self.cli.LOG.info(self.report_time_taken(
             stats_start_time, stats_finish_time))
-        self.message = 0  # Jenkins regards a zero exit status as a pass.
+        self.message = 0
 
     def run_stats(self):
         self.build_numbers = self.build_pl_ids_and_check(
@@ -108,7 +107,7 @@ class Stats(DobermanBase):
             all_builds[job] = jenkins_job._poll()['builds']
             actives[job] = []
             for pipeline, build_dict in self.build_numbers.items():
-                build_number = build_dict.get(job)
+                build_number = build_dict[job]
                 if build_number is None:
                     continue
 
@@ -150,20 +149,19 @@ class Stats(DobermanBase):
         for job in self.non_crude_job_names:
             completed_builds = [
                 int(bs[job]) for pl, bs in self.build_numbers.items()
-                if bs.get(job) is not None]
+                if bs[job] is not None]
             builds[job] = [b for b in all_builds[job] if b['number'] in
                            completed_builds]
         return builds, actives, bld_artifacts
 
-    def get_start_idx_num_and_date(self, builds, job,
+    def get_start_idx_num_and_date(self, builds,
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
         start_idx = self.find_build_newer_than(builds, self.cli.start)
         end_idx = self.find_build_newer_than(builds, self.cli.end)
-
         if end_idx is None and start_idx is None:
-            msg = "There were no (completed) {} builds in this time range."
-            self.cli.LOG.error(msg.format(job))
-            raise NoCompletedBuilds(msg.format(job))
+            msg = "There were no (completed) builds in this time range."
+            self.cli.LOG.error(msg)
+            raise Exception(msg)
         start_num = builds[start_idx]['number']
         start_in_ms = builds[start_idx]['timestamp'] / 1000
         start_date = datetime.fromtimestamp(start_in_ms)
@@ -191,12 +189,9 @@ class Stats(DobermanBase):
         if builds is None:
             job_dict['build objects'] = 0 + num_active
             return job_dict
-        try:
-            start_idx, start_num, start_date =\
-                self.get_start_idx_num_and_date(builds, job)
-        except NoCompletedBuilds:
-            job_dict['build objects'] = 0
-            return job_dict
+
+        start_idx, start_num, start_date =\
+            self.get_start_idx_num_and_date(builds)
         job_dict['start job'] = start_num
         job_dict['start date'] = start_date
 
@@ -334,20 +329,14 @@ class Stats(DobermanBase):
                 non_xml_success_rates.append(result.get('success rate', 0))
             if job in self.cli.subset_success_rate_jobs:
                 subset_success_rate.append(result.get('success rate', 0))
-
-        avg = round(sum(all_success_rates) / float(len(all_success_rates)), 2)
-        results['overall']['average_percentage_sr'] = avg if avg else 0
-
-        combined_sr = round(self.calculate_percentages(all_success_rates), 2)
-        results['overall']['combined_sr'] = combined_sr if combined_sr else 0
-
-        no_x_sr = round(
+        results['overall']['average_percentage_sr'] = round(
+            sum(all_success_rates) / float(len(all_success_rates)), 2)
+        results['overall']['combined_sr'] = round(
+            self.calculate_percentages(all_success_rates), 2)
+        results['overall']['combined_non_xml_sr'] = round(
             self.calculate_percentages(non_xml_success_rates), 2)
-        results['overall']['combined_non_xml_sr'] = no_x_sr if no_x_sr else 0
-
-        subset = round(self.calculate_percentages(subset_success_rate), 2)
-        results['overall']['combined_subset_sr'] = subset if subset else 0
-
+        results['overall']['combined_subset_sr'] = round(
+            self.calculate_percentages(subset_success_rate), 2)
         return results
 
     def calculate_percentages(self, percentages_list):
@@ -358,7 +347,7 @@ class Stats(DobermanBase):
 
     def write_intro_to_results_file(self, fname):
         with open(fname, 'w') as fout:
-            fout.write(self.intro + ":\n")
+            fout.write(self.intro)
 
     def write_to_results_file(self, fname, results, job):
         job_dict = results['jobs'][job]
@@ -367,7 +356,7 @@ class Stats(DobermanBase):
         with open(fname, 'a') as fout:
             fout.write('\n')
             fout.write("* {} success rate was {}%\n"
-                       .format(job, job_dict.get('success rate', 0)))
+                       .format(job, job_dict.get('success rate')))
             fout.write("    - Start Job: {} (Date: {})\n"
                        .format(job_dict.get('start job'),
                                job_dict.get('start date')))
@@ -376,16 +365,16 @@ class Stats(DobermanBase):
                                job_dict.get('end date')))
             if job not in self.cli.xmls:
                 fout.write("    - {} jobs, {} active, {} pass, {} fail\n"
-                           .format(job_dict.get('build objects', 0),
-                                   job_dict.get('still running', 0),
-                                   job_dict.get('passes', 0),
-                                   job_dict.get('fails', 0)))
+                           .format(job_dict.get('build objects'),
+                                   job_dict.get('still running'),
+                                   job_dict.get('passes'),
+                                   job_dict.get('fails')))
             else:
                 fout.write("    - {} good / {} ({} total - {} skip)\n"
-                           .format(job_dict.get('good builds', 0),
-                                   job_dict.get('total', 0),
-                                   job_dict.get('total without skipped', 0),
-                                   job_dict.get('skipped', 0)))
+                           .format(job_dict.get('good builds'),
+                                   job_dict.get('total'),
+                                   job_dict.get('total without skipped'),
+                                   job_dict.get('skipped')))
 
     def write_summary_to_results_file(self, fname, totals, results):
         # Write to file:
