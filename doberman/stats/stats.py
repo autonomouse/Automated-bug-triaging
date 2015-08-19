@@ -3,8 +3,6 @@
 import os
 import sys
 import yaml
-import time
-import bisect
 import shutil
 from lxml import etree
 from datetime import datetime
@@ -13,7 +11,6 @@ from pprint import pprint
 from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
-from doberman.common.exception import NoCompletedBuilds
 
 
 class Stats(DobermanBase):
@@ -174,7 +171,7 @@ class Stats(DobermanBase):
         # be ordered, but to be thorough:
         max_ts = max([b.get('timestamp') for b in builds])
         end_idx = [num for num, b in enumerate(builds) if b['timestamp'] is
-               max_ts][0]
+                   max_ts][0]
 
         start_num = builds[end_idx]['number']
         start_in_ms = builds[end_idx]['timestamp'] / 1000
