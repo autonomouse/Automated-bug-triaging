@@ -93,9 +93,9 @@ class TestCatalog(DobermanBase):
 
         # Remove any pipelines that shouldn't be there (keep in the paabn
         # though - no need to lose good data):
-        for pipeline in build_numbers.keys():
-            if pipeline not in pipeline_ids:
-                build_numbers.pop(pipeline)
+        not_these = [pl for pl in build_numbers.keys() if pl not in
+                     pipeline_ids]
+        [build_numbers.pop(not_this) for not_this in not_these]
 
         self.cli.LOG.info("Returning {} pipelines".format(len(build_numbers)))
         return build_numbers
