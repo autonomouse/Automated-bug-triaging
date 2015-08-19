@@ -168,7 +168,7 @@ class Stats(DobermanBase):
                                  ts_format='YYYY-MMM-DD HH:mm:ss'):
         # I could just use and index of 0 here as they're already supposed to
         # be ordered, but to be thorough:
-        max_ts, end_idx = min((b.get('timestamp'), idx) for idx, b in
+        max_ts, end_idx = max((b.get('timestamp'), idx) for idx, b in
                               enumerate(builds))
 
         end_num = builds[end_idx]['number']
