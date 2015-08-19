@@ -5,15 +5,14 @@ from jenkinsapi.custom_exceptions import *
 from doberman.common.base import DobermanBase
 from crude_jenkins import Jenkins, Build
 from crude_test_catalog import TestCatalog
-
 # <ACTIONPOINT>
-from doberman.common.CLI import CLI
 try:
     from doberman.weebl_tools.weebl import Weebl
     from doberman.weebl_tools.weebl_specific_crude_cli import CLI
 except ImportError as e:
-    print(e)
+    from doberman.common.CLI import CLI
 #
+
 
 class CrudeAnalysis(DobermanBase):
 
@@ -28,8 +27,8 @@ class CrudeAnalysis(DobermanBase):
         # <ACTIONPOINT>
         if self.cli.use_weebl:
             self.weebl = Weebl(self.cli)
-            self.weebl.weeblify_environment(self.jenkins.jenkins_api, 
-                                            report=True)
+            self.weebl.weeblify_environment(
+                self.jenkins.jenkins_api, report=True)
         #
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
@@ -48,7 +47,6 @@ class CrudeAnalysis(DobermanBase):
         else:
             jobs_to_process = self.cli.job_names
         return jobs_to_process
-
 
     def pipeline_processor(self, jobs_to_process):
         self.message = 0

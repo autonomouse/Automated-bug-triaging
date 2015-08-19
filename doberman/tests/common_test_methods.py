@@ -10,11 +10,14 @@ from doberman.__init__ import __version__
 from collections import namedtuple
 from lxml import etree
 
+mock_data_dir = "./doberman/tests/mock_data/"
+mock_output_data = os.path.abspath(os.path.join(mock_data_dir, "output"))
+
 
 class CommonTestMethods(DobermanTestBase):
 
-    mock_data_dir = "./doberman/tests/mock_data/"
-    mock_output_data = os.path.abspath(os.path.join(mock_data_dir, "output"))
+    mock_data_dir = mock_data_dir
+    mock_output_data = mock_output_data
     DB_files = os.path.abspath(os.path.join(mock_data_dir, "database_files"))
     real_db_yaml = "../../../../samples/mock_database.yml"
     pipeline_id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
@@ -92,9 +95,11 @@ class CommonTestMethods(DobermanTestBase):
         cli.generic_bug_id = "GenericBug_Ignore"
         cli.bug_tracker_url = "https://bugs.launchpad.net/bugs/{}"
         cli.environment = "TestEnvironment"
-        cli.weebl_ip = "http://127.0.0.1:8000" # need to mock this
-        cli.weebl_auth = ("weebl", "passweebl")
 
+        # WEEBL:
+        cli.use_weebl = False
+        #
+        
         LOG = utils.get_logger('doberman.analysis')
         LOG.info("Doberman version {0}".format(__version__))
         cli.LOG = LOG
