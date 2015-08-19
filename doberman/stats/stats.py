@@ -155,33 +155,31 @@ class Stats(DobermanBase):
                            completed_builds]
         return builds, actives, bld_artifacts
 
-    def get_start_idx_num_and_date(self, builds, job,
+    def get_start_idx_num_and_date(self, builds,
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
-        start_idx = self.find_build_newer_than(builds, self.cli.start)
-        end_idx = self.find_build_newer_than(builds, self.cli.end)
+        # I could just use and index of -1 here as they're already supposed to
+        # be ordered, but to be thorough:
+        min_ts = min([b.get('timestamp') for b in builds])
+        start_idx = [num for num, b in enumerate(builds) if b['timestamp'] is
+                     min_ts][0]
 
-        if end_idx is None and start_idx is None:
-            msg = "There were no (completed) {} builds in this time range."
-            self.cli.LOG.error(msg.format(job))
-            raise NoCompletedBuilds(msg.format(job))
         start_num = builds[start_idx]['number']
         start_in_ms = builds[start_idx]['timestamp'] / 1000
         start_date = datetime.fromtimestamp(start_in_ms)
-
         return (start_idx, start_num, start_date)
 
     def get_end_idx_num_and_date(self, builds,
                                  ts_format='YYYY-MMM-DD HH:mm:ss'):
-        end_idx = self.find_build_newer_than(builds, self.cli.end)
+        # I could just use and index of 0 here as they're already supposed to
+        # be ordered, but to be thorough:
+        max_ts = max([b.get('timestamp') for b in builds])
+        end_idx = [num for num, b in enumerate(builds) if b['timestamp'] is
+               max_ts][0]
 
-        if end_idx is None:
-            end_idx = builds.index(builds[-1])
-
-        end_num = builds[end_idx]['number']
-        end_in_ms = builds[end_idx]['timestamp'] / 1000
-        end_date = datetime.fromtimestamp(end_in_ms)
-
-        return (end_idx, end_num, end_date)
+        start_num = builds[end_idx]['number']
+        start_in_ms = builds[end_idx]['timestamp'] / 1000
+        start_date = datetime.fromtimestamp(start_in_ms)
+        return (end_idx, start_num, start_date)
 
     def populate_job_dict(self, job, all_builds, all_actives, bld_artifacts):
         job_dict = {}
@@ -191,12 +189,8 @@ class Stats(DobermanBase):
         if builds is None:
             job_dict['build objects'] = 0 + num_active
             return job_dict
-        try:
-            start_idx, start_num, start_date =\
-                self.get_start_idx_num_and_date(builds, job)
-        except NoCompletedBuilds:
-            job_dict['build objects'] = 0
-            return job_dict
+        start_idx, start_num, start_date =\
+            self.get_start_idx_num_and_date(builds)
         job_dict['start job'] = start_num
         job_dict['start date'] = start_date
 
@@ -301,22 +295,6 @@ class Stats(DobermanBase):
             if os.path.isdir(op_dir):
                 shutil.rmtree(op_dir)
                 self.cli.LOG.debug("{} deleted".format(op_dir))
-
-    def find_build_newer_than(self, builds, timestamp):
-        """Finds builds newer than timestamp. It assumes that builds has first
-        been sorted.
-        """
-        # pre calculate key list
-        keys = [r.get('timestamp') for r in builds]
-
-        # make a micro timestamp from input
-        timestamp_in_ms = int(time.mktime(timestamp.timetuple())) * 1000
-
-        # find leftmost item greater than or equal to start
-        idx = bisect.bisect_left(keys, timestamp_in_ms)
-        if idx != len(keys):
-            return idx
-        return None
 
     def is_running(self, build):
         return build.get('duration') == 0
