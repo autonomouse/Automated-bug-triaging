@@ -271,7 +271,7 @@ class Stats(DobermanBase):
                                 artifact_name, artifact_rename))
         if len(warnings) > 0:
             print("The following issue(s) occurred:")
-            pprint(warnings)
+            pprint(set(warnings))
             print("Consider a re-run to avoid incorrect stats.")
         n_total = (sum(tests) - sum(skip))
         n_bad = sum(errors) + sum(failures)
