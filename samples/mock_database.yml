@@ -1361,3 +1361,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "No more floating ips in pool ext-net"
 
+  "1486604":
+    category: None
+    description: "oil_ci/juju/client.py got a non-zero exit status CalledProcessError when using subprocess (test_bundletests failure)"
+    test_bundletests:
+      -
+        "console.txt":
+            regexp:
+            - "subprocess.CalledProcessError.{1,150}returned non-zero exit status"
+
