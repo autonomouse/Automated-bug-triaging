@@ -156,12 +156,11 @@ class Stats(DobermanBase):
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
         # I could just use and index of -1 here as they're already supposed to
         # be ordered, but to be thorough:
-        min_ts = min([b.get('timestamp') for b in builds])
-        start_idx = [num for num, b in enumerate(builds) if b['timestamp'] is
-                     min_ts][0]
+        min_ts, start_idx = min((b.get('timestamp'), idx) for idx, b in
+                                enumerate(builds))
 
         start_num = builds[start_idx]['number']
-        start_in_ms = builds[start_idx]['timestamp'] / 1000
+        start_in_ms = min_ts / 1000
         start_date = datetime.fromtimestamp(start_in_ms)
         return (start_idx, start_num, start_date)
 
@@ -169,14 +168,13 @@ class Stats(DobermanBase):
                                  ts_format='YYYY-MMM-DD HH:mm:ss'):
         # I could just use and index of 0 here as they're already supposed to
         # be ordered, but to be thorough:
-        max_ts = max([b.get('timestamp') for b in builds])
-        end_idx = [num for num, b in enumerate(builds) if b['timestamp'] is
-                   max_ts][0]
+        max_ts, end_idx = min((b.get('timestamp'), idx) for idx, b in
+                              enumerate(builds))
 
-        start_num = builds[end_idx]['number']
-        start_in_ms = builds[end_idx]['timestamp'] / 1000
-        start_date = datetime.fromtimestamp(start_in_ms)
-        return (end_idx, start_num, start_date)
+        end_num = builds[end_idx]['number']
+        end_in_ms = max_ts / 1000
+        end_date = datetime.fromtimestamp(end_in_ms)
+        return (end_idx, end_num, end_date)
 
     def populate_job_dict(self, job, all_builds, all_actives, bld_artifacts):
         job_dict = {}
