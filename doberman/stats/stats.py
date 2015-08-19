@@ -147,7 +147,7 @@ class Stats(DobermanBase):
         for job in self.non_crude_job_names:
             completed_builds = [
                 int(bs[job]) for pl, bs in self.build_numbers.items()
-                if bs[job] is not None]
+                if bs.get(job) is not None]
             builds[job] = [b for b in all_builds[job] if b['number'] in
                            completed_builds]
         return builds, actives, bld_artifacts
