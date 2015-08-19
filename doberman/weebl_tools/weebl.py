@@ -2,15 +2,16 @@ import json
 import requests
 import subprocess
 from weebl_specific_crude_cli import CLI
-from doberman.common.common import Common
+from doberman.common.base import DobermanBase
 
 
-class Weebl(Common):
+class Weebl(DobermanBase):
     """Weebl API wrapper class."""
 
     def __init__(self, cli=False, report=True):
         self.cli = CLI().populate_cli() if not cli else cli
-        self.headers = {"content-type": "application/json"}
+        self.headers = {"content-type": "application/json",
+                        "limit": None}
         self.base_url = "{}/api/{}".format(self.cli.weebl_ip,
                                            self.cli.weebl_api_ver)
 
@@ -99,15 +100,16 @@ class Weebl(Common):
         url = "{}/jenkins/".format(self.base_url)
         data = {'environment': self.env_uuid,
                 #'internal_access_url': self.get_internal_url_of_this_machine(),
-                'external_access_url': self.cli.external_jenkins_url}
+                'external_access_url': self.cli.jenkins_host}
         successful, response = self.post(url, data, expected)
         if not successful:
             self.unexpected(response.status_code, expected, response.text)
         self.cli.LOG.info("Set up new jenkins: {}".format(self.cli.uuid))
 
-    def set_up_new_build_executors(self, ci_server_api, expected=201):
+    def set_up_new_build_executors(self, ci_server_api, expected=201):        
         build_executor_instances = self.get_instances("build_executor")
         newly_created_build_executors = []
+        
         for build_executor in ci_server_api.get_nodes().iteritems():
             name = build_executor[0]
             # Check to see if this build_executor already exists:
@@ -115,7 +117,7 @@ class Weebl(Common):
                            if self.env_uuid in bex['jenkins']]
             if name in b_ex_in_env:
                 continue
-
+            
             # Create this build executor for this environment:
             url = "{}/build_executor/".format(self.base_url)
             data = {'name': name,
@@ -167,7 +169,7 @@ class Weebl(Common):
         return json.loads(response.text).get('uuid')
 
     def get_build_executor_uuid_from_name(self, build_executor_name,
-                                          expected=200):
+                                          expected=200):    
         env_uuid = self.get_env_uuid_from_name(self.cli.environment)
         url = "{}/build_executor/".format(self.base_url)
         url_with_args = "{}?jenkins={}&name={}".format(url, env_uuid,
