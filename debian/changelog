@@ -1,6 +1,8 @@
 doberman (2.1.3-0ubuntu1) utopic; urgency=medium
 
   * Removed the (oil-)stats way of selecting the appropriate builds to use and now instead completely relies upon the doberman system of selecting which builds to use from a given date-range.
+  * Fixed refinery causing a red light in jenkins (was no longer returning 0 on completion). 
+  * Now removes any pipelines that shouldn't be there when loading from paabn file (crude_test_catalog).
 
  -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 19 Aug 2015 10:55:22 +0100
 
