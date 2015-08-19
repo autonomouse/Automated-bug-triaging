@@ -1282,15 +1282,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "deployer.charm. Could not branch.{1,100}to trusty.neutron-calico"
 
-  "1479380":
-    category: None
-    description: "juju.worker.upgrader from 1.24.2 to 1.24.3 fails - wants a restart (pipeline_deploy)"
-    pipeline_deploy:
-      -
-        "juju_debug_machine-*.txt":
-            regexp:
-            - "fatal .api.. must restart. an agent upgrade is available"
-
   "1481484":
     category: None
     description: "mysqld exceeds max connections limit"
@@ -1369,4 +1360,3 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "subprocess.CalledProcessError.{1,150}returned non-zero exit status"
-
