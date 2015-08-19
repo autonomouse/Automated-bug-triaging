@@ -186,7 +186,8 @@ class OptionsParser(object):
                     self.LOG.info(stmsg.format(self.start.strftime('%c')))
                 if not opts.end:
                     self.end = datetime.utcnow()
-                    self.LOG.info("Defaulting to an end date of 'now'")
+                    self.LOG.info("Defaulting to an end date of 'now' ({})"
+                                  .format(self.end.strftime('%c')))
                 else:
                     self.end = self.date_parse(opts.end)
                     stmsg = "Using an end date of {0}"

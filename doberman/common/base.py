@@ -134,7 +134,7 @@ class DobermanBase(object):
 
         elif self.cli.use_date_range:
             # If using a date range instead of pipelines, get pipeline:
-            msg = "Getting pipeline ids for between {0} and {1} (this locale)"
+            msg = "Getting pipeline ids for between {0} and {1} (UTC)"
             self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
                                          self.cli.end.strftime('%c')))
             self.ids = buildtracker.get_pipelines_from_date_range(
@@ -150,7 +150,7 @@ class DobermanBase(object):
             else:
                 pipeline = idn
             # Quickly cycle through to check all pipelines are real:
-            if not ci_server.pipeline_check(pipeline):
+            if not self.pipeline_check(pipeline):
                 msg = "Pipeline ID \"%s\" is an unrecognised format" % pipeline
                 self.cli.LOG.error(msg)
             else:
