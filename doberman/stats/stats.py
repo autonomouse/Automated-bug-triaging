@@ -105,7 +105,7 @@ class Stats(DobermanBase):
             all_builds[job] = jenkins_job._poll()['builds']
             actives[job] = []
             for pipeline, build_dict in self.build_numbers.items():
-                build_number = build_dict[job]
+                build_number = build_dict.get(job)
                 if build_number is None:
                     continue
 
@@ -147,7 +147,7 @@ class Stats(DobermanBase):
         for job in self.non_crude_job_names:
             completed_builds = [
                 int(bs[job]) for pl, bs in self.build_numbers.items()
-                if bs[job] is not None]
+                if bs.get(job) is not None]
             builds[job] = [b for b in all_builds[job] if b['number'] in
                            completed_builds]
         return builds, actives, bld_artifacts
