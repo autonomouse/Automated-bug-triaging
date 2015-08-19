@@ -91,6 +91,9 @@ class CommonTestMethods(DobermanTestBase):
         cli.bug_tracker_bugs_url = "https://bugs.launchpad.net/oil/+bug/{}"
         cli.generic_bug_id = "GenericBug_Ignore"
         cli.bug_tracker_url = "https://bugs.launchpad.net/bugs/{}"
+        cli.environment = "TestEnvironment"
+        cli.weebl_ip = "http://127.0.0.1:8000" # need to mock this
+        cli.weebl_auth = ("weebl", "passweebl")
 
         LOG = utils.get_logger('doberman.analysis')
         LOG.info("Doberman version {0}".format(__version__))
