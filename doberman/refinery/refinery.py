@@ -29,7 +29,7 @@ class Refinery(DobermanBase):
         """Overwriting CrudeAnalysis' __init__ method."""
         doberman_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
-        self.message = -1
+        self.message = 1  # Jenkins regards a non-zero exit status as a fail.
         self.bug_rankings = {}
         self.info_file_cache = {}
 
@@ -46,6 +46,7 @@ class Refinery(DobermanBase):
         doberman_finish_time = datetime.now()
         self.cli.LOG.info(self.report_time_taken(doberman_start_time,
                                                  doberman_finish_time))
+        self.message = 0  # Jenkins regards a zero exit status as a pass.
 
     def analyse_crude_output(self, make_plots, dont_print):
         """Get and analyse the crude output yamls."""

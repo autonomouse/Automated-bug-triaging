@@ -9,8 +9,6 @@ from jenkinsapi.custom_exceptions import *
 
 
 class TestCatalog(DobermanBase):
-    """
-    """
 
     def __init__(self, cli):
         self.cli = cli
@@ -61,8 +59,6 @@ class TestCatalog(DobermanBase):
                                      cookies=self.cookie, verify=self.verify)
 
     def get_pipelines_from_paabn(self, filename=None):
-        """
-        """
         if not filename:
             filename = 'pipelines_and_associated_build_numbers.yml'
         if filename in os.listdir(self.cli.reportdir):
@@ -71,8 +67,6 @@ class TestCatalog(DobermanBase):
         return {}
 
     def get_all_pipelines(self, pipeline_ids):
-        """
-        """
         build_numbers = {}
         self.mkdir(self.cli.reportdir)
 
@@ -97,13 +91,19 @@ class TestCatalog(DobermanBase):
             # Create local dictionary for next time:
             self.write_output_yaml(self.cli.reportdir, filename, build_numbers)
 
+        # Remove any pipelines that shouldn't be there (keep in the paabn
+        # though - no need to lose good data):
+        not_these = [pl for pl in build_numbers.keys() if pl not in
+                     pipeline_ids]
+        [build_numbers.pop(not_this) for not_this in not_these]
+
+        self.cli.LOG.info("Returning {} pipelines".format(len(build_numbers)))
         return build_numbers
 
     def get_pipelines(self, pipeline):
         """ Using test-catalog, return the build numbers for the jobs that are
             part of the given pipeline.
         """
-
         try:
             pl_tcat = TCCTestPipeline(self.client, pipeline)
         except Exception as e:

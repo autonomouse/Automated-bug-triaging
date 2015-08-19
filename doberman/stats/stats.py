@@ -3,8 +3,6 @@
 import os
 import sys
 import yaml
-import time
-import bisect
 import shutil
 from lxml import etree
 from datetime import datetime
@@ -156,29 +154,26 @@ class Stats(DobermanBase):
 
     def get_start_idx_num_and_date(self, builds,
                                    ts_format='YYYY-MMM-DD HH:mm:ss'):
-        start_idx = self.find_build_newer_than(builds, self.cli.start)
-        end_idx = self.find_build_newer_than(builds, self.cli.end)
-        if end_idx is None and start_idx is None:
-            msg = "There were no (completed) builds in this time range."
-            self.cli.LOG.error(msg)
-            raise Exception(msg)
-        start_num = builds[start_idx]['number']
-        start_in_ms = builds[start_idx]['timestamp'] / 1000
-        start_date = datetime.fromtimestamp(start_in_ms)
+        # I could just use and index of -1 here as they're already supposed to
+        # be ordered, but to be thorough:
+        min_ts, start_idx = min((b.get('timestamp'), idx) for idx, b in
+                                enumerate(builds))
 
+        start_num = builds[start_idx]['number']
+        start_in_ms = min_ts / 1000
+        start_date = datetime.fromtimestamp(start_in_ms)
         return (start_idx, start_num, start_date)
 
     def get_end_idx_num_and_date(self, builds,
                                  ts_format='YYYY-MMM-DD HH:mm:ss'):
-        end_idx = self.find_build_newer_than(builds, self.cli.end)
-
-        if end_idx is None:
-            end_idx = builds.index(builds[-1])
+        # I could just use and index of 0 here as they're already supposed to
+        # be ordered, but to be thorough:
+        max_ts, end_idx = max((b.get('timestamp'), idx) for idx, b in
+                              enumerate(builds))
 
         end_num = builds[end_idx]['number']
-        end_in_ms = builds[end_idx]['timestamp'] / 1000
+        end_in_ms = max_ts / 1000
         end_date = datetime.fromtimestamp(end_in_ms)
-
         return (end_idx, end_num, end_date)
 
     def populate_job_dict(self, job, all_builds, all_actives, bld_artifacts):
@@ -276,7 +271,7 @@ class Stats(DobermanBase):
                                 artifact_name, artifact_rename))
         if len(warnings) > 0:
             print("The following issue(s) occurred:")
-            pprint(warnings)
+            pprint(set(warnings))
             print("Consider a re-run to avoid incorrect stats.")
         n_total = (sum(tests) - sum(skip))
         n_bad = sum(errors) + sum(failures)
@@ -296,22 +291,6 @@ class Stats(DobermanBase):
             if os.path.isdir(op_dir):
                 shutil.rmtree(op_dir)
                 self.cli.LOG.debug("{} deleted".format(op_dir))
-
-    def find_build_newer_than(self, builds, timestamp):
-        """Finds builds newer than timestamp. It assumes that builds has first
-        been sorted.
-        """
-        # pre calculate key list
-        keys = [r.get('timestamp') for r in builds]
-
-        # make a micro timestamp from input
-        timestamp_in_ms = int(time.mktime(timestamp.timetuple())) * 1000
-
-        # find leftmost item greater than or equal to start
-        idx = bisect.bisect_left(keys, timestamp_in_ms)
-        if idx != len(keys):
-            return idx
-        return None
 
     def is_running(self, build):
         return build.get('duration') == 0
