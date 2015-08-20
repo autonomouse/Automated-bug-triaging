@@ -105,7 +105,8 @@ class DobermanBase(object):
         if current_position in progress:
             return str(report_at[progress.index(current_position)])
 
-    def build_pl_ids_and_check(self, ci_server, buildtracker):
+    def build_pl_ids_and_check(self, ci_server, buildtracker,
+                               ts_format='%a %d %b %Y %H:%M:%S'):
         self.pipeline_ids = []
         self.ids = self.cli.ids
 
@@ -135,8 +136,8 @@ class DobermanBase(object):
         elif self.cli.use_date_range:
             # If using a date range instead of pipelines, get pipeline:
             msg = "Getting pipeline ids for between {0} and {1} (UTC)"
-            self.cli.LOG.info(msg.format(self.cli.start.strftime('%c'),
-                                         self.cli.end.strftime('%c')))
+            self.cli.LOG.info(msg.format(self.cli.start.strftime(ts_format),
+                                         self.cli.end.strftime(ts_format)))
             self.ids = buildtracker.get_pipelines_from_date_range(
                 self.cli.start, self.cli.end)
 

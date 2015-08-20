@@ -20,6 +20,7 @@ class OptionsParser(object):
             values in the config file.
         """
         self.LOG.info("Doberman version {0}".format(__version__))
+        ts_format = '%a %d %b %Y %H:%M:%S'
 
         # cli override of config values
         if opts.configfile:
@@ -183,15 +184,15 @@ class OptionsParser(object):
                 else:
                     self.start = self.date_parse(opts.start)
                     stmsg = "Using a start date of {0}"
-                    self.LOG.info(stmsg.format(self.start.strftime('%c')))
+                    self.LOG.info(stmsg.format(self.start.strftime(ts_format)))
                 if not opts.end:
                     self.end = datetime.utcnow()
                     self.LOG.info("Defaulting to an end date of 'now' ({})"
-                                  .format(self.end.strftime('%c')))
+                                  .format(self.end.strftime(ts_format)))
                 else:
                     self.end = self.date_parse(opts.end)
                     stmsg = "Using an end date of {0}"
-                    self.LOG.info(stmsg.format(self.end.strftime('%c')))
+                    self.LOG.info(stmsg.format(self.end.strftime(ts_format)))
         else:
             self.use_date_range = False
 

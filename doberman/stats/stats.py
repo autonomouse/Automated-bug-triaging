@@ -99,6 +99,8 @@ class Stats(DobermanBase):
         actives = {}
         pipelines_to_remove = []
         bld_artifacts = {}
+        if self.build_numbers in [None, {}]:
+            return {}, {}, None
         for job in self.non_crude_job_names:
             jenkins_job = self.jenkins_api[job]
             self.cli.LOG.info("Polling Jenkins for {} data".format(job))
@@ -178,10 +180,10 @@ class Stats(DobermanBase):
 
     def populate_job_dict(self, job, all_builds, all_actives, bld_artifacts):
         job_dict = {}
-        builds = all_builds[job]
-        num_active = len(all_actives[job])
+        builds = all_builds.get(job)
+        num_active = len(all_actives.get(job, {}))
         job_dict['still_running'] = num_active
-        if builds is None:
+        if builds in [None, []]:
             job_dict['build objects'] = 0 + num_active
             return job_dict
 

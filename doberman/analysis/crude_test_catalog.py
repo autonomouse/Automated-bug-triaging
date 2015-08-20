@@ -128,9 +128,10 @@ class TestCatalog(DobermanBase):
         self.cli.LOG.debug(msg.format(pipeline, bstr))
         return build_numbers
 
-    def get_pipelines_from_date_range(self, start, end, limit=2000):
-        start_date = 'start="{}"'.format(start.strftime('%c'))
-        end_date = 'end="{}"'.format(end.strftime('%c'))
+    def get_pipelines_from_date_range(self, start, end, limit=2000, 
+                                      ts_format='%a %d %b %Y %H:%M:%S'):
+        start_date = 'start="{}"'.format(start.strftime(ts_format))
+        end_date = 'end="{}"'.format(end.strftime(ts_format))
         params = [start_date, end_date]
         return self.client.search_pipelines(params, limit=limit, extra=False)
 
