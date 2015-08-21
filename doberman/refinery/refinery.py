@@ -610,8 +610,8 @@ class Refinery(DobermanBase):
         generic_bugs, top_ten = self.format_top_ten_bugs(job_names, bug_rankings)
         self.display_top_ten_bugs(top_ten)
         self.write_top_ten_bugs_to_file(top_ten, f_name)
-        
-        
+
+
     def format_top_ten_bugs(self, job_names, bug_rankings):
         url = self.cli.bug_tracker_url
         job_ranking = None
@@ -623,7 +623,7 @@ class Refinery(DobermanBase):
                 target_type = "tests"
             else:
                 target_type = "pipelines"
-            
+
             top_ten.append('\n')
             top_ten.append("Top bugs for job: {}".format(job))
             top_ten.append("-----------------------------------")
@@ -645,7 +645,7 @@ class Refinery(DobermanBase):
             else:
                 top_ten.append("No bugs found.")
             top_ten.append('\n')
-        
+
         top_ten = self.format_generic_bugs(generic_bugs, top_ten)
         top_ten = self.format_external_links(top_ten)
         return generic_bugs, top_ten
@@ -653,7 +653,7 @@ class Refinery(DobermanBase):
     def display_top_ten_bugs(self, top_ten):
         for line in top_ten:
             print(line)
-    
+
     def write_top_ten_bugs_to_file(self, top_ten, f_name):
         # Write to file, or append to existing file:
         path = os.path.join(self.cli.reportdir, f_name)
@@ -693,12 +693,12 @@ class Refinery(DobermanBase):
             fx_pls = 'pipelines_affected_by_bug'
             ext = '.yml'
             top_ten.append('\n')
-            top_ten.append(jlink.format(self.cli.external_jenkins_url, 
-                                    self.cli.jjob, self.cli.jjob_build, 
+            top_ten.append(jlink.format(self.cli.external_jenkins_url,
+                                    self.cli.jjob, self.cli.jjob_build,
                                     paabn, ext))
             top_ten.append('\n')
-            top_ten.append(jlink.format(self.cli.external_jenkins_url, 
-                                    self.cli.jjob, self.cli.jjob_build, 
+            top_ten.append(jlink.format(self.cli.external_jenkins_url,
+                                    self.cli.jjob, self.cli.jjob_build,
                                     fx_pls, ext))
             top_ten.append('\n')
         return top_ten
