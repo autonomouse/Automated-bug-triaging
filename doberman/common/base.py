@@ -436,3 +436,12 @@ class DobermanBase(object):
         time_taken = finish_time - start_time
         time_str = ':'.join(str(time_taken).split(':')[:3])
         return "Time to complete: {}".format(time_str)
+
+    def convert_timestamp_to_dt_obj(self, timestamp):
+        timestamp_in_ms = timestamp / 1000
+        return datetime.fromtimestamp(timestamp_in_ms)
+
+    def convert_timestamp_to_string(self, timestamp,
+                                    ts_format='%a %d %b %Y %H:%M:%S'):
+        dt_obj = self.convert_timestamp_to_dt_obj(timestamp)
+        return dt_obj.strftime(ts_format)

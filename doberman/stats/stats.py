@@ -154,8 +154,7 @@ class Stats(DobermanBase):
                            completed_builds]
         return builds, actives, bld_artifacts
 
-    def get_start_idx_num_and_date(self, builds,
-                                   ts_format='YYYY-MMM-DD HH:mm:ss'):
+    def get_start_idx_num_and_date(self, builds):
         start_idx = self.find_build_newer_than(builds, self.cli.start)
         end_idx = self.find_build_newer_than(builds, self.cli.end)
         if end_idx is None and start_idx is None:
@@ -163,21 +162,20 @@ class Stats(DobermanBase):
             self.cli.LOG.error(msg)
             raise Exception(msg)
         start_num = builds[start_idx]['number']
-        start_in_ms = builds[start_idx]['timestamp'] / 1000
-        start_date = datetime.fromtimestamp(start_in_ms)
+        start_date = self.convert_timestamp_to_dt_obj(
+            builds[start_idx]['timestamp'])
 
         return (start_idx, start_num, start_date)
 
-    def get_end_idx_num_and_date(self, builds,
-                                 ts_format='YYYY-MMM-DD HH:mm:ss'):
+    def get_end_idx_num_and_date(self, builds):
         end_idx = self.find_build_newer_than(builds, self.cli.end)
 
         if end_idx is None:
             end_idx = builds.index(builds[-1])
 
         end_num = builds[end_idx]['number']
-        end_in_ms = builds[end_idx]['timestamp'] / 1000
-        end_date = datetime.fromtimestamp(end_in_ms)
+        end_date = self.convert_timestamp_to_dt_obj(
+            builds[end_idx]['timestamp'])
 
         return (end_idx, end_num, end_date)
 

@@ -52,7 +52,7 @@ class Weebl(DobermanBase):
             return True
         return False
 
-    def build_existence_check(self, name, env_uuid):
+    def build_executor_existence_check(self, name, env_uuid):
         build_executor_instances = self.get_instances("build_executor")
         b_ex_in_env = [bex.get('name') for bex in build_executor_instances
                        if env_uuid in bex['jenkins']]
@@ -72,12 +72,18 @@ class Weebl(DobermanBase):
                 return True
         return False
 
+    def build_existence_check(self, build_id, job_type, pipeline):
+        build_instances = self.get_instances("build")
+        builds = [bld.get('build_id') for bld in build_instances if pipeline
+                  in bld['pipeline'] and job_type in bld['job_type']]
+        return True if build_id in builds else False
+
     def set_up_new_build_executors(self, ci_server_api):
         newly_created_build_executors = []
 
         for build_executor in ci_server_api.get_nodes().iteritems():
             name = build_executor[0]
-            if self.build_existence_check(name, self.env_uuid):
+            if self.build_executor_existence_check(name, self.env_uuid):
                 continue
 
             # Create this build executor for this environment:
@@ -177,3 +183,37 @@ class Weebl(DobermanBase):
 
     def get_internal_url_of_this_machine(self):
         return subprocess.check_output(["hostname", "-I"]).split()[0]
+
+    def create_build(self, build_id, pipeline, job_type, build_status,
+                     build_started_at=None, build_finished_at=None,
+                     ts_format="%Y-%m-%d %H:%M:%SZ"):
+        if self.build_existence_check(build_id, job_type, pipeline):
+            return build_id
+
+        # Create build:
+        url = "{}/build/".format(self.base_url)
+        data = {'build_id': build_id,
+                'pipeline': pipeline,
+                'build_status': build_status.lower(),
+                'job_type': job_type}
+        if build_started_at:
+            data['build_started_at'] =\
+                self.convert_timestamp_to_string(build_started_at, ts_format)
+        if build_finished_at:
+            data['build_finished_at'] =\
+                self.convert_timestamp_to_string(build_finished_at, ts_format)
+        response = self.make_request('post', url=url, data=json.dumps(data))
+        build_uuid = json.loads(response.text).get('uuid')
+        self.cli.LOG.info("Build {} successfully created (build uuid: {})"
+                          .format(build_id, build_uuid))
+
+        returned_build_id = json.loads(response.text).get('build_id')
+
+        # Error if builds do not match:
+        if returned_build_id != build_id:
+            msg = ("Build created on weebl does not match: {} != {}"
+                   .format(build_id, self.build_number))
+            self.cli.LOG.error(msg)
+            raise Exception(msg)
+
+        return returned_build_id
