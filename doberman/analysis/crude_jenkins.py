@@ -204,12 +204,7 @@ class Build(OilSpill):
         # <ACTIONPOINT>
         if self.cli.use_weebl:
             weebl = Weebl(self.cli, report=False)
-            pipeline_id = weebl.create_pipeline(self.pipeline, build_executor)
-            if pipeline_id != self.pipeline:
-                msg = ("Pipeline created on weebl does not match: {} != {}"
-                       .format(pipeline_id, self.pipeline))
-                self.cli.LOG.error(msg)
-                raise Exception(msg)
+            weebl.create_pipeline(self.pipeline, build_executor)
         #
 
         self.cli.LOG.info("Processing pipeline: {} (on {})".format(
