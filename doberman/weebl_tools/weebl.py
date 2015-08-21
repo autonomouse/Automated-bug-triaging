@@ -52,7 +52,7 @@ class Weebl(DobermanBase):
             return True
         return False
 
-    def build_existence_check(self, name, env_uuid):
+    def build_executor_existence_check(self, name, env_uuid):
         build_executor_instances = self.get_instances("build_executor")
         b_ex_in_env = [bex.get('name') for bex in build_executor_instances
                        if env_uuid in bex['jenkins']]
@@ -77,7 +77,7 @@ class Weebl(DobermanBase):
 
         for build_executor in ci_server_api.get_nodes().iteritems():
             name = build_executor[0]
-            if self.build_existence_check(name, self.env_uuid):
+            if self.build_executor_existence_check(name, self.env_uuid):
                 continue
 
             # Create this build executor for this environment:
