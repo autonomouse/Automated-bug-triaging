@@ -33,7 +33,7 @@ class Stats(DobermanBase):
             stats_start_time, stats_finish_time))
         self.message = 0
 
-    def run_stats(self, stats_file = "stats.txt"):
+    def run_stats(self, stats_file="stats.txt"):
         self.build_numbers = self.build_pl_ids_and_check(
             self.jenkins, self.test_catalog)
 
