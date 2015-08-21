@@ -19,7 +19,9 @@ class RefineryTests(CommonTestMethods):
                         'pipeline_deploy': [('bug1', 1), ('bug2', 2)]}
         cli = self.populate_cli_var("blank_database.yml")
         refinery = Refinery(cli, dont_print=True)
-        output = refinery.display_top_ten_bugs(job_names, bug_rankings)
+        output, top_ten = refinery.format_top_ten_bugs(
+            job_names, bug_rankings)
+        
         self.assertEqual(output, {'pipeline_deploy': 0})
 
     def test_display_top_ten_bugs_returns_correct_number_of_generics(self):
@@ -31,5 +33,6 @@ class RefineryTests(CommonTestMethods):
         cli = self.populate_cli_var("blank_database.yml")
         cli.generic_bug_id = gen_bug
         refinery = Refinery(cli, dont_print=True)
-        output = refinery.display_top_ten_bugs(job_names, bug_rankings)
+        output, top_ten = refinery.format_top_ten_bugs(
+            job_names, bug_rankings)
         self.assertEqual(output, {'pipeline_deploy': num_gnrcs})

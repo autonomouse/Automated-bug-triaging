@@ -33,7 +33,7 @@ class Stats(DobermanBase):
             stats_start_time, stats_finish_time))
         self.message = 0
 
-    def run_stats(self):
+    def run_stats(self, stats_file="stats.txt"):
         self.build_numbers = self.build_pl_ids_and_check(
             self.jenkins, self.test_catalog)
 
@@ -60,7 +60,7 @@ class Stats(DobermanBase):
         results = self.calculate_overall_success_rates(totals, results)
 
         # Report results:
-        fname = os.path.join(self.cli.reportdir, "stats.txt")
+        fname = os.path.join(self.cli.reportdir, stats_file)
         self.write_intro_to_results_file(fname)
         for job in self.non_crude_job_names:
             # I wanted to do "for job in results.keys():" here, but then they
@@ -99,6 +99,8 @@ class Stats(DobermanBase):
         actives = {}
         pipelines_to_remove = []
         bld_artifacts = {}
+        if self.build_numbers in [None, {}]:
+            return {}, {}, None
         for job in self.non_crude_job_names:
             jenkins_job = self.jenkins_api[job]
             self.cli.LOG.info("Polling Jenkins for {} data".format(job))
@@ -178,10 +180,10 @@ class Stats(DobermanBase):
 
     def populate_job_dict(self, job, all_builds, all_actives, bld_artifacts):
         job_dict = {}
-        builds = all_builds[job]
-        num_active = len(all_actives[job])
+        builds = all_builds.get(job)
+        num_active = len(all_actives.get(job, {}))
         job_dict['still_running'] = num_active
-        if builds is None:
+        if builds in [None, []]:
             job_dict['build objects'] = 0 + num_active
             return job_dict
 
@@ -326,7 +328,7 @@ class Stats(DobermanBase):
 
     def write_intro_to_results_file(self, fname):
         with open(fname, 'w') as fout:
-            fout.write(self.intro)
+            fout.write(self.intro + ":\n")
 
     def write_to_results_file(self, fname, results, job):
         job_dict = results['jobs'][job]
