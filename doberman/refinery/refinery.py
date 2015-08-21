@@ -34,7 +34,7 @@ class Refinery(DobermanBase):
         self.info_file_cache = {}
 
         # Download and analyse the crude output yamls:
-        self.analyse_crude_output(make_plots, dont_print)
+        self.analyse_crude_output(make_plots, dont_print, "top_ten_lists.txt")
 
         # Tidy Up:
         if not self.cli.keep_data:
@@ -48,7 +48,7 @@ class Refinery(DobermanBase):
                                                  doberman_finish_time))
         self.message = 0  # Jenkins regards a zero exit status as a pass.
 
-    def analyse_crude_output(self, make_plots, dont_print):
+    def analyse_crude_output(self, make_plots, dont_print, f_name):
         """Get and analyse the crude output yamls."""
         other_jobs = [j for j in self.cli.job_names if j != self.cli.crude_job]
 
@@ -80,7 +80,7 @@ class Refinery(DobermanBase):
                                           self.job_specific_bugs_dict)
 
         if not dont_print:
-            self.report_top_ten_bugs(other_jobs, self.bug_rankings)
+            self.report_top_ten_bugs(other_jobs, self.bug_rankings, f_name)
         if 'pipeline_ids' in self.__dict__:
             self.log_pipelines()
         self.generate_yamls()
@@ -605,32 +605,35 @@ class Refinery(DobermanBase):
 
         return (grouped_bugs, all_scores)
 
-    def report_top_ten_bugs(self, job_names, bug_rankings):
+    def report_top_ten_bugs(self, job_names, bug_rankings, f_name):
         """Print the top ten bugs for each job to the console."""
-        generic_bugs = self.display_top_ten_bugs(job_names, bug_rankings)
-        self.display_generic_bugs(generic_bugs)
-        self.display_external_links()
-
-    def display_top_ten_bugs(self, job_names, bug_rankings):
+        generic_bugs, top_ten = self.format_top_ten_bugs(job_names, bug_rankings)
+        self.display_top_ten_bugs(top_ten)
+        self.write_top_ten_bugs_to_file(top_ten, f_name)
+        
+        
+    def format_top_ten_bugs(self, job_names, bug_rankings):
         url = self.cli.bug_tracker_url
         job_ranking = None
         generic_bugs = {}
+        top_ten = []
 
         for job in job_names:
             if job in self.cli.multi_bugs_in_pl:
                 target_type = "tests"
             else:
                 target_type = "pipelines"
-            print
-            print("Top bugs for job: {}".format(job))
-            print("-----------------------------------")
-            print
+            
+            top_ten.append('\n')
+            top_ten.append("Top bugs for job: {}".format(job))
+            top_ten.append("-----------------------------------")
+            top_ten.append('\n')
             job_ranking = bug_rankings.get(job)
             if job_ranking not in [None, {}]:
                 generic_bugs[job] = \
                     self.count_generic_bugs(job_ranking, generic_bugs, job)
                 if job_ranking == []:
-                    print("No non-generic bugs found.")
+                    top_ten.append("No non-generic bugs found.")
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
                     if 'unfiled' not in bug[0]:
@@ -638,25 +641,40 @@ class Refinery(DobermanBase):
                     else:
                         bug_tuple = list(bug)
                     bug_tuple.append(target_type)
-                    print(msg.format(*bug_tuple))
+                    top_ten.append(msg.format(*bug_tuple))
             else:
-                print("No bugs found.")
-            print
-        return generic_bugs
+                top_ten.append("No bugs found.")
+            top_ten.append('\n')
+        
+        top_ten = self.format_generic_bugs(generic_bugs, top_ten)
+        top_ten = self.format_external_links(top_ten)
+        return generic_bugs, top_ten
 
-    def display_generic_bugs(self, generic_bugs):
+    def display_top_ten_bugs(self, top_ten):
+        for line in top_ten:
+            print(line)
+    
+    def write_top_ten_bugs_to_file(self, top_ten, f_name):
+        # Write to file, or append to existing file:
+        path = os.path.join(self.cli.reportdir, f_name)
+        with open(path, 'w') as fout:
+            for line in top_ten:
+                fout.write(line + "\n")
+
+    def format_generic_bugs(self, generic_bugs, top_ten):
         if sum([v for k, v in generic_bugs.iteritems()]) > 0:
-            print("Generic/high-level bugs")
-            print("-----------------------")
+            top_ten.append("Generic/high-level bugs")
+            top_ten.append("-----------------------")
             for gjob in generic_bugs:
                 target_type = ("test" if gjob in self.cli.multi_bugs_in_pl
                                else "pipeline")
                 num_generics = generic_bugs[gjob]
                 plural = 's' if num_generics > 1 else ''
                 if num_generics > 0:
-                    print("{} - {} {}{}".format(gjob, num_generics,
+                    top_ten.append("{} - {} {}{}".format(gjob, num_generics,
                                                 target_type, plural))
-        print
+                top_ten.append("\n")
+        return top_ten
 
     def count_generic_bugs(self, job_ranking, generic_bugs, job):
         for i, bug_info in enumerate(job_ranking):
@@ -666,7 +684,7 @@ class Refinery(DobermanBase):
             return bug_info[1]
         return 0
 
-    def display_external_links(self):
+    def format_external_links(self, top_ten):
         jlink = "{3} data can be found at: "
         jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
 
@@ -674,13 +692,16 @@ class Refinery(DobermanBase):
             paabn = 'pipelines_and_associated_build_numbers'
             fx_pls = 'pipelines_affected_by_bug'
             ext = '.yml'
-            print
-            print(jlink.format(self.cli.external_jenkins_url, self.cli.jjob,
-                               self.cli.jjob_build, paabn, ext))
-            print
-            print(jlink.format(self.cli.external_jenkins_url, self.cli.jjob,
-                               self.cli.jjob_build, fx_pls, ext))
-            print
+            top_ten.append('\n')
+            top_ten.append(jlink.format(self.cli.external_jenkins_url, 
+                                    self.cli.jjob, self.cli.jjob_build, 
+                                    paabn, ext))
+            top_ten.append('\n')
+            top_ten.append(jlink.format(self.cli.external_jenkins_url, 
+                                    self.cli.jjob, self.cli.jjob_build, 
+                                    fx_pls, ext))
+            top_ten.append('\n')
+        return top_ten
 
 
 def main():
