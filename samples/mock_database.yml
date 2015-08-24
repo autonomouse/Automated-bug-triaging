@@ -980,15 +980,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "ERROR nova.api.openstack.*Caught error...OperationalError.{7,10}Too many connections"
 
-  "1213179":
-    category: None
-    description:
-    test_tempest_smoke:
-      -
-        "glance_*_var_log_glance_api.log":
-            regexp:
-            - "TRACE swiftclient ClientException. Container HEAD failed.{55,70}glance 404 Not Found"
-
   "1457813":
     category: None
     description: "[prodstack] service neutron-calico has no calico-acl-api relation (deploy fail)"
