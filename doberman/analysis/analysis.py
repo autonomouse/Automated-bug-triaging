@@ -8,6 +8,7 @@ from crude_test_catalog import TestCatalog
 from doberman.common.CLI import CLI
 # <ACTIONPOINT>
 try:
+    sys.path.append('/home/darren/Repositories/Canonical/weebl_client/trunk')
     from weebl_python2.weebl import Weebl
 except ImportError as e:
     pass
