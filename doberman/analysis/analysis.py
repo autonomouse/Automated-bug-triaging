@@ -5,12 +5,12 @@ from jenkinsapi.custom_exceptions import *
 from doberman.common.base import DobermanBase
 from crude_jenkins import Jenkins, Build
 from crude_test_catalog import TestCatalog
+from doberman.common.CLI import CLI
 # <ACTIONPOINT>
 try:
-    from doberman.weebl_tools.weebl import Weebl
-    from doberman.weebl_tools.weebl_specific_crude_cli import CLI
+    from weebl_python2.weebl import Weebl
 except ImportError as e:
-    from doberman.common.CLI import CLI
+    pass
 #
 
 
@@ -26,7 +26,7 @@ class CrudeAnalysis(DobermanBase):
             self.jenkins, self.test_catalog)
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            self.weebl = Weebl(self.cli)
+            self.weebl = Weebl(self.cli.uuid)
             self.weebl.weeblify_environment(self.jenkins.jenkins_api)
         #
         jobs_to_process = self.determine_jobs_to_process()

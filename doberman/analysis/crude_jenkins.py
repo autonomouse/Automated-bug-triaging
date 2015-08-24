@@ -8,7 +8,12 @@ from doberman.common import pycookiecheat
 from doberman.common.base import DobermanBase
 from doberman.analysis.oil_spill import OilSpill
 from jenkinsapi.custom_exceptions import *
-from doberman.weebl_tools.weebl import Weebl
+# <ACTIONPOINT>
+try:
+    from weebl_python2.weebl import Weebl
+except ImportError as e:
+    pass
+#
 
 
 class Jenkins(DobermanBase):
@@ -203,7 +208,7 @@ class Build(OilSpill):
 
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            weebl = Weebl(self.cli, report=False)
+            weebl = Weebl(self.cli.uuid)
             weebl.create_pipeline(self.pipeline, build_executor)
         #
 
