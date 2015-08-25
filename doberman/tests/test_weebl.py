@@ -9,12 +9,6 @@ from doberman.common.options_parser import OptionsParser
 from datetime import datetime
 from mock import patch, MagicMock, Mock
 from common_test_methods import CommonTestMethods
-
-###############################################################################
-# tmp (until I build the package and add it to control!):
-import sys
-sys.path.append('/home/darren/Repositories/Canonical/weebl_client/trunk')
-###############################################################################
 from weebl_python2.weebl import Weebl
 
 reportdir = common_test_methods.mock_output_data
@@ -57,9 +51,3 @@ class WeeblTests(CommonTestMethods):
                        mock_jkns_init):    
                 mock_jkns_init.return_value = None      
                 get_all_pipelines.return_value = self.paabn_info
-                #super(WeeblTests, self).test_build_number_in_output()
-        import pdb; pdb.set_trace()
-        
-        create_pipeline.assert_called_with()
-        #self.pipeline, build_executor
-
