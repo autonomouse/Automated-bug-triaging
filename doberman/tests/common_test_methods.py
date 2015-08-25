@@ -10,11 +10,14 @@ from doberman.__init__ import __version__
 from collections import namedtuple
 from lxml import etree
 
+mock_data_dir = "./doberman/tests/mock_data/"
+mock_output_data = os.path.abspath(os.path.join(mock_data_dir, "output"))
+
 
 class CommonTestMethods(DobermanTestBase):
 
-    mock_data_dir = "./doberman/tests/mock_data/"
-    mock_output_data = os.path.abspath(os.path.join(mock_data_dir, "output"))
+    mock_data_dir = mock_data_dir
+    mock_output_data = mock_output_data
     DB_files = os.path.abspath(os.path.join(mock_data_dir, "database_files"))
     real_db_yaml = "../../../../samples/mock_database.yml"
     pipeline_id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
@@ -61,7 +64,7 @@ class CommonTestMethods(DobermanTestBase):
         except KeyError:
             return
 
-    def populate_cli_var(self, bugs_database, reportdir=mock_output_data): 
+    def populate_cli_var(self, bugs_database, reportdir=mock_output_data):
         cli = namedtuple('CLI', '')
         cli.crude_job = 'pipeline_start'
         cli.database = os.path.join(self.DB_files, bugs_database)
@@ -91,6 +94,11 @@ class CommonTestMethods(DobermanTestBase):
         cli.bug_tracker_bugs_url = "https://bugs.launchpad.net/oil/+bug/{}"
         cli.generic_bug_id = "GenericBug_Ignore"
         cli.bug_tracker_url = "https://bugs.launchpad.net/bugs/{}"
+        cli.environment = "TestEnvironment"
+
+        # WEEBL:
+        cli.use_weebl = False
+        #
 
         LOG = utils.get_logger('doberman.analysis')
         LOG.info("Doberman version {0}".format(__version__))
@@ -127,3 +135,8 @@ class CommonTestMethods(DobermanTestBase):
 
     def generate_text_from_regexp(self, regexp):
         return generate_from_regex(regexp)
+
+    def get_bugs_from_file(self, bugs_database):
+        database = os.path.join(self.DB_files, bugs_database)
+        with open(database, "r") as mock_db_file:
+            return yaml.load(mock_db_file)['bugs']
