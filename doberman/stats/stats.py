@@ -344,14 +344,12 @@ class Stats(DobermanBase):
             fout.write("    - End Job: {} (Date: {})\n"
                        .format(job_dict.get('end job'),
                                job_dict.get('end date')))
-            
-            if job not in self.cli.multi_bugs_in_pl:
-                fout.write("    - {} jobs, {} active, {} pass, {} fail\n"
-                           .format(job_dict.get('build objects', 0),
-                                   job_dict.get('still running', 0),
-                                   job_dict.get('passes', 0),
-                                   job_dict.get('fails', 0)))
-            else:                
+            fout.write("    - {} jobs, {} active, {} pass, {} fail\n"
+                       .format(job_dict.get('build objects', 0),
+                               job_dict.get('still running', 0),
+                               job_dict.get('passes', 0),
+                               job_dict.get('fails', 0)))
+            if job in self.cli.multi_bugs_in_pl: 
                 fout.write("    - {} good / {} ({} total - {} skip)\n"
                            .format(job_dict.get('good builds', 0),
                                    job_dict.get('total', 0),
