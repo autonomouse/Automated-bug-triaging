@@ -12,7 +12,6 @@ class OilSpill(DobermanBase):
     """Failure detection class"""
 
     def __init__(self, build_number, jobname, yaml_dict, cli, pipeline):
-
         self.cli = cli
         self.build_number = build_number
         self.jobname = jobname
@@ -41,6 +40,13 @@ class OilSpill(DobermanBase):
         else:
             build_status = 'Unknown'
         matching_bugs = {}
+        # <ACTIONPOINT>
+        if self.cli.use_weebl:
+            # Create build:
+            self.weebl.create_build(
+                self.build_number, self.pipeline, self.jobname, build_status,
+                build_finished_at=build_details.get('timestamp'))
+        #
 
         bug_unmatched = True
         if not self.cli.bugs:
@@ -303,7 +309,10 @@ class OilSpill(DobermanBase):
                     else:
                         return {target_file: {'regexp': regexps}}
 
-    def oil_survey(self, path, pipeline, extracted_info):
+    # <ACTIONPOINT>
+    def oil_survey(self, path, pipeline, extracted_info, weebl=None):
+        self.weebl = weebl
+        #
         self.oil_df = extracted_info['oil_df']
         (matching_bugs, build_status) = self.bug_hunt(path)
         self.matching_bugs = matching_bugs
