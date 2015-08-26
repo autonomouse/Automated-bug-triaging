@@ -207,7 +207,7 @@ class Stats(DobermanBase):
         return job_dict
 
     def get_passes_and_fails(self, job, job_dict, build_objs, bld_artifacts):
-        
+
         # TODO: handle case where we don't have active, good or bad builds
         good = filter(lambda x: self.build_was_successful(x), build_objs)
         bad = filter(lambda x: self.build_was_successful(x) is False and
@@ -216,7 +216,7 @@ class Stats(DobermanBase):
         job_dict['passes'] = len(good)
         job_dict['fails'] = len(bad)
         job_dict['completed builds'] = nr_nab
-        
+
         if job not in self.cli.multi_bugs_in_pl:
             # pipeline_deploy 11 active, 16/31 = 58.68% passing
             # Total: 31 builds, 12 active, 2 failed, 17 pass.
@@ -347,7 +347,7 @@ class Stats(DobermanBase):
                                job_dict.get('still_running', 0),
                                job_dict.get('passes', 0),
                                job_dict.get('fails', 0)))
-            if job in self.cli.multi_bugs_in_pl: 
+            if job in self.cli.multi_bugs_in_pl:
                 fout.write("    - {} good tests out of {} "
                            "(There were {} total, but {} were skipped)\n"
                            .format(job_dict.get('good builds', 0),
