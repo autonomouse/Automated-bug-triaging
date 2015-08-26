@@ -132,9 +132,6 @@ class Refinery(DobermanBase):
         build = jenkins_job.get_build(int(build_num))
         artifact_found = False
 
-        if job == self.cli.crude_job:
-            return
-
         if build._data['duration'] == 0:
             msg = "Output from {} unavailable (build {}) - still running?"
             self.cli.LOG.info(msg.format(pipeline_id))
@@ -162,7 +159,7 @@ class Refinery(DobermanBase):
                     artifact.save_to_dir(outdir)
                     # TODO: Would these ever need renaming?
 
-        if not artifact_found:
+        if not artifact_found and job != self.cli.crude_job:
             msg = ("No triage artifacts found for job {0} for {1}"
                    .format(job, pipeline_id))
             self.cli.LOG.info(msg)
