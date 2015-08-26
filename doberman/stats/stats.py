@@ -375,7 +375,8 @@ class Stats(DobermanBase):
     def print_results(self, fname):
         """Read back that file and print to console"""
         with open(fname, 'r') as fin:
-            print fin.read()
+            print(fin.read())
+        print("\n")
 
 
 def main():
