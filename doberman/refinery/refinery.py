@@ -74,7 +74,7 @@ class Refinery(DobermanBase):
         # Analyse the downloaded crude output yamls:
         self.grouped_bugs, self.all_scores = \
             self.group_similar_unfiled_bugs(self.unified_bugdict)
-        self.pipelines_affected_by_bug, self.bug_rankings = \
+        self.pipelines_affected_by_bug, self.bug_rankings =\
             self.calculate_bug_prevalence(self.grouped_bugs,
                                           self.unified_bugdict,
                                           self.job_specific_bugs_dict)
@@ -132,6 +132,9 @@ class Refinery(DobermanBase):
         build = jenkins_job.get_build(int(build_num))
         artifact_found = False
 
+        if job == self.cli.crude_job:
+            return
+
         if build._data['duration'] == 0:
             msg = "Output from {} unavailable (build {}) - still running?"
             self.cli.LOG.info(msg.format(pipeline_id))
@@ -168,11 +171,10 @@ class Refinery(DobermanBase):
         """Get crude output."""
         self.cli.op_dir_structure = os.path.join("{0}", "{3}", "{2}")
         self.all_build_numbers = []
-        build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
         for pipeline_id in self.pipeline_ids:
             try:
-                build_num = build_numbers[pipeline_id].get(job)
+                build_num = self.build_numbers[pipeline_id].get(job)
 
                 if build_num:
                     outdir = (self.cli.op_dir_structure.format(

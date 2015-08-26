@@ -232,43 +232,45 @@ class Stats(DobermanBase):
     def get_passes_fails_from_xml_job(self, job, job_dict, build_objs,
                                       bld_artifacts):
         warnings = []
-        self.cli.LOG.info("Downloading artifacts for {}".format(job))
+        msg = "Downloading artifacts for {} ({}% complete)."
         tests = []
         errors = []
         failures = []
         skip = []
-        for this_build in build_objs:
-            build = this_build['number']
-            for artifacts in bld_artifacts:
-                artifacts = bld_artifacts.get(build)
-                for artifact in artifacts:
-                    op_dir = self.create_output_directory(job)
-                    if artifact:
-                        op_dir = self.create_output_directory(
-                            os.path.join(job, str(build)))
-                        artifact_name = str(artifact).split('/')[-1].strip('>')
-                        xml_file = os.path.join(op_dir, artifact_name)
-                        if not os.path.exists(xml_file):
-                            artifact.save_to_dir(op_dir)
-                        with open(xml_file):
-                            parser = etree.XMLParser(huge_tree=True)
-                            try:
-                                doc = etree.parse(xml_file, parser).getroot()
-                                tests.append(int(doc.attrib.get('tests', 0)))
-                                errors.append(int(doc.attrib.get('errors', 0)))
-                                failures.append(
-                                    int(doc.attrib.get('failures', 0)))
-                                skip.append(int(doc.attrib.get('skip', 0)))
-                            except Exception, e:
-                                warnings.append("'{0}' for build {1}"
-                                                .format(e, build))
-                                continue
-                            artifact_rename = ("{0}_{1}.{2}".format(
-                                               artifact_name.split('.')[0],
-                                               str(build),
-                                               artifact_name.split('.')[-1]))
-                            os.rename(xml_file, xml_file.replace(
-                                artifact_name, artifact_rename))
+        for pos, this_build in enumerate(build_objs):
+            build = this_build.get('number')
+            artifacts = bld_artifacts.get(build)
+            for artifact in artifacts:
+                op_dir = self.create_output_directory(job)
+                if artifact:
+                    op_dir = self.create_output_directory(
+                        os.path.join(job, str(build)))
+                    artifact_name = str(artifact).split('/')[-1].strip('>')
+                    xml_file = os.path.join(op_dir, artifact_name)
+                    if not os.path.exists(xml_file):
+                        artifact.save_to_dir(op_dir)
+                    with open(xml_file):
+                        parser = etree.XMLParser(huge_tree=True)
+                        try:
+                            doc = etree.parse(xml_file, parser).getroot()
+                            tests.append(int(doc.attrib.get('tests', 0)))
+                            errors.append(int(doc.attrib.get('errors', 0)))
+                            failures.append(
+                                int(doc.attrib.get('failures', 0)))
+                            skip.append(int(doc.attrib.get('skip', 0)))
+                        except Exception, e:
+                            warnings.append("'{0}' for build {1}"
+                                            .format(e, build))
+                            continue
+                        artifact_rename = ("{0}_{1}.{2}".format(
+                                           artifact_name.split('.')[0],
+                                           str(build),
+                                           artifact_name.split('.')[-1]))
+                        os.rename(xml_file, xml_file.replace(
+                            artifact_name, artifact_rename))
+            pgr = self.calculate_progress(pos, build_objs)
+            if pgr:
+                self.cli.LOG.info(msg.format(job, pgr))
         if len(warnings) > 0:
             print("The following issue(s) occurred:")
             pprint(set(warnings))
