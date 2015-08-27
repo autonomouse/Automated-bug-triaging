@@ -107,8 +107,13 @@ class OilSpill(DobermanBase):
                                     xml_files_parsed.append(target)
                                 # Get tempest results:
                                 p = etree.XMLParser(huge_tree=True)
-                                et = etree.parse(target_location, parser=p)
-                                doc = et.getroot()
+                                try:
+                                    et = etree.parse(target_location, parser=p)
+                                    doc = et.getroot()
+                                except etree.XMLSyntaxError as e:
+                                    msg = "Cannot read from XML file"
+                                    self.cli.LOG.error(msg)
+                                    continue
                                 errors_and_fails = doc.xpath('.//failure')
                                 errors_and_fails += doc.xpath('.//error')
                                 # TODO: There is not currently a way to do
