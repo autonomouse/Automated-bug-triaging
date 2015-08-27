@@ -1359,4 +1359,4 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "network.{0,5}LOG.info.result..stdout{0,10}TypeError. .NoneType. object has no attribute .__getitem__"
+            - "network.{0,8}LOG.info.result..stdout{0,10}TypeError. .NoneType. object has no attribute .__getitem__"
