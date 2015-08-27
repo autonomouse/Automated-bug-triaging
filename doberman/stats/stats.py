@@ -207,13 +207,7 @@ class Stats(DobermanBase):
         return job_dict
 
     def get_passes_and_fails(self, job, job_dict, build_objs, bld_artifacts):
-        if job not in self.cli.multi_bugs_in_pl:
-            return self.get_passes_fails_from_non_xml_job(job_dict, build_objs)
-        else:
-            return self.get_passes_fails_from_xml_job(
-                job, job_dict, build_objs, bld_artifacts[job])
 
-    def get_passes_fails_from_non_xml_job(self, job_dict, build_objs):
         # TODO: handle case where we don't have active, good or bad builds
         good = filter(lambda x: self.build_was_successful(x), build_objs)
         bad = filter(lambda x: self.build_was_successful(x) is False and
@@ -223,54 +217,60 @@ class Stats(DobermanBase):
         job_dict['fails'] = len(bad)
         job_dict['completed builds'] = nr_nab
 
-        # pipeline_deploy 11 active, 16/31 = 58.68% passing
-        # Total: 31 builds, 12 active, 2 failed, 17 pass.
-        # Success rate: 17 / (31 - 12) = 89%
-        success_rate = (float(len(good)) / float(nr_nab) * 100.0
-                        if nr_nab else 0)
-        job_dict['success rate'] = success_rate
-        return job_dict
+        if job not in self.cli.multi_bugs_in_pl:
+            # pipeline_deploy 11 active, 16/31 = 58.68% passing
+            # Total: 31 builds, 12 active, 2 failed, 17 pass.
+            # Success rate: 17 / (31 - 12) = 89%
+            success_rate = (float(len(good)) / float(nr_nab) * 100.0
+                            if nr_nab else 0)
+            job_dict['success rate'] = success_rate
+            return job_dict
+        else:
+            return self.get_passes_fails_from_xml_job(
+                job, job_dict, build_objs, bld_artifacts[job])
 
     def get_passes_fails_from_xml_job(self, job, job_dict, build_objs,
                                       bld_artifacts):
         warnings = []
-        self.cli.LOG.info("Downloading artifacts for {}".format(job))
+        msg = "Downloading artifacts for {} ({}% complete)."
         tests = []
         errors = []
         failures = []
         skip = []
-        for this_build in build_objs:
-            build = this_build['number']
-            for artifacts in bld_artifacts:
-                artifacts = bld_artifacts.get(build)
-                for artifact in artifacts:
-                    op_dir = self.create_output_directory(job)
-                    if artifact:
-                        op_dir = self.create_output_directory(
-                            os.path.join(job, str(build)))
-                        artifact_name = str(artifact).split('/')[-1].strip('>')
-                        xml_file = os.path.join(op_dir, artifact_name)
-                        if not os.path.exists(xml_file):
-                            artifact.save_to_dir(op_dir)
-                        with open(xml_file):
-                            parser = etree.XMLParser(huge_tree=True)
-                            try:
-                                doc = etree.parse(xml_file, parser).getroot()
-                                tests.append(int(doc.attrib.get('tests', 0)))
-                                errors.append(int(doc.attrib.get('errors', 0)))
-                                failures.append(
-                                    int(doc.attrib.get('failures', 0)))
-                                skip.append(int(doc.attrib.get('skip', 0)))
-                            except Exception, e:
-                                warnings.append("'{0}' for build {1}"
-                                                .format(e, build))
-                                continue
-                            artifact_rename = ("{0}_{1}.{2}".format(
-                                               artifact_name.split('.')[0],
-                                               str(build),
-                                               artifact_name.split('.')[-1]))
-                            os.rename(xml_file, xml_file.replace(
-                                artifact_name, artifact_rename))
+        for pos, this_build in enumerate(build_objs):
+            build = this_build.get('number')
+            artifacts = bld_artifacts.get(build)
+            for artifact in artifacts:
+                op_dir = self.create_output_directory(job)
+                if artifact:
+                    op_dir = self.create_output_directory(
+                        os.path.join(job, str(build)))
+                    artifact_name = str(artifact).split('/')[-1].strip('>')
+                    xml_file = os.path.join(op_dir, artifact_name)
+                    if not os.path.exists(xml_file):
+                        artifact.save_to_dir(op_dir)
+                    with open(xml_file):
+                        parser = etree.XMLParser(huge_tree=True)
+                        try:
+                            doc = etree.parse(xml_file, parser).getroot()
+                            tests.append(int(doc.attrib.get('tests', 0)))
+                            errors.append(int(doc.attrib.get('errors', 0)))
+                            failures.append(
+                                int(doc.attrib.get('failures', 0)))
+                            skip.append(int(doc.attrib.get('skip', 0)))
+                        except Exception, e:
+                            warnings.append("'{0}' for build {1}"
+                                            .format(e, build))
+                            continue
+                        artifact_rename = ("{0}_{1}.{2}".format(
+                                           artifact_name.split('.')[0],
+                                           str(build),
+                                           artifact_name.split('.')[-1]))
+                        os.rename(xml_file, xml_file.replace(
+                            artifact_name, artifact_rename))
+            pgr = self.calculate_progress(pos, build_objs)
+            if pgr:
+                self.cli.LOG.info(msg.format(job, pgr))
         if len(warnings) > 0:
             print("The following issue(s) occurred:")
             pprint(set(warnings))
@@ -280,8 +280,6 @@ class Stats(DobermanBase):
         n_good = n_total - n_bad
         success_rate = ((float(n_good) / n_total) * 100) if n_total else 0
         job_dict['good builds'] = n_good
-        job_dict['fails'] = n_bad
-        job_dict['passes'] = n_good
         job_dict['total'] = sum(tests)
         job_dict['total without skipped'] = n_total
         job_dict['skipped'] = sum(skip)
@@ -310,14 +308,14 @@ class Stats(DobermanBase):
                 non_xml_success_rates.append(result.get('success rate', 0))
             if job in self.cli.subset_success_rate_jobs:
                 subset_success_rate.append(result.get('success rate', 0))
+        results['overall']['combined_subset_sr'] = round(
+            self.calculate_percentages(subset_success_rate), 2)
         results['overall']['average_percentage_sr'] = round(
             sum(all_success_rates) / float(len(all_success_rates)), 2)
         results['overall']['combined_sr'] = round(
             self.calculate_percentages(all_success_rates), 2)
         results['overall']['combined_non_xml_sr'] = round(
             self.calculate_percentages(non_xml_success_rates), 2)
-        results['overall']['combined_subset_sr'] = round(
-            self.calculate_percentages(subset_success_rate), 2)
         return results
 
     def calculate_percentages(self, percentages_list):
@@ -337,46 +335,48 @@ class Stats(DobermanBase):
         with open(fname, 'a') as fout:
             fout.write('\n')
             fout.write("* {} success rate was {}%\n"
-                       .format(job, job_dict.get('success rate')))
+                       .format(job, round(job_dict.get('success rate', 0), 2)))
             fout.write("    - Start Job: {} (Date: {})\n"
                        .format(job_dict.get('start job'),
                                job_dict.get('start date')))
             fout.write("    - End Job: {} (Date: {})\n"
                        .format(job_dict.get('end job'),
                                job_dict.get('end date')))
-            if job not in self.cli.xmls:
-                fout.write("    - {} jobs, {} active, {} pass, {} fail\n"
-                           .format(job_dict.get('build objects'),
-                                   job_dict.get('still running'),
-                                   job_dict.get('passes'),
-                                   job_dict.get('fails')))
-            else:
-                fout.write("    - {} good / {} ({} total - {} skip)\n"
-                           .format(job_dict.get('good builds'),
-                                   job_dict.get('total'),
-                                   job_dict.get('total without skipped'),
-                                   job_dict.get('skipped')))
+            fout.write("    - {} jobs, {} active, {} pass, {} fail\n"
+                       .format(job_dict.get('build objects', 0),
+                               job_dict.get('still_running', 0),
+                               job_dict.get('passes', 0),
+                               job_dict.get('fails', 0)))
+            if job in self.cli.multi_bugs_in_pl:
+                fout.write("    - {} good tests out of {} "
+                           "(There were {} total, but {} were skipped)\n"
+                           .format(job_dict.get('good builds', 0),
+                                   job_dict.get('total without skipped', 0),
+                                   job_dict.get('total', 0),
+                                   job_dict.get('skipped', 0)))
 
     def write_summary_to_results_file(self, fname, totals, results):
         # Write to file:
         with open(fname, 'a') as fout:
             fout.write('\n')
-            fout.write("Average Success Rate (mean of all jobs): {}%\n"
-                       .format(results['overall']['average_percentage_sr']))
-            fout.write("Overall Success Rate (pass rate on all jobs): {}%\n"
-                       .format(results['overall']['combined_sr']))
-            fout.write("Overall Success Rate (pass rate on non-xml job): {}%\n"
-                       .format(results['overall']['combined_non_xml_sr']))
             expl = "{}".format(", ".join(self.cli.subset_success_rate_jobs))
             idx = expl.rfind(',')
             expl = "".join([expl[:idx], " &", expl[idx + 1:]])
             fout.write("Overall Success Rate (pass rate on {} jobs): {}%\n"
                        .format(expl, results['overall']['combined_subset_sr']))
+            fout.write("Average Success Rate (mean of all jobs): {}%\n"
+                       .format(results['overall']['average_percentage_sr']))
+            fout.write('\n')
+            fout.write("Overall Success Rate (pass rate on all jobs): {}%\n"
+                       .format(results['overall']['combined_sr']))
+            fout.write("Overall Success Rate (pass rate on non-xml job): {}%\n"
+                       .format(results['overall']['combined_non_xml_sr']))
 
     def print_results(self, fname):
         """Read back that file and print to console"""
         with open(fname, 'r') as fin:
-            print fin.read()
+            print(fin.read())
+        print("\n")
 
 
 def main():

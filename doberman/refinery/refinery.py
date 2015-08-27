@@ -74,7 +74,7 @@ class Refinery(DobermanBase):
         # Analyse the downloaded crude output yamls:
         self.grouped_bugs, self.all_scores = \
             self.group_similar_unfiled_bugs(self.unified_bugdict)
-        self.pipelines_affected_by_bug, self.bug_rankings = \
+        self.pipelines_affected_by_bug, self.bug_rankings =\
             self.calculate_bug_prevalence(self.grouped_bugs,
                                           self.unified_bugdict,
                                           self.job_specific_bugs_dict)
@@ -159,7 +159,7 @@ class Refinery(DobermanBase):
                     artifact.save_to_dir(outdir)
                     # TODO: Would these ever need renaming?
 
-        if not artifact_found:
+        if not artifact_found and job != self.cli.crude_job:
             msg = ("No triage artifacts found for job {0} for {1}"
                    .format(job, pipeline_id))
             self.cli.LOG.info(msg)
@@ -168,11 +168,10 @@ class Refinery(DobermanBase):
         """Get crude output."""
         self.cli.op_dir_structure = os.path.join("{0}", "{3}", "{2}")
         self.all_build_numbers = []
-        build_numbers = self.test_catalog.get_all_pipelines(self.pipeline_ids)
 
         for pipeline_id in self.pipeline_ids:
             try:
-                build_num = build_numbers[pipeline_id].get(job)
+                build_num = self.build_numbers[pipeline_id].get(job)
 
                 if build_num:
                     outdir = (self.cli.op_dir_structure.format(
@@ -624,10 +623,8 @@ class Refinery(DobermanBase):
             else:
                 target_type = "pipelines"
 
-            top_ten.append('\n')
             top_ten.append("Top bugs for job: {}".format(job))
             top_ten.append("-----------------------------------")
-            top_ten.append('\n')
             job_ranking = bug_rankings.get(job)
             if job_ranking not in [None, {}]:
                 generic_bugs[job] = \
@@ -644,8 +641,7 @@ class Refinery(DobermanBase):
                     top_ten.append(msg.format(*bug_tuple))
             else:
                 top_ten.append("No bugs found.")
-            top_ten.append('\n')
-
+            top_ten.append("\n")
         top_ten = self.format_generic_bugs(generic_bugs, top_ten)
         top_ten = self.format_external_links(top_ten)
         return generic_bugs, top_ten
@@ -673,7 +669,7 @@ class Refinery(DobermanBase):
                 if int(num_generics) > 0:
                     top_ten.append("{} - {} {}{}".format(
                         gjob, num_generics, target_type, plural))
-                top_ten.append("\n")
+            top_ten.append("\n")
         return top_ten
 
     def count_generic_bugs(self, job_ranking, generic_bugs, job):
@@ -685,22 +681,24 @@ class Refinery(DobermanBase):
         return 0
 
     def format_external_links(self, top_ten):
-        jlink = "{3} data can be found at: "
+        jlink = "-> {3} data can be found at: "
         jlink += "{0}/job/{1}/{2}/artifact/artifacts/{3}{4}/*view*/"
 
         if hasattr(self.cli, 'jjob_build'):
             paabn = 'pipelines_and_associated_build_numbers'
             fx_pls = 'pipelines_affected_by_bug'
+            auto_unfiled_bugs = "auto-triaged_unfiled_bugs"
             ext = '.yml'
-            top_ten.append('\n')
             top_ten.append(jlink.format(self.cli.external_jenkins_url,
                                         self.cli.jjob, self.cli.jjob_build,
                                         paabn, ext))
-            top_ten.append('\n')
             top_ten.append(jlink.format(self.cli.external_jenkins_url,
                                         self.cli.jjob, self.cli.jjob_build,
                                         fx_pls, ext))
-            top_ten.append('\n')
+            top_ten.append(jlink.format(self.cli.external_jenkins_url,
+                                        self.cli.jjob, self.cli.jjob_build,
+                                        auto_unfiled_bugs, ext))
+            top_ten.append("\n")
         return top_ten
 
 

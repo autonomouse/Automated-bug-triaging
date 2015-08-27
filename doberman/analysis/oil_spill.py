@@ -165,11 +165,15 @@ class OilSpill(DobermanBase):
                         current_target = target if 'target' in locals() else \
                             None
                         text = text if 'text' in locals() else None
-                        if not text or current_target != default_target:
-                            # reload the text:
-                            with open(target_location, 'r') as grep_me:
-                                text = grep_me.read()
-                        info['text'] = text
+                        try:
+                            if not text or current_target != default_target:
+                                # reload the text:
+                                with open(target_location, 'r') as grep_me:
+                                    text = grep_me.read()
+                            info['text'] = text
+                        except IOError as e:
+                            info['text'] = None
+                            self.cli.LOG.error(e)
 
                     # Recreate original_hit_dict (i.e. with keys as
                     # 'console.txt' rather than 'pipeline_deploy_console.txt'
