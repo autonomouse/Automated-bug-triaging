@@ -1351,3 +1351,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "subprocess.CalledProcessError.{1,150}returned non-zero exit status"
+
+  "1489394":
+    category: None
+    description: "[Prodstack] OILPreparationFailure - network.py expects result to be a dict, but it is a None (prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "network.{0,5}LOG.info.result..stdout{0,10}TypeError. .NoneType. object has no attribute .__getitem__"
