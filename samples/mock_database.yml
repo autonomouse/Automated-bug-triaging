@@ -1360,3 +1360,22 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "network.{0,8}LOG.info.result..stdout{0,10}TypeError. .NoneType. object has no attribute .__getitem__"
+
+  "1489943":
+    category: None
+    description: "Prodstack[test_cloud_image]: failed to boot image"
+    test_cloud_image:
+      -
+        "console.txt":
+            regexp:
+            - "instance status. ERROR"
+
+  "1490009":
+    category: None
+    description: "Prodstack[test_cloud_image]: failed before calling nosetest"
+    test_cloud_image:
+      -
+        "console.txt":
+            regexp:
+            - "Test run cloud_image failed"
+
