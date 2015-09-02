@@ -1378,3 +1378,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Test run cloud_image failed"
+
+  "1491397":
+    category: None
+    description: "[Prodstack] Bad router request. Router already has a port on subnet (prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "Bad router request. Router already has a port on subnet"
