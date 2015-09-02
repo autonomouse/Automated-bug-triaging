@@ -1387,3 +1387,12 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Bad router request. Router already has a port on subnet"
+
+  "1491496":
+    category: None
+    description: "[Prodstack] Unable to complete operation for network. The IP address is in use. (prepare fail)"
+    pipeline_prepare:
+      -
+        "console.txt":
+            regexp:
+            - "IpAddressInUseClient. Unable to complete operation for network .{36}. The IP address .{4,20} is in use"
