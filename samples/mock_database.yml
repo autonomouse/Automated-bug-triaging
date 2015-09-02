@@ -641,7 +641,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "tempest_xunit.xml":
             regexp:
             - "Endpoint not found"
-            
+
 
   "1414644":
     category: None
@@ -1359,7 +1359,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "network.{0,8}LOG.info.result..stdout{0,10}TypeError. .NoneType. object has no attribute .__getitem__"
+            - "network.{0,8}LOG.info.result..stdout.{0,10}TypeError. .NoneType. object has no attribute .__getitem__"
 
   "1489943":
     category: None
@@ -1378,4 +1378,3 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "Test run cloud_image failed"
-
