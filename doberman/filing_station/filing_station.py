@@ -112,8 +112,8 @@ class FilingStation(DobermanBase):
         """
         msg = "Bug filed on {} with launchpad bug id: {}"
 
-        bug_tracker = '/tmp/mock_launchpad/'  # tmp
-        self.mkdir(bug_tracker)  # tmp
+        bug_tracker = os.path.join(self.cli.reportdir, "bugs_to_file")
+        self.mkdir(bug_tracker)
 
         file_me = '{}_{}.yml'.format(bug_to_file[0], bug_to_file[1])
         file_path = os.path.join(bug_tracker, file_me)

@@ -127,7 +127,6 @@ class Refinery(DobermanBase):
     def download_specific_file(self, job, pipeline_id, build_num, marker,
                                outdir, rename=False):
         """Download a particular artifact from jenkins. """
-
         jenkins_job = self.jenkins.jenkins_api[job]
         build = jenkins_job.get_build(int(build_num))
         artifact_found = False
@@ -349,17 +348,25 @@ class Refinery(DobermanBase):
                             if not os.path.isfile(a_file):
                                 params = (job, pipeline_id, build,
                                           'console.txt', op_dir, rename)
+                            nullify = False
                             try:
                                 # Check to see if the file is there already
                                 # first rename:
+                                redownload = not self.cli.offline_mode
                                 if not (os.path.isfile(os.path.join(op_dir,
-                                        rename))):
+                                        rename))) and redownload:
                                     self.download_specific_file(*params)
+                                else:
+                                    msg = "Cannot redownload file when offline"
+                                    self.cli.LOG.error(msg)
+                                    nullify = True
                             except Exception as e:
                                 err = "Problem fetching console data for "
                                 err += "pl {} (bug {}). {}"
                                 self.cli.LOG.info(err.format(pipeline_id, bug,
                                                   e))
+                                nullify = True
+                            if nullify:
                                 bug_output['additional info']['text'] = None
 
                             openme = os.path.join(op_dir, rename)
@@ -482,8 +489,12 @@ class Refinery(DobermanBase):
                 return self.info_file_cache[info_file]
 
             # Temporarily load up the whole output file into memory:
-            with open(info_file, 'r') as f:
-                info = f.read()
+            try:
+                with open(info_file, 'r') as f:
+                    info = f.read()
+            except IOError as e:
+                info = None
+                self.cli.LOG.error(e)
 
         # replace pipeline id(s) with placeholder:
         pl_placeholder = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE'
