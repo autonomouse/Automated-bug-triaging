@@ -8,11 +8,13 @@ from weebl_python2.exception import UnexpectedStatusCode
 class Weebl(object):
     """Weebl API wrapper class."""
 
-    def __init__(self, uuid,
-                 weebl_ip="http://10.245.0.14",
+    def __init__(self, uuid, env_name,
+                 #weebl_ip="http://10.245.0.14",
+                 weebl_ip="http://localhost:8000",
                  weebl_api_ver="v1",
                  weebl_auth=('weebl', 'passweebl')):
         self.LOG = utils.get_logger("weeblSDK_python2")
+        self.env_name = env_name
         self.uuid = uuid
         self.weebl_auth = weebl_auth
         self.headers = {"content-type": "application/json",
@@ -43,11 +45,12 @@ class Weebl(object):
         response = self.make_request('get', url=url)
         return json.loads(response.text).get('objects')
 
-    def weeblify_environment(self, ci_server_api=None, report=True):
+    def weeblify_environment(self, jenkins_host, ci_server_api=None,
+                             report=True):
         self.set_up_new_environment(report=report)
-        self.set_up_new_jenkins(report=report)
-        if ci_server_api is not None:
-            self.set_up_new_build_executors(ci_server_api)
+        self.set_up_new_jenkins(jenkins_host, report=report)
+        if ci_server_api is not None and hasattr(ci_server_api, 'jenkins_api'):
+            self.set_up_new_build_executors(ci_server_api.jenkins_api)
 
     def environment_existence_check(self, uuid):
         environment_instances = self.get_instances("environment")
@@ -86,13 +89,13 @@ class Weebl(object):
 
         for build_executor in ci_server_api.get_nodes().iteritems():
             name = build_executor[0]
-            if self.build_executor_existence_check(name, self.env_uuid):
+            if self.build_executor_existence_check(name, self.uuid):
                 continue
 
             # Create this build executor for this environment:
             url = "{}/build_executor/".format(self.base_url)
             data = {'name': name,
-                    'jenkins': self.env_uuid}
+                    'jenkins': self.uuid}
             self.make_request('post', url=url, data=json.dumps(data))
             newly_created_build_executors.append(name)
         if newly_created_build_executors != []:
@@ -105,21 +108,26 @@ class Weebl(object):
             if report:
                 self.LOG.info("Environment exists with UUID: {}"
                               .format(self.uuid))
-            self.env_uuid = self.uuid
-            self.env_name = self.get_env_name_from_uuid(self.env_uuid)
+            env_name = self.get_env_name_from_uuid(self.uuid)
+            if env_name != self.env_name:
+                msg = "Environment name provided ({0}) does not match the "
+                msg += "name of the environment with uuid: {1}, which is {2}. "
+                msg += "Using {2} as environment name instead."
+                self.LOG.error(
+                    msg.format(self.env_name, self.uuid, env_name))
+                self.env_name = env_name
             return
 
         # Create new environment:
         url = "{}/environment/".format(self.base_url)
-        data = {'name': self.environment,
+        data = {'name': self.env_name,
                 'uuid': self.uuid}
         response = self.make_request('post', url=url, data=json.dumps(data))
-        self.env_uuid = json.loads(response.text)['uuid']
         self.env_name = json.loads(response.text)['name']
         self.LOG.info("Set up new {} environment: {}".format(
-            self.environment, self.env_uuid))
+            self.env_name, self.uuid))
 
-    def set_up_new_jenkins(self, report=True):
+    def set_up_new_jenkins(self, jenkins_host, report=True):
         if self.jenkins_existence_check():
             if report:
                 self.LOG.info("Jenkins exists with UUID: {}"
@@ -128,15 +136,15 @@ class Weebl(object):
 
         # Create new jenkins:
         url = "{}/jenkins/".format(self.base_url)
-        data = {'environment': self.env_uuid,
-                'external_access_url': self.jenkins_host}
+        data = {'environment': self.uuid,
+                'external_access_url': jenkins_host}
         # TODO: Add internal_access_url once it's reimplemented in the API:
         # data['internal_access_url'] = self.get_internal_url_of_this_machine()
         self.make_request('post', url=url, data=json.dumps(data))
         self.LOG.info("Set up new jenkins: {}".format(self.uuid))
 
     def check_in_to_jenkins(self, ci_server_api):
-        url = "{}/jenkins/{}/".format(self.base_url, self.env_uuid)
+        url = "{}/jenkins/{}/".format(self.base_url, self.uuid)
         response = self.make_request('put', url=url)
         return json.loads(response.text).get('uuid')
 
@@ -177,9 +185,8 @@ class Weebl(object):
         return json.loads(response.text).get('uuid')
 
     def get_build_executor_uuid_from_name(self, build_executor_name):
-        env_uuid = self.get_env_uuid_from_name(self.environment)
         url = "{}/build_executor/".format(self.base_url)
-        url_with_args = "{}?jenkins={}&name={}".format(url, env_uuid,
+        url_with_args = "{}?jenkins={}&name={}".format(url, self.uuid,
                                                        build_executor_name)
         response = self.make_request('get', url=url_with_args)
         objects = json.loads(response.text)['objects']

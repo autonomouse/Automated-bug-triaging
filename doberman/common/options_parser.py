@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from doberman.common import utils
 from doberman.__init__ import __version__
+from ConfigParser import NoOptionError
 
 
 class OptionsParser(object):
@@ -120,7 +121,10 @@ class OptionsParser(object):
             self.environment = "Unknown"
 
         # WEEBL
-        use_weebl = cfg.get('DEFAULT', 'use_weebl').lower() in ['true', 'yes']
+        try:
+            use_weebl = cfg.get('DEFAULT', 'use_weebl').lower() in ['true', 'yes']
+        except NoOptionError:
+            pass
         if opts.use_weebl:
             self.use_weebl = opts.use_weebl
         elif use_weebl:

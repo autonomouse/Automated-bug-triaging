@@ -95,6 +95,7 @@ class CommonTestMethods(DobermanTestBase):
         cli.generic_bug_id = "GenericBug_Ignore"
         cli.bug_tracker_url = "https://bugs.launchpad.net/bugs/{}"
         cli.environment = "TestEnvironment"
+        cli.uuid = "fake-uuid"
 
         # WEEBL:
         cli.use_weebl = False

@@ -26,8 +26,9 @@ class CrudeAnalysis(DobermanBase):
             self.jenkins, self.test_catalog)
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            self.weebl = Weebl(self.cli.uuid)
-            self.weebl.weeblify_environment(self.jenkins.jenkins_api)
+            self.weebl = Weebl(self.cli.uuid, self.cli.environment)
+            self.weebl.weeblify_environment(
+                self.cli.jenkins_host, self.jenkins)
         #
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)

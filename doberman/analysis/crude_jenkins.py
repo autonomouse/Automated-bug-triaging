@@ -208,7 +208,7 @@ class Build(OilSpill):
 
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            weebl = Weebl(self.cli.uuid)
+            weebl = Weebl(self.cli.uuid, self.cli.environment)
             weebl.create_pipeline(self.pipeline, build_executor)
         #
 
