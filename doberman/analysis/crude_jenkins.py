@@ -205,16 +205,16 @@ class Build(OilSpill):
         for err in file_parser.status:
             self.cli.LOG.error(err)
         build_executor = file_parser.extracted_info['build_executor']
+        self.cli.LOG.info("Processing pipeline: {} (on {})".format(
+                          self.pipeline, build_executor))
 
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            weebl = Weebl(self.cli.uuid, self.cli.environment)
+            # Create pipeline:
+            weebl = Weebl(self.cli.uuid, self.cli.environment, report=False)
             weebl.create_pipeline(self.pipeline, build_executor)
+        matching_bugs = self.oil_survey(
+            path, self.pipeline, file_parser.extracted_info)
         #
-
-        self.cli.LOG.info("Processing pipeline: {} (on {})".format(
-                          self.pipeline, build_executor))
-        matching_bugs = self.oil_survey(path, self.pipeline,
-                                        file_parser.extracted_info)
         self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
         self.message = 0
