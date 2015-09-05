@@ -211,7 +211,7 @@ class Build(OilSpill):
         # <ACTIONPOINT>
         if self.cli.use_weebl:
             # Create pipeline:
-            weebl = Weebl(self.cli.uuid, self.cli.environment, report=False)
+            weebl = Weebl(self.cli.uuid, self.cli.environment)
             weebl.create_pipeline(self.pipeline, build_executor)
         matching_bugs = self.oil_survey(
             path, self.pipeline, file_parser.extracted_info)

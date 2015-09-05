@@ -122,7 +122,8 @@ class OptionsParser(object):
 
         # WEEBL
         try:
-            use_weebl = cfg.get('DEFAULT', 'use_weebl').lower() in ['true', 'yes']
+            use_weebl = cfg.get('DEFAULT', 'use_weebl').lower() in ['true',
+                                                                    'yes']
         except NoOptionError:
             pass
         if opts.use_weebl:
