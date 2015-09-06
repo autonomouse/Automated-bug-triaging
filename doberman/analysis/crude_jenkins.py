@@ -8,6 +8,12 @@ from doberman.common import pycookiecheat
 from doberman.common.base import DobermanBase
 from doberman.analysis.oil_spill import OilSpill
 from jenkinsapi.custom_exceptions import *
+# <ACTIONPOINT>
+try:
+    from weebl_python2.weebl import Weebl
+except ImportError as e:
+    pass
+#
 
 
 class Jenkins(DobermanBase):
@@ -198,8 +204,17 @@ class Build(OilSpill):
         file_parser = FileParser(path=path, job=self.jobname)
         for err in file_parser.status:
             self.cli.LOG.error(err)
+        build_executor = file_parser.extracted_info['build_executor']
+        self.cli.LOG.info("Processing pipeline: {} (on {})".format(
+                          self.pipeline, build_executor))
 
-        matching_bugs = self.oil_survey(path, self.pipeline,
-                                        file_parser.extracted_info)
+        # <ACTIONPOINT>
+        if self.cli.use_weebl:
+            # Create pipeline:
+            weebl = Weebl(self.cli.uuid, self.cli.environment)
+            weebl.create_pipeline(self.pipeline, build_executor)
+        matching_bugs = self.oil_survey(
+            path, self.pipeline, file_parser.extracted_info)
+        #
         self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
         self.message = 0

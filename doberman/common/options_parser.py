@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from doberman.common import utils
 from doberman.__init__ import __version__
+from ConfigParser import NoOptionError
 
 
 class OptionsParser(object):
@@ -119,6 +120,20 @@ class OptionsParser(object):
         else:
             self.environment = "Unknown"
 
+        # WEEBL
+        try:
+            use_weebl = cfg.get('DEFAULT', 'use_weebl').lower() in ['true',
+                                                                    'yes']
+        except NoOptionError:
+            pass
+        if opts.use_weebl:
+            self.use_weebl = opts.use_weebl
+        elif use_weebl:
+            self.use_weebl = use_weebl
+        else:
+            self.use_weebl = False
+        #
+
         self.logpipelines = True if opts.logpipelines else False
 
         try:
@@ -168,6 +183,15 @@ class OptionsParser(object):
                 opts.start = '24 hours ago'
                 msg = "No pipeline IDs provided, defaulting to past 24 hours"
                 self.LOG.info(msg)
+
+        # Unique identifier of environment:
+        uuid = cfg.get('DEFAULT', 'uuid')
+        if opts.uuid:
+            self.uuid = opts.uuid
+        elif uuid is None:
+            self.uuid = None
+        else:
+            self.uuid = uuid
 
         # Start and end datetimes:
         if opts.start or opts.end:

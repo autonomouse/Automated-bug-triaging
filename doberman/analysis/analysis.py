@@ -6,6 +6,12 @@ from doberman.common.base import DobermanBase
 from crude_jenkins import Jenkins, Build
 from crude_test_catalog import TestCatalog
 from doberman.common.CLI import CLI
+# <ACTIONPOINT>
+try:
+    from weebl_python2.weebl import Weebl
+except ImportError as e:
+    pass
+#
 
 
 class CrudeAnalysis(DobermanBase):
@@ -18,6 +24,12 @@ class CrudeAnalysis(DobermanBase):
         self.jenkins = Jenkins(self.cli)
         self.build_numbers = self.build_pl_ids_and_check(
             self.jenkins, self.test_catalog)
+        # <ACTIONPOINT>
+        if self.cli.use_weebl:
+            self.weebl = Weebl(self.cli.uuid, self.cli.environment)
+            self.weebl.weeblify_environment(
+                self.cli.jenkins_host, self.jenkins)
+        #
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
         self.generate_output_files(yamldict, problem_pipelines)
@@ -71,8 +83,8 @@ class CrudeAnalysis(DobermanBase):
                     continue
 
                 jdict = job_dict[job] if job in job_dict else {}
-                # Pull console and artifacts from jenkins:
 
+                # Pull console and artifacts from jenkins:
                 build_obj = Build(build_num, job, self.jenkins, jdict,
                                   self.cli, pipeline_id, prev_class)
                 job_dict[job] = build_obj.yaml_dict
@@ -87,7 +99,7 @@ class CrudeAnalysis(DobermanBase):
                 self.cli.LOG.info(progmsg.format(pgr))
 
             pl_proc_msg = "CrudeAnalysis has finished processing pipline id: "
-            pl_proc_msg += "{0} and is returning a value of {1}."
+            pl_proc_msg += "{0} and is returning a value of {1}.\n\n"
             self.cli.LOG.info(pl_proc_msg.format(pipeline_id, self.message))
 
             # Merge dictionaries (necessary for multiple pipelines):
