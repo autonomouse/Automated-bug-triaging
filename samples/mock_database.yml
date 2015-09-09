@@ -404,19 +404,6 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
             regexp:
             - "hook failed...identity-service-relation-joined. for keystone.identity-service"
 
-  "1386679":
-    category: None
-    description: "Prodstack: storage backend relation joined"
-    pipeline_deploy:
-      -
-        "console.txt":
-            regexp:
-            - "unit. cinder-vnx... machine.  agent-state. error details. hook failed...storage-backend-relation-joined"
-      -
-        "juju_status.yaml":
-            regexp:
-            - "hook failed...storage.backend.relation.joined.{1,2000}for cinder-vnx.storage.backend"
-
   "1389318":
     category: None
     description: "Prodstack: stable juno did not match any file(s) known to git (tempest fail)"
