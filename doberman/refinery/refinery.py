@@ -257,12 +257,17 @@ class Refinery(DobermanBase):
 
                     # Use a set to only consider the pipelines we're
                     # interested in (not other stuff in folder)
-                    these_build_numbers = \
-                        {self.build_numbers[pl].get(crude_job)
-                         for pl in self.pipeline_ids}
+                    if hasattr(self, 'pipeline_ids') is False:
+                        do_anyway = True
+                        these_build_numbers = {}
+                    else:
+                        these_build_numbers = \
+                            {self.build_numbers[pl].get(crude_job)
+                             for pl in self.pipeline_ids}
+                        do_anyway = False
 
                     for build_num in os.walk(crude_folder).next()[1]:
-                        if build_num in these_build_numbers:
+                        if build_num in these_build_numbers or do_anyway:
                             new_bugs = self.unify(crude_job, marker, job,
                                                   filename, crude_dir,
                                                   build_num)
@@ -626,7 +631,7 @@ class Refinery(DobermanBase):
         url = self.cli.bug_tracker_url
         job_ranking = None
         generic_bugs = {}
-        top_ten = []
+        top_ten = ["\n"]
 
         for job in job_names:
             if job in self.cli.multi_bugs_in_pl:
