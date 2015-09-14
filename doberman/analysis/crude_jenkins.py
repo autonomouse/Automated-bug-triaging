@@ -213,11 +213,8 @@ class Build(OilSpill):
             # Create pipeline:
             weebl = Weebl(self.cli.uuid, self.cli.environment)
             weebl.create_pipeline(self.pipeline, build_executor)
-            matching_bugs = self.oil_survey(
-                path, self.pipeline, file_parser.extracted_info)
-        else:
-            matching_bugs = self.oil_survey(
-                path, self.pipeline, file_parser.extracted_info)
+        matching_bugs = self.oil_survey(
+            path, self.pipeline, file_parser.extracted_info)
         #
 
         self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
