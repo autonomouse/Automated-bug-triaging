@@ -6,6 +6,12 @@ import re
 import uuid
 from jenkinsapi.custom_exceptions import *
 from glob import glob
+# <ACTIONPOINT>
+try:
+    from weebl_python2.weebl import Weebl
+except ImportError as e:
+    pass
+#
 
 
 class OilSpill(DobermanBase):
@@ -40,6 +46,13 @@ class OilSpill(DobermanBase):
         else:
             build_status = 'Unknown'
         matching_bugs = {}
+        # <ACTIONPOINT>
+        if self.cli.use_weebl:
+            # Create build:
+            self.weebl.create_build(
+                self.build_number, self.pipeline, self.jobname, build_status,
+                build_finished_at=build_details.get('timestamp'))
+        #
 
         bug_unmatched = True
         if not self.cli.bugs:
@@ -307,12 +320,24 @@ class OilSpill(DobermanBase):
             matches = re.compile(regexp, re.DOTALL).findall(text)
             if matches:
                 if len(set(matches)) >= len(set_re):
+
+                    # <ACTIONPOINT>
+                    if self.cli.use_weebl:
+                        # Create bug occurrence:
+                        self.weebl.create_bug_occurrence(
+                            self.build_number, self.jobname, self.pipeline, 
+                            regexps)
+                    #
+
                     if '*' in orig_filename_in_db:
                         return {orig_filename_in_db: {'regexp': regexps}}
                     else:
                         return {target_file: {'regexp': regexps}}
 
     def oil_survey(self, path, pipeline, extracted_info):
+        # <ACTIONPOINT>
+        self.weebl = Weebl(self.cli.uuid, self.cli.environment)
+        #
         self.oil_df = extracted_info['oil_df']
         (matching_bugs, build_status) = self.bug_hunt(path)
         self.matching_bugs = matching_bugs
