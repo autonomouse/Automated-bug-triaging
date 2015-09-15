@@ -292,10 +292,10 @@ class Weebl(object):
     def create_build(self, build_id, pipeline, job_type, build_status,
                      build_started_at=None, build_finished_at=None,
                      ts_format="%Y-%m-%d %H:%M:%SZ"):
-        build_id = self.build_exists(build_id, pipeline)
-        if build_id is not None:
-            return build_id
-        import pdb; pdb.set_trace()
+        build_uuid = self.build_exists(build_id, pipeline)
+        if build_uuid is not None:
+            return build_uuid
+
         # Create build:
         url = "{}/build/".format(self.base_url)
         data = {'build_id': build_id,
@@ -308,10 +308,7 @@ class Weebl(object):
         if build_finished_at:
             data['build_finished_at'] =\
                 self.convert_timestamp_to_string(build_finished_at, ts_format)
-        try:
-            response = self.make_request('post', url=url, data=json.dumps(data))
-        except:
-            import pdb; pdb.set_trace()
+        response = self.make_request('post', url=url, data=json.dumps(data))
         build_uuid = json.loads(response.text).get('uuid')
         self.LOG.info("Build {} successfully created (build uuid: {})"
                       .format(build_id, build_uuid))
@@ -358,7 +355,6 @@ class Weebl(object):
         """Get the data and put it into the format doberman is expecting (the
         same as test-catalog's get_bug_info method).
         """
-
         bug_info = {'bugs': {}}
         for target_file_glob in target_file_globs:
             tfile = target_file_glob['glob_pattern']
