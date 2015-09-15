@@ -1,3 +1,10 @@
+doberman (2.2.3) precise; urgency=medium
+
+  * Now optionally downloads bugs from weebl rather than test-catalog. 
+  * Renamed temporary weebl client folder (to weeblclient) to reflect the new naming scheme of the client package (this will still be removed when the package is available).
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Tue, 15 Sep 2015 13:40:06 -0400
+
 doberman (2.2.2-0ubuntu1) precise; urgency=medium
 
   * Fixed downloading of artifacts taking an unbelievably long time (especially on weekly runs) due to an extra for loop
