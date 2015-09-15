@@ -330,14 +330,14 @@ class Weebl(object):
         return self.munge_bug_info_data(
             known_bug_regex_instances, bug_instances,
             bug_tracker_bug_instances, target_file_glob)
-    
+
 
     def munge_bug_info_data(self, known_bug_regex_instances, bug_instances,
                             bug_tracker_bug_instances, target_file_globs):
         """Get the data and put it into the format doberman is expecting (the
         same as test-catalog's get_bug_info method).
         """
-        
+
         bug_info = {'bugs': {}}
         for target_file_glob in target_file_globs:
             tfile = target_file_glob['glob_pattern']
@@ -346,148 +346,42 @@ class Weebl(object):
                 continue
             for known_bug_regex in known_bug_regex_instances:
                 regex = known_bug_regex['regex']
+                regex_uuid = known_bug_regex['uuid']
                 files_bug_affects = known_bug_regex.get('target_file_globs')
-                
                 weebl_bug = known_bug_regex.get('bug')
-               
+
                 for bug in bug_instances:
+                    # Description here is misnamed - actually means summary:
+                    description = bug.get('summary')
                     if bug['uuid'] == weebl_bug:
                         if bug['bug_tracker_bugs'] == []:
                             continue
                         lp_bugs = bug['bug_tracker_bugs']
-                        
+
                         if tfile in files_bug_affects:
-                            #sub_dict = self.build_regex_lower_dictionary(
-                            #    regex, tfile, jobs)
-                            
                             for job in jobs:
+                                tfile_regex = {}
                                 for lp_bug in lp_bugs:
                                     if lp_bug not in bug_info['bugs']:
                                         bug_info['bugs'][lp_bug] = {}
-                                    if affects not in bug_info['bugs'][lp_bug]:
-                                        bug_info['bugs'][lp_bug]['affects'] = []
-                                    if category not in bug_info['bugs'][lp_bug]:
-                                        bug_info['bugs'][lp_bug]['category'] = []
-                                    if affects not in bug_info['bugs'][lp_bug]:
-                                        bug_info['bugs'][lp_bug]['affects'] = []
-                                    if description not in bug_info['bugs'][lp_bug]:
-                                        bug_info['bugs'][lp_bug]['description'] = []
+
+                                    if 'affects' not in bug_info['bugs'][lp_bug]:
+                                        bug_info['bugs'][lp_bug]['affects'] = []  # TODO: Get from bug_tracker_bug after LP integration
+                                    if 'category' not in bug_info['bugs'][lp_bug]:
+                                        bug_info['bugs'][lp_bug]['category'] = []  # TODO: Get from bug_tracker_bug after LP integration
+                                    if 'description' not in bug_info['bugs'][lp_bug]:
+                                        bug_info['bugs'][lp_bug]['description'] = description
+                                    if 'regex_uuid' not in bug_info['bugs'][lp_bug]:
+                                        bug_info['bugs'][lp_bug]['regex_uuid'] = regex_uuid
                                     if job not in bug_info['bugs'][lp_bug]:
-                                        bug_info['bugs'][lp_bug][job] = {}
-                                    bug_info['bugs'][lp_bug][job][tfile] =\
-                                        {'regexp': [regex]}
-                                        
-        # affects, category & description
-        #TODO: ALSO INCLUDE UUIDS OF REGEXES!!!!!!!!!!!!!!!!!!1
-        # make testable
-        # once passes, split into sub methods
-        return bug_info
-        
+                                        bug_info['bugs'][lp_bug][job] = []
 
+                                    if tfile not in tfile_regex:
+                                        tfile_regex[tfile] = {'regexp': []}
+                                    if regex not in tfile_regex[tfile]['regexp']:
+                                        tfile_regex[tfile]['regexp'].append(regex)
+                                bug_info['bugs'][lp_bug][job].append(tfile_regex)
 
-
-
-
-    def build_regex_lower_dictionary(self, regex, target_file_glob, jobs):
-        sub_dict = {}
-        for job in jobs:
-            if job not in sub_dict:
-                sub_dict[job] = {}
-            sub_dict[job][target_file_glob] = {'regexp': [regex]}
-        return sub_dict
-    
-    def build_bug_tracker_bug_mid_dictionary(self, sub_dicts, lp_bugs):
-        
-        for sub_dict in sub_dicts:
-            import pdb; pdb.set_trace()
-        
-        return mid_dict
-    
-    def build_bugs_upper_dictionary(self, mid_dicts):
-        
-        complete_dict = {'bugs': {}}
-        
-        for mid_dict in mid_dicts:
-            import pdb; pdb.set_trace()
-            
-        return complete_dict
-
-
-
-
-
-
-
-
-
-
-    '''
-    def populate_re_dict(self, known_bug_regex, target_file_glob_instances):
-        re_dict = {}
-        regex = {'regexp': [known_bug_regex['regex']]}
-        for target_file_glob in known_bug_regex['target_file_globs']:
-            tfglobs = [(tfile['job_types'], tfile['glob_pattern']) for tfile in
-                       target_file_glob_instances if tfile['glob_pattern'] == 
-                       target_file_glob]
-            #if tfglobs == []:
-            #    re_dict['*']['*'] = regex
-            for jobs, glob_pattern in tfglobs:
-                for job in jobs:
-                    if not hasattr(re_dict, 'job'):
-                        re_dict[job] = []
-                    re_dict[job].append({glob_pattern: regex})
-        return re_dict
-    '''        
-
-            
-        
-        
-        
-    def old_munge_bug_info_data(self, known_bug_regex_instances, bug_instances,
-                            bug_tracker_bug_instances, target_file_glob):
-        """Get the data and put it into the format doberman is expecting (the
-        same as test-catalog's get_bug_info method).
-        """
-        bug_info = {'bugs': {}}
-        for known_bug_regex in known_bug_regex_instances:
-            bug_id = known_bug_regex.get("bug")
-            if bug_id is not None:
-                bug_list = [bug for bug in bug_instances if
-                            bug['uuid'] == bug_id]
-                if bug_list == []:
-                    bug = None
-                    bug_info['bugs'][bug_id] =\
-                        self.populate_re_dict(
-                            known_bug_regex, target_file_glob)
-                    bug_info['bugs'][bug_id]['description'] = ""
-                    bug_tracker_bug_ids = []
-                else:
-                    bug = bug_list[0]
-                    bug_tracker_bug_ids = bug.get("bug_tracker_bugs")
-                    # Description here is misnamed - actually means summary:
-                    if bug_tracker_bug_ids in [None, []]:
-                        bug_info['bugs'][bug_id] =\
-                            self.populate_re_dict(
-                                known_bug_regex, target_file_glob)
-                        bug_info['bugs'][bug_id]['description'] =\
-                            bug.get('summary')
-                    else:
-                        for bug_tracker_bug in bug_tracker_bug_ids:
-                            bug_tracker_bug_instance = [
-                                usbug for usbug in
-                                bug_tracker_bug_instances if
-                                usbug['bug_id'] == bug_tracker_bug][0]
-                            bug_info['bugs'][bug_tracker_bug] =\
-                                bug_tracker_bug_instance
-                import pdb; pdb.set_trace()
-            else:
-                bug_tracker_bug_ids = []
-                bug_id = "Unknown"
-                bug_info['bugs'][bug_id] =\
-                    self.populate_re_dict(known_bug_regex, target_file_glob)
-                bug_info['bugs'][bug_id]['description'] = ""
-            bug_info['bugs'][bug_id]['category'] = []
-            bug_info['bugs'][bug_id]['affects'] = []
         return bug_info
 
     def delete_bug_info(self, bugno):
@@ -508,76 +402,3 @@ class Weebl(object):
             glob_pattern=glob_pattern, job_types=job_types)
         self.create_known_bug_regex(
             glob_pattern=glob_pattern, regex=regex, bug=bugno)
-
-
-
-
-'''
-
-    def munge_bug_info_data(self, regular_expression_instances, bug_instances,
-                            bug_tracker_bug_instances):
-        """Get the data and put it into the format doberman is expecting (the
-        same as test-catalog's get_bug_info method).
-        """
-        bug_info = {'bugs': {}}
-        for regular_expression in regular_expression_instances:
-            bug_id = regular_expression.get("bug")
-            if bug_id is not None:
-                bug_list = [bug for bug in bug_instances if
-                            bug['uuid'] == bug_id]
-                if bug_list is []:
-                    bug = None
-                    bug_info['bugs'][bug_id] =\
-                        self.populate_re_dict(regular_expression)
-                    bug_info['bugs'][bug_id]['description'] = ""
-                    bug_tracker_bug_ids = []
-                else:
-                    bug = bug_list[0]
-                    bug_tracker_bug_ids = bug.get("bug_tracker_bugs")
-                    # Description here is misnamed - actually means summary:
-                    if bug_tracker_bug_ids in [None, []]:
-                        bug_info['bugs'][bug_id] =\
-                            self.populate_re_dict(regular_expression)
-                        bug_info['bugs'][bug_id]['description'] =\
-                            bug.get('summary')
-                    else:
-                        for bug_tracker_bug in bug_tracker_bug_ids:
-                            bug_tracker_bug_instance = [
-                                usbug for usbug in
-                                bug_tracker_bug_instances if
-                                usbug['bug_id'] == bug_tracker_bug][0]
-                            bug_info['bugs'][bug_tracker_bug] = {}
-                            bug_info['bugs'][bug_tracker_bug]['category'] =\
-                                bug_tracker_bug_instance.get('category')
-                            bug_info['bugs'][bug_tracker_bug]['affects'] =\
-                                bug_tracker_bug_instance.get('affects')
-                            bug_info['bugs'][bug_tracker_bug]['description'] =\
-                                bug_tracker_bug_instance.get('description')
-            else:
-                bug_tracker_bug_ids = []
-                bug_id = "Unknown"
-                bug_info['bugs'][bug_id] =\
-                    self.populate_re_dict(regular_expression)
-                bug_info['bugs'][bug_id]['description'] = ""
-            bug_info['bugs'][bug_id]['category'] = []
-            bug_info['bugs'][bug_id]['affects'] = []
-        return bug_info
-
-    def delete_bug_info(self, bugno):
-        """This method does nothing, as deletion is not required for updating
-        the data in weebl."""
-        pass
-
-    def add_bug_info(self, bugno, names, file_, reg, boolean):
-        """
-        warning:
-        'Failed to parse config:\s+lxc.include\s+=\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
-        has become:
-        'Failed to parse config:\\s+lxc.include\\s+=\\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
-
-        check in doberman once it is downloaded again
-        """
-        self.create_target_file_glob(glob_pattern=file_, job_types=names)
-        self.create_regular_expression(
-            glob_pattern=file_, regex=reg, bug=bugno)
-'''

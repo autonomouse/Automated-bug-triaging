@@ -12,7 +12,6 @@ class OilSpill(DobermanBase):
     """Failure detection class"""
 
     def __init__(self, build_number, jobname, yaml_dict, cli, pipeline):
-
         self.cli = cli
         self.build_number = build_number
         self.jobname = jobname
@@ -54,6 +53,7 @@ class OilSpill(DobermanBase):
                 # Any dict in self.cli.bugs[bug_id][self.jobname] can match(or)
                 or_dict = self.cli.bugs[bug_id][self.jobname]
                 files_to_scan = []
+                
                 [files_to_scan.extend(and_dict.keys()) for and_dict in or_dict]
                 xmls_to_scan = set([xml for xml in files_to_scan if xml in
                                     self.cli.xmls])

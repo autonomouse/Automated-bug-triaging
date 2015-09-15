@@ -10,7 +10,7 @@ from doberman.analysis.oil_spill import OilSpill
 from jenkinsapi.custom_exceptions import *
 # <ACTIONPOINT>
 try:
-    from weebl_python2.weebl import Weebl
+    from weebl_client.weebl_python2.weebl import Weebl
 except ImportError as e:
     pass
 #

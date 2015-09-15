@@ -25,11 +25,13 @@ class CrudeAnalysis(DobermanBase):
             self.weebl = Weebl(self.cli.uuid, self.cli.environment)
             self.weebl.weeblify_environment(
                 self.cli.jenkins_host, self.jenkins)
-            self.cli.bugs = self.weebl.get_bug_info()
+            self.cli.bugs = self.weebl.get_bug_info().get('bugs')
         else:
             self.cli.bugs = None
         #
         self.test_catalog = TestCatalog(self.cli, self.cli.bugs)
+        if self.cli.bugs is None:
+            self.cli.bugs = self.test_catalog.bugs
         self.build_numbers = self.build_pl_ids_and_check(
             self.jenkins, self.test_catalog)
         jobs_to_process = self.determine_jobs_to_process()
