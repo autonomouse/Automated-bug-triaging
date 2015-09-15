@@ -21,8 +21,8 @@ class CrudeAnalysisTests(CommonTestMethods):
         super(CrudeAnalysisTests, self).tearDown()
         self.tidy_up()
 
-    @patch('weebl_python2.weebl.Weebl.weeblify_environment')
-    @patch('weebl_python2.weebl.Weebl.create_pipeline')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.weeblify_environment')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.create_pipeline')
     def test_use_weebl(self, _create_pipeline, _weeblify_environment):
         cli = self.populate_cli_var("blank_database.yml")
         cli.use_weebl = True

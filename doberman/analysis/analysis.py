@@ -8,7 +8,7 @@ from crude_test_catalog import TestCatalog
 from doberman.common.CLI import CLI
 # <ACTIONPOINT>
 try:
-    from weebl_client.weebl_python2.weebl import Weebl
+    from weeblclient.weebl_python2.weebl import Weebl
 except ImportError as e:
     pass
 #
