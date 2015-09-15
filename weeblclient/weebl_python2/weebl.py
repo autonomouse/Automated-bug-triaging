@@ -9,8 +9,7 @@ class Weebl(object):
     """Weebl API wrapper class."""
 
     def __init__(self, uuid, env_name,
-                 #weebl_ip="http://10.245.0.14",     #  <-      LOOK HERE!!!
-                 weebl_ip="http://localhost:8000",
+                 weebl_ip="http://10.245.0.14",
                  weebl_api_ver="v1",
                  weebl_auth=('weebl', 'passweebl')):
         self.LOG = utils.get_logger("weeblSDK_python2")
