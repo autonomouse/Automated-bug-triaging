@@ -8,7 +8,7 @@ from crude_test_catalog import TestCatalog
 from doberman.common.CLI import CLI
 # <ACTIONPOINT>
 try:
-    from weebl_python2.weebl import Weebl
+    from weebl_client.weebl_python2.weebl import Weebl
 except ImportError as e:
     pass
 #
@@ -19,17 +19,19 @@ class CrudeAnalysis(DobermanBase):
     def __init__(self, cli=False):
         doberman_start_time = datetime.now()
         self.cli = CLI().populate_cli() if not cli else cli
-        self.test_catalog = TestCatalog(self.cli)
-        self.cli.bugs = self.test_catalog.bugs
         self.jenkins = Jenkins(self.cli)
-        self.build_numbers = self.build_pl_ids_and_check(
-            self.jenkins, self.test_catalog)
         # <ACTIONPOINT>
         if self.cli.use_weebl:
             self.weebl = Weebl(self.cli.uuid, self.cli.environment)
             self.weebl.weeblify_environment(
                 self.cli.jenkins_host, self.jenkins)
+            self.cli.bugs = self.weebl.get_bug_info()
+        else:
+            self.cli.bugs = None
         #
+        self.test_catalog = TestCatalog(self.cli, self.cli.bugs)
+        self.build_numbers = self.build_pl_ids_and_check(
+            self.jenkins, self.test_catalog)
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
         self.generate_output_files(yamldict, problem_pipelines)
