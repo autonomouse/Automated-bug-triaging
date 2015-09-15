@@ -10,7 +10,7 @@ from jenkinsapi.custom_exceptions import *
 
 class TestCatalog(DobermanBase):
 
-    def __init__(self, cli):
+    def __init__(self, cli, bugs=None):
         self.cli = cli
         self.verify = self.cli.verify
         self.tc_client = TCClient
@@ -19,7 +19,10 @@ class TestCatalog(DobermanBase):
         if not self.cli.offline_mode:
             self.cookie = self.cli.tc_auth
             self.get_tc_client()
-        self.open_bug_database()  # Connect to bugs DB
+        if bugs is not None:
+            self.bugs = bugs.get('bugs')
+        else:
+            self.open_bug_database()
 
     def open_bug_database(self):
         if self.cli.database in [None, 'None', 'none', '']:
