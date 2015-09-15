@@ -8,7 +8,7 @@ from jenkinsapi.custom_exceptions import *
 from glob import glob
 # <ACTIONPOINT>
 try:
-    from weebl_python2.weebl import Weebl
+    from weeblclient.weebl_python2.weebl import Weebl
 except ImportError as e:
     pass
 #
@@ -23,6 +23,10 @@ class OilSpill(DobermanBase):
         self.jobname = jobname
         self.yaml_dict = yaml_dict
         self.pipeline = pipeline
+        # <ACTIONPOINT>
+        if self.cli.use_weebl:
+            self.weebl = Weebl(self.cli.uuid, self.cli.environment)
+        #
 
     def bug_hunt(self, path, announce=True):
         """ Using information from the bugs database, opens target file and
@@ -48,12 +52,16 @@ class OilSpill(DobermanBase):
         matching_bugs = {}
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            # Create build:
-            self.weebl.create_build(
-                self.build_number, self.pipeline, self.jobname, build_status,
-                build_finished_at=build_details.get('timestamp'))
-        #
+            if not self.cli.offline_mode:
+                timestamp = build_details.get('timestamp')
+            else:
+                timestamp = None
 
+            # Create build:
+            self.build_uuid = self.weebl.create_build(
+                self.build_number, self.pipeline, self.jobname, build_status,
+                build_finished_at=timestamp)
+        #
         bug_unmatched = True
         if not self.cli.bugs:
             raise Exception("No bugs in database!")
@@ -61,8 +69,12 @@ class OilSpill(DobermanBase):
         unfiled_xml_fails = {}
         failed_to_hit_any_flag = True
 
-        for bug_id in self.cli.bugs.keys():
+        for bug_id, bug_info in self.cli.bugs.items():
             if self.jobname in self.cli.bugs[bug_id]:
+                # <ACTIONPOINT>
+                if self.cli.use_weebl:
+                    self.regex_uuid = bug_info['regex_uuid']
+                #
                 # Any dict in self.cli.bugs[bug_id][self.jobname] can match(or)
                 or_dict = self.cli.bugs[bug_id][self.jobname]
                 files_to_scan = []
@@ -325,8 +337,7 @@ class OilSpill(DobermanBase):
                     if self.cli.use_weebl:
                         # Create bug occurrence:
                         self.weebl.create_bug_occurrence(
-                            self.build_number, self.jobname, self.pipeline, 
-                            regexps)
+                            self.build_uuid, self.regex_uuid)
                     #
 
                     if '*' in orig_filename_in_db:

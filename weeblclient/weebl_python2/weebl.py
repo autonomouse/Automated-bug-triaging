@@ -1,6 +1,7 @@
 import json
 import requests
 import subprocess
+from datetime import datetime
 from weeblclient.weebl_python2 import utils
 from weeblclient.weebl_python2.exception import UnexpectedStatusCode
 
@@ -9,7 +10,8 @@ class Weebl(object):
     """Weebl API wrapper class."""
 
     def __init__(self, uuid, env_name,
-                 weebl_ip="http://10.245.0.14",
+                 #weebl_ip="http://10.245.0.14",     #  <-      LOOK HERE!!!
+                 weebl_ip="http://localhost:8000",
                  weebl_api_ver="v1",
                  weebl_auth=('weebl', 'passweebl')):
         self.LOG = utils.get_logger("weeblSDK_python2")
@@ -20,6 +22,15 @@ class Weebl(object):
         self.headers = {"content-type": "application/json",
                         "limit": None}
         self.base_url = "{}/api/{}".format(weebl_ip, weebl_api_ver)
+
+    def convert_timestamp_to_dt_obj(self, timestamp):
+        timestamp_in_ms = timestamp / 1000
+        return datetime.fromtimestamp(timestamp_in_ms)
+
+    def convert_timestamp_to_string(self, timestamp,
+                                    ts_format='%a %d %b %Y %H:%M:%S'):
+        dt_obj = self.convert_timestamp_to_dt_obj(timestamp)
+        return dt_obj.strftime(ts_format)
 
     def make_request(self, method, raise_exception=True, **params):
         params['headers'] = self.headers
@@ -83,11 +94,13 @@ class Weebl(object):
                 return True
         return False
 
-    def build_exists(self, build_id, job_type, pipeline):
+    def build_exists(self, build_id, pipeline):
         build_instances = self.get_instances("build")
-        builds = [bld.get('build_id') for bld in build_instances if pipeline
-                  in bld['pipeline'] and job_type in bld['job_type']]
-        return True if build_id in builds else False
+        builds = [bld.get('uuid') for bld in build_instances if pipeline
+                  in bld['pipeline']]
+        if builds != []:
+            return builds[0]
+        return
 
     def regular_expression_exists(self, regex):
         regular_expression_instances = self.get_instances("regular_expression")
@@ -96,6 +109,13 @@ class Weebl(object):
                          regular_expression_instances]:
                 return True
         return False
+
+    def bug_occurrence_exists(self, build_uuid, regex_uuid):
+        bug_occurrence_instances = self.get_instances("bug_occurrence")
+        build_uuids = [bugocc.get('uuid') for bugocc in
+              bug_occurrence_instances if build_uuid in bugocc['build']
+              and regex_uuid in bugocc['regex']]
+        return True if build_uuids != [] else False
 
     def target_file_glob_exists(self, glob_pattern):
         target_file_glob_instances = self.get_instances("target_file_glob")
@@ -272,9 +292,10 @@ class Weebl(object):
     def create_build(self, build_id, pipeline, job_type, build_status,
                      build_started_at=None, build_finished_at=None,
                      ts_format="%Y-%m-%d %H:%M:%SZ"):
-        if self.build_exists(build_id, job_type, pipeline):
+        build_id = self.build_exists(build_id, pipeline)
+        if build_id is not None:
             return build_id
-
+        import pdb; pdb.set_trace()
         # Create build:
         url = "{}/build/".format(self.base_url)
         data = {'build_id': build_id,
@@ -287,7 +308,10 @@ class Weebl(object):
         if build_finished_at:
             data['build_finished_at'] =\
                 self.convert_timestamp_to_string(build_finished_at, ts_format)
-        response = self.make_request('post', url=url, data=json.dumps(data))
+        try:
+            response = self.make_request('post', url=url, data=json.dumps(data))
+        except:
+            import pdb; pdb.set_trace()
         build_uuid = json.loads(response.text).get('uuid')
         self.LOG.info("Build {} successfully created (build uuid: {})"
                       .format(build_id, build_uuid))
@@ -301,23 +325,20 @@ class Weebl(object):
             self.LOG.error(msg)
             raise Exception(msg)
 
-        return returned_build_id
+        return build_uuid
 
-    def populate_re_dict(self, regular_expression):
-        re_dict = {}
-        regex = {'regexp': [regular_expression['regex']]}
-        for target_file_glob in regular_expression['target_file_globs']:
-            tfglobs = [(tfile['job_types'], tfile['glob_pattern']) for tfile in
-                       self.get_instances("target_file_glob") if
-                       tfile['glob_pattern'] == target_file_glob]
-            #if tfglobs == []:
-            #    re_dict['*']['*'] = regex
-            for jobs, glob_pattern in tfglobs:
-                for job in jobs:
-                    if not hasattr(re_dict, 'job'):
-                        re_dict[job] = []
-                    re_dict[job].append({glob_pattern: regex})
-        return re_dict
+    def create_bug_occurrence(self, build_uuid, regex_uuid):
+        if self.bug_occurrence_exists(build_uuid, regex_uuid):
+            return
+
+        # Create Bug Occurrence:
+        url = "{}/bug_occurrence/".format(self.base_url)
+        data = {'build': build_uuid,
+                'regex': regex_uuid}
+        response = self.make_request('post', url=url, data=json.dumps(data))
+        bug_occurrence_uuid = json.loads(response.text).get('uuid')
+        self.LOG.info("Bug Occurrence created (bug occurrence uuid: {})"
+                      .format(bug_occurrence_uuid))
 
     def get_bug_info(self, force_refresh=True):
         self.LOG.info("Downloading bug regexs from Weebl: {}"
@@ -326,6 +347,7 @@ class Weebl(object):
         bug_instances = self.get_instances("bug")
         bug_tracker_bug_instances = self.get_instances("bug_tracker_bug")
         target_file_glob = self.get_instances("target_file_glob")
+
         return self.munge_bug_info_data(
             known_bug_regex_instances, bug_instances,
             bug_tracker_bug_instances, target_file_glob)
@@ -380,7 +402,6 @@ class Weebl(object):
                                     if regex not in tfile_regex[tfile]['regexp']:
                                         tfile_regex[tfile]['regexp'].append(regex)
                                 bug_info['bugs'][lp_bug][job].append(tfile_regex)
-
         return bug_info
 
     def delete_bug_info(self, bugno):
@@ -394,7 +415,6 @@ class Weebl(object):
         'Failed to parse config:\s+lxc.include\s+=\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
         has become:
         'Failed to parse config:\\s+lxc.include\\s+=\\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
-
         check in doberman once it is downloaded again
         """
         self.create_target_file_glob(
