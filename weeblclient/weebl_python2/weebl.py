@@ -55,6 +55,11 @@ class Weebl(object):
         response = self.make_request('get', url=url)
         return json.loads(response.text).get('objects')
 
+    def filter_instances(self, obj, filter_by, filter_for):
+        url = "{}/{}/?{}={}".format(self.base_url, obj, filter_by, filter_for)
+        response = self.make_request('get', url=url)
+        return json.loads(response.text).get('objects')
+
     def get_single_instance(self, obj, instance_id):
         url = "{}/{}/{}/".format(self.base_url, obj, instance_id)
         response = self.make_request('get', url=url)
@@ -68,49 +73,53 @@ class Weebl(object):
             self.set_up_new_build_executors(ci_server_api.jenkins_api)
 
     def environment_exists(self, uuid):
-        environment_instances = self.get_instances("environment")
+        environment_instances = self.filter_instances(
+            "environment", 'uuid', uuid)
         if uuid in [env.get('uuid') for env in environment_instances]:
             return True
         return False
 
     def build_executor_exists(self, name, env_uuid):
-        build_executor_instances = self.get_instances("build_executor")
+        build_executor_instances = self.filter_instances(
+            "build_executor", 'uuid', uuid)
         b_ex_in_env = [bex.get('name') for bex in build_executor_instances
                        if env_uuid in bex['jenkins']]
         return True if name in b_ex_in_env else False
 
     def jenkins_exists(self):
-        jkns_instances = self.get_instances("jenkins")
+        jkns_instances = self.filter_instances("jenkins", 'uuid', uuid)
         if jkns_instances is not None:
             if self.uuid in [jkns.get('uuid') for jkns in jkns_instances]:
                 return True
         return False
 
     def pipeline_exists(self, pipeline_id):
-        pipeline_instances = self.get_instances("pipeline")
+        pipeline_instances = self.filter_instances("pipeline", 'uuid', uuid)
         if pipeline_instances is not None:
             if pipeline_id in [pl.get('uuid') for pl in pipeline_instances]:
                 return True
         return False
 
     def build_exists(self, build_id, pipeline):
-        build_instances = self.get_instances("build")
+        build_instances = self.filter_instances("build", 'uuid', uuid)
         builds = [bld.get('uuid') for bld in build_instances if pipeline
                   in bld['pipeline']]
         if builds != []:
             return builds[0]
         return
 
-    def regular_expression_exists(self, regex):
-        regular_expression_instances = self.get_instances("regular_expression")
-        if regular_expression_instances is not None:
+    def known_bug_regex_exists(self, regex):
+        known_bug_regex_instances = self.filter_instances(
+            "known_bug_regex", 'uuid', uuid)
+        if known_bug_regex_instances is not None:
             if regex in [kbr.get('regex') for kbr in
-                         regular_expression_instances]:
+                         known_bug_regex_instances]:
                 return True
         return False
 
     def bug_occurrence_exists(self, build_uuid, regex_uuid):
-        bug_occurrence_instances = self.get_instances("bug_occurrence")
+        bug_occurrence_instances = self.filter_instances(
+            "bug_occurrence", 'uuid', uuid)
         build_uuids = [bugocc.get('uuid') for bugocc in
               bug_occurrence_instances if build_uuid in bugocc['build']
               and regex_uuid in bugocc['regex']]
@@ -214,18 +223,18 @@ class Weebl(object):
 
         return returned_pipeline
 
-    def create_regular_expression(self, glob_pattern, regex, bug=None):
-        if self.regular_expression_exists(regex):
+    def create_known_bug_regex(self, glob_pattern, regex, bug=None):
+        if self.known_bug_regex_exists(regex):
             return
 
-        # Create regular_expression:
-        url = "{}/regular_expression/".format(self.base_url)
+        # Create known_bug_regex:
+        url = "{}/known_bug_regex/".format(self.base_url)
         data = {"target_file_globs": glob_pattern,
                 "regex": regex}
         if bug is not None:
             data['bug'] = bug
         response = self.make_request('post', url=url, data=json.dumps(data))
-        returned_regex = json.loads(response.text).get('regular_expression')
+        returned_regex = json.loads(response.text).get('known_bug_regex')
         if response.status_code == 201:
             self.LOG.info(
                 "Regex \"{}\" successfully created in Weebl".format(regex))
