@@ -10,17 +10,17 @@ class Weebl(object):
     """Weebl API wrapper class."""
 
     def __init__(self, uuid, env_name,
-                 weebl_ip="http://10.245.0.14", 
+                 weebl_url="http://10.245.0.14",
                  weebl_api_ver="v1",
                  weebl_auth=('weebl', 'passweebl')):
         self.LOG = utils.get_logger("weeblSDK_python2")
         self.env_name = env_name
         self.uuid = uuid
-        self.weebl_ip = weebl_ip
+        self.weebl_url = weebl_url
         self.weebl_auth = weebl_auth
         self.headers = {"content-type": "application/json",
                         "limit": None}
-        self.base_url = "{}/api/{}".format(weebl_ip, weebl_api_ver)
+        self.base_url = "{}/api/{}".format(weebl_url, weebl_api_ver)
 
     def convert_timestamp_to_dt_obj(self, timestamp):
         timestamp_in_ms = timestamp / 1000
@@ -55,15 +55,20 @@ class Weebl(object):
         response = self.make_request('get', url=url)
         return json.loads(response.text).get('objects')
 
-    def filter_instances(self, obj, filter_by, filter_for):
-        url = "{}/{}/?{}={}".format(self.base_url, obj, filter_by, filter_for)
-        response = self.make_request('get', url=url)
-        return json.loads(response.text).get('objects')
-
     def get_single_instance(self, obj, instance_id):
         url = "{}/{}/{}/".format(self.base_url, obj, instance_id)
         response = self.make_request('get', url=url)
         return json.loads(response.text)
+
+    def filter_instances(self, obj, filters):
+        filter_by = '?'
+        for num, fltr in enumerate(filters):
+            filter_by += "{}={}".format(fltr[0], fltr[1])
+            if num != (len(filters) - 1):
+                filter_by += "&"
+        url = "{}/{}/{}".format(self.base_url, obj, filter_by, filter_by)
+        response = self.make_request('get', url=url)
+        return json.loads(response.text).get('objects')
 
     def weeblify_environment(self, jenkins_host, ci_server_api=None,
                              report=True):
@@ -74,34 +79,36 @@ class Weebl(object):
 
     def environment_exists(self, uuid):
         environment_instances = self.filter_instances(
-            "environment", 'uuid', uuid)
+            "environment", [('uuid', uuid)])
         if uuid in [env.get('uuid') for env in environment_instances]:
             return True
         return False
 
-    def build_executor_exists(self, name, env_uuid):
-        build_executor_instances = self.filter_instances(
-            "build_executor", 'uuid', uuid)
-        b_ex_in_env = [bex.get('name') for bex in build_executor_instances
-                       if env_uuid in bex['jenkins']]
-        return True if name in b_ex_in_env else False
-
-    def jenkins_exists(self):
-        jkns_instances = self.filter_instances("jenkins", 'uuid', uuid)
+    def jenkins_exists(self, uuid):
+        jkns_instances = self.filter_instances("jenkins", [('uuid', uuid)])
         if jkns_instances is not None:
             if self.uuid in [jkns.get('uuid') for jkns in jkns_instances]:
                 return True
         return False
 
+    def build_executor_exists(self, name, env_uuid):
+        build_executor_instances = self.filter_instances(
+            "build_executor", [('name', name)])
+        b_ex_in_env = [bex.get('name') for bex in build_executor_instances
+                       if env_uuid in bex['jenkins']]
+        return True if name in b_ex_in_env else False
+
     def pipeline_exists(self, pipeline_id):
-        pipeline_instances = self.filter_instances("pipeline", 'uuid', uuid)
+        pipeline_instances = self.filter_instances(
+            "pipeline", [('uuid', pipeline_id)])
         if pipeline_instances is not None:
             if pipeline_id in [pl.get('uuid') for pl in pipeline_instances]:
                 return True
         return False
 
     def build_exists(self, build_id, pipeline):
-        build_instances = self.filter_instances("build", 'uuid', uuid)
+        build_instances = self.filter_instances(
+            "build", [('build_id', build_id)])
         builds = [bld.get('uuid') for bld in build_instances if pipeline
                   in bld['pipeline']]
         if builds != []:
@@ -110,7 +117,7 @@ class Weebl(object):
 
     def known_bug_regex_exists(self, regex):
         known_bug_regex_instances = self.filter_instances(
-            "known_bug_regex", 'uuid', uuid)
+            "known_bug_regex", [('regex', regex)])
         if known_bug_regex_instances is not None:
             if regex in [kbr.get('regex') for kbr in
                          known_bug_regex_instances]:
@@ -119,14 +126,16 @@ class Weebl(object):
 
     def bug_occurrence_exists(self, build_uuid, regex_uuid):
         bug_occurrence_instances = self.filter_instances(
-            "bug_occurrence", 'uuid', uuid)
+            "bug_occurrence", [('build__uuid', build_uuid), 
+                               ('regex__uuid', regex_uuid)])
         build_uuids = [bugocc.get('uuid') for bugocc in
               bug_occurrence_instances if build_uuid in bugocc['build']
               and regex_uuid in bugocc['regex']]
         return True if build_uuids != [] else False
 
     def target_file_glob_exists(self, glob_pattern):
-        target_file_glob_instances = self.get_instances("target_file_glob")
+        target_file_glob_instances = self.filter_instances(
+            "target_file_glob", [('glob_pattern', glob_pattern)])
         if target_file_glob_instances is not None:
             if glob_pattern in [tfglobs.get('glob_pattern') for tfglobs in
                                 target_file_glob_instances]:
@@ -177,7 +186,7 @@ class Weebl(object):
             self.env_name, self.uuid))
 
     def set_up_new_jenkins(self, jenkins_host, report=True):
-        if self.jenkins_exists():
+        if self.jenkins_exists(self.uuid):
             if report:
                 self.LOG.info("Jenkins exists with UUID: {}"
                               .format(self.uuid))
@@ -347,7 +356,7 @@ class Weebl(object):
 
     def get_bug_info(self, force_refresh=True):
         self.LOG.info("Downloading bug regexs from Weebl: {}"
-                      .format(self.weebl_ip))
+                      .format(self.weebl_url))
         known_bug_regex_instances = self.get_instances("known_bug_regex")
         bug_instances = self.get_instances("bug")
         bug_tracker_bug_instances = self.get_instances("bug_tracker_bug")
@@ -407,21 +416,3 @@ class Weebl(object):
                                         tfile_regex[tfile]['regexp'].append(regex)
                                 bug_info['bugs'][lp_bug][job].append(tfile_regex)
         return bug_info
-
-    def delete_bug_info(self, bugno):
-        """This method does nothing, as deletion is not required for updating
-        the data in weebl."""
-        pass
-
-    def add_bug_info(self, bugno, job_types, glob_pattern, regex, boolean):
-        """
-        warning:
-        'Failed to parse config:\s+lxc.include\s+=\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
-        has become:
-        'Failed to parse config:\\s+lxc.include\\s+=\\s+.usr.share.lxc.config.ubuntu-cloud.common.conf'
-        check in doberman once it is downloaded again
-        """
-        self.create_target_file_glob(
-            glob_pattern=glob_pattern, job_types=job_types)
-        self.create_known_bug_regex(
-            glob_pattern=glob_pattern, regex=regex, bug=bugno)
