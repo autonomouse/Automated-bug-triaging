@@ -216,5 +216,6 @@ class Build(OilSpill):
         matching_bugs = self.oil_survey(
             path, self.pipeline, file_parser.extracted_info)
         #
+
         self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
         self.message = 0

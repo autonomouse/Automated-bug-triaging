@@ -23,7 +23,11 @@ class CrudeAnalysisTests(CommonTestMethods):
 
     @patch('weeblclient.weebl_python2.weebl.Weebl.weeblify_environment')
     @patch('weeblclient.weebl_python2.weebl.Weebl.create_pipeline')
-    def test_use_weebl(self, _create_pipeline, _weeblify_environment):
+    @patch('weeblclient.weebl_python2.weebl.Weebl.create_build')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.create_bug_occurrence')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.get_bug_info')
+    def test_use_weebl(self, _get_bug_info, _create_bug_occurrence, _create_build, 
+                       _create_pipeline, _weeblify_environment):
         cli = self.populate_cli_var("blank_database.yml")
         cli.use_weebl = True
         analysis = CrudeAnalysis(cli)

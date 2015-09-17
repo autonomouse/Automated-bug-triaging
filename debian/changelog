@@ -1,3 +1,9 @@
+doberman (2.3.0) precise; urgency=medium
+
+  * Crudeanalysis can now submit Pipelines, Builds and BugOccurrences to Weebl
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 17 Sep 2015 11:47:16 -0400
+
 doberman (2.2.3) precise; urgency=medium
 
   * Now optionally downloads bugs from weebl rather than test-catalog. 
