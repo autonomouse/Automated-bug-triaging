@@ -132,12 +132,12 @@ class OptionsParser(object):
             self.use_weebl = use_weebl
         else:
             self.use_weebl = False
-        
+
         if opts.weebl_url:
             self.weebl_url = opts.weebl_url
         else:
             self.weebl_url = cfg.get('DEFAULT', 'weebl_url')
-        
+
         #
 
         self.logpipelines = True if opts.logpipelines else False

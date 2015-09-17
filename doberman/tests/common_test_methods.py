@@ -99,6 +99,7 @@ class CommonTestMethods(DobermanTestBase):
 
         # WEEBL:
         cli.use_weebl = False
+        cli.weebl_url = "http://localhost:8000"
         #
 
         LOG = utils.get_logger('doberman.analysis')

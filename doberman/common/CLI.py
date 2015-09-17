@@ -89,7 +89,7 @@ class CLI(DobermanBase):
         prsr.add_option('-W', '--weebl', action='store_true', dest='use_weebl',
                         default=False, help='Send data to Weebl.')
         prsr.add_option('-w', '--weebl_url', action='store', dest='weebl_url',
-                        default=None, help='URL to Weebl server') 
+                        default=None, help='URL to Weebl server')
         #
         prsr.add_option('-x', '--xmls', action='store', dest='xmls',
                         default=None,
