@@ -22,6 +22,8 @@ class CrudeAnalysis(DobermanBase):
         self.jenkins = Jenkins(self.cli)
         # <ACTIONPOINT>
         if self.cli.use_weebl:
+            self.cli.LOG.info("Connecting to Weebl @ {}"
+                              .format(self.cli.weebl_url))
             self.weebl = Weebl(self.cli.uuid, self.cli.environment,
                                weebl_url=self.cli.weebl_url)
             self.weebl.weeblify_environment(
