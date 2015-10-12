@@ -337,8 +337,14 @@ class OilSpill(DobermanBase):
                     # <ACTIONPOINT>
                     if self.cli.use_weebl:
                         # Create bug occurrence:
-                        self.weebl.create_bug_occurrence(
+                        bug_occurrence_uuid = self.weebl.create_bug_occurrence(
                             self.build_uuid, self.regex_uuid)
+                        if bug_occurrence_uuid is not None:
+                            msg = "Bug Occurrence created "
+                            msg += "(bugoccurrence uuid: {})"
+                        else:
+                            msg = "(Bug Occurrence has already been reported)."
+                        self.cli.LOG.info(msg.format(bug_occurrence_uuid))
                     #
 
                     if '*' in orig_filename_in_db:
