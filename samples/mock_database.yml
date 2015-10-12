@@ -135,7 +135,7 @@ bugs:
 
   "1372946":
     category: None
-    description:
+    description: AssertionError
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -144,7 +144,7 @@ bugs:
 
   "1372947":
     category: None
-    description:
+    description: SSHTimeout
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -153,7 +153,7 @@ bugs:
 
   "1372949":
     category: None
-    description:
+    description: UnboundLocalError
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -162,7 +162,7 @@ bugs:
 
   "1372954":
     category: None
-    description:
+    description: TimeoutException
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -171,7 +171,7 @@ bugs:
 
   "1372958":
     category: None
-    description:
+    description: Request timed out
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -193,7 +193,7 @@ bugs:
 
   "1372964":
     category: None
-    description:
+    description: Unable to find network with name private
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -202,7 +202,7 @@ bugs:
 
   "1318783":
     category: None
-    description:
+    description: No more IP addresses available on network
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -220,7 +220,7 @@ bugs:
 
   "1372970":
     category: None
-    description:
+    description: No ResellerAdmin role found
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -247,7 +247,7 @@ bugs:
 
   "1373024":
     category: None
-    description:
+    description: No attribute volumes_client
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -256,7 +256,7 @@ bugs:
 
   "1373027":
     category: None
-    description:
+    description: Failed to attach interface
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -265,7 +265,7 @@ bugs:
 
   "1373028":
     category: None
-    description:
+    description: MismatchError
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -274,7 +274,7 @@ bugs:
 
   "1373030":
     category: None
-    description:
+    description: Image not found
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -283,7 +283,7 @@ bugs:
 
   "1372459":
     category: None
-    description:
+    description: FloatingIpPoolNotFound
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -292,7 +292,7 @@ bugs:
 
   "1372461":
     category: None
-    description:
+    description: Timed out waiting to become reachable
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -951,7 +951,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
 
   "1456997":
     category: None
-    description:
+    description: No valid host was found
     test_tempest_smoke:
       -
         "tempest_xunit.xml":
@@ -960,7 +960,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
 
   "1339910":
     category: None
-    description:
+    description: Too many connections
     test_tempest_smoke:
       -
         "nova-cloud-controller_*_var_log_nova_nova-api-os-compute.log":
