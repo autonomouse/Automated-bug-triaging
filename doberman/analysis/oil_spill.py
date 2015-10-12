@@ -58,8 +58,8 @@ class OilSpill(DobermanBase):
             else:
                 timestamp = None
 
-            # Create build:
-            self.build_uuid = self.weebl.create_build(
+            # Create/Update build:
+            self.build_uuid = self.weebl.update_build(
                 self.build_number, self.pipeline, self.jobname, build_status,
                 build_finished_at=timestamp)
         #
