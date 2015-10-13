@@ -46,8 +46,10 @@ class OilSpill(DobermanBase):
                 [build_info for build_info in self.jenkins.jenkins_api
                  [self.jobname]._poll()['builds']
                  if build_info['number'] == int(self.build_number)]
-            if build_details_list is not []:
+            if build_details_list != []:
                 build_details = build_details_list[0]
+            else:
+                build_details = {}
 
             build_status = (build_details['result'] if 'result' in
                             build_details else 'Unknown')
