@@ -221,9 +221,13 @@ class Build(OilSpill):
                           weebl_url=self.cli.weebl_url)
             weebl.create_build_executor(build_executor)
             weebl.create_pipeline(self.pipeline, build_executor)
-        matching_bugs = self.oil_survey(
-            path, self.pipeline, file_parser.extracted_info)
         #
-
-        self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
-        self.message = 0
+        if not os.path.exists(path):
+            matching_bugs = self.oil_survey(
+                path, self.pipeline, file_parser.extracted_info)
+            self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
+            self.message = 0
+        else:
+            msg = "{} does not exist - cannot search for bugs!".format(path)
+            self.cli.LOG.error(msg)
+            self.message = -1

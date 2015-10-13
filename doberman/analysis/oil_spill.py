@@ -42,10 +42,13 @@ class OilSpill(DobermanBase):
         xml_files_parsed = []
 
         if not self.cli.offline_mode:
-            build_details =\
+            build_details_list =\
                 [build_info for build_info in self.jenkins.jenkins_api
                  [self.jobname]._poll()['builds']
-                 if build_info['number'] == int(self.build_number)][0]
+                 if build_info['number'] == int(self.build_number)]
+            if build_details_list is not []:
+                build_details = build_details_list[0]
+
             build_status = (build_details['result'] if 'result' in
                             build_details else 'Unknown')
         else:
