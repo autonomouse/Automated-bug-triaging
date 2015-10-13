@@ -184,13 +184,17 @@ class Build(OilSpill):
         path = os.path.join(self.cli.reportdir, jobname, build_number)
         if self.cli.dont_replace:
             if not os.path.exists(path):
-                self.still_running = (jenkins.get_triage_data(build_number,
-                                      jobname, self.cli.reportdir))
-                if self.still_running:
-                    self.cli.LOG.info("{} is still running - skipping"
-                                      .format(path))
-                else:
-                    self.cli.LOG.info("{} (re)downloaded".format(path))
+                try:
+                    self.still_running = (jenkins.get_triage_data(build_number,
+                                          jobname, self.cli.reportdir))
+                    if self.still_running:
+                        self.cli.LOG.info("{} is still running - skipping"
+                                          .format(path))
+                    else:
+                        self.cli.LOG.info("{} (re)downloaded".format(path))
+                except Exception as e:
+                    self.cli.LOG.error("Problem fetching data for {}:\n{}"
+                                       .format(path, e))
         else:
             self.still_running = jenkins.\
                 get_triage_data(build_number, jobname, self.cli.reportdir)
