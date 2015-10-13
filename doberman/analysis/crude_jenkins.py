@@ -222,7 +222,7 @@ class Build(OilSpill):
             weebl.create_build_executor(build_executor)
             weebl.create_pipeline(self.pipeline, build_executor)
         #
-        if not os.path.exists(path):
+        if os.path.exists(path):
             matching_bugs = self.oil_survey(
                 path, self.pipeline, file_parser.extracted_info)
             self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
