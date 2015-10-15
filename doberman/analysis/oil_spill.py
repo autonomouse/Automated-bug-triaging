@@ -64,9 +64,14 @@ class OilSpill(DobermanBase):
                 timestamp = None
 
             # Create/Update build:
-            self.build_uuid = self.weebl.update_build(
-                self.build_number, self.pipeline, self.jobname, build_status,
-                build_finished_at=timestamp)
+            params = (
+                self.build_number, self.pipeline, self.jobname, build_status)
+            if self.build_exists(build_id, pipeline) is None:
+                self.build_uuid = self.create_build(
+                    *params, build_finished_at=timestamp)
+            else:
+                self.build_uuid = self.weebl.update_build(
+                    *params, build_finished_at=timestamp)
         #
         bug_unmatched = True
         if not self.cli.bugs:
