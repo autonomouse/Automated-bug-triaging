@@ -3,6 +3,7 @@ import tarfile
 import bisect
 import time
 from doberman.analysis.file_parser import FileParser
+from jenkinsapi.jenkins import Requester
 from jenkinsapi.jenkins import Jenkins as JenkinsAPI
 from doberman.common import pycookiecheat
 from doberman.common.base import DobermanBase
