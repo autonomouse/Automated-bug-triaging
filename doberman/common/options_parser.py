@@ -191,7 +191,7 @@ class OptionsParser(object):
                 self.LOG.info(msg)
 
         # Unique identifier of environment:
-        uuid = cfg.get('DEFAULT', 'uuid')
+        uuid = cfg.get('DEFAULT', 'environment_uuid')
         if opts.uuid:
             self.uuid = opts.uuid
         elif uuid is None:
