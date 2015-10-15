@@ -49,8 +49,9 @@ class Jenkins(DobermanBase):
             self.cli.LOG.info("Fetching cookies for %s" % url)
             self.cookie = pycookiecheat.chrome_cookies(url)
         try:
-            self.jenkins_api = JenkinsAPI(baseurl=url, cookies=self.cookie,
-                                          netloc=self.netloc)
+            requester = Requester(baseurl=url, cookies=self.cookie,
+                                  ssl_verify=self.cli.verify)
+            self.jenkins_api = JenkinsAPI(baseurl=url, requester=requester)
         except JenkinsAPIException:
             self.cli.LOG.exception('Failed to connect to Jenkins')
 
