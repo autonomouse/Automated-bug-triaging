@@ -186,13 +186,17 @@ class Build(OilSpill):
         path = os.path.join(self.cli.reportdir, jobname, build_number)
         if self.cli.dont_replace:
             if not os.path.exists(path):
-                self.still_running = (jenkins.get_triage_data(build_number,
-                                      jobname, self.cli.reportdir))
-                if self.still_running:
-                    self.cli.LOG.info("{} is still running - skipping"
-                                      .format(path))
-                else:
-                    self.cli.LOG.info("{} (re)downloaded".format(path))
+                try:
+                    self.still_running = (jenkins.get_triage_data(build_number,
+                                          jobname, self.cli.reportdir))
+                    if self.still_running:
+                        self.cli.LOG.info("{} is still running - skipping"
+                                          .format(path))
+                    else:
+                        self.cli.LOG.info("{} (re)downloaded".format(path))
+                except Exception as e:
+                    self.cli.LOG.error("Problem fetching data for {}:\n{}"
+                                       .format(path, e))
         else:
             self.still_running = jenkins.\
                 get_triage_data(build_number, jobname, self.cli.reportdir)
@@ -207,18 +211,25 @@ class Build(OilSpill):
         for err in file_parser.status:
             self.cli.LOG.error(err)
         build_executor = file_parser.extracted_info['build_executor']
+        if build_executor in [None, '']:
+            build_executor = 'unknown'
         self.cli.LOG.info("Processing pipeline: {} (on {})".format(
                           self.pipeline, build_executor))
 
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            # Create pipeline:
+            # Create build_executor and pipeline:
             weebl = Weebl(self.cli.uuid, self.cli.environment,
                           weebl_url=self.cli.weebl_url)
+            weebl.create_build_executor(build_executor)
             weebl.create_pipeline(self.pipeline, build_executor)
-        matching_bugs = self.oil_survey(
-            path, self.pipeline, file_parser.extracted_info)
         #
-
-        self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
-        self.message = 0
+        if os.path.exists(path):
+            matching_bugs = self.oil_survey(
+                path, self.pipeline, file_parser.extracted_info)
+            self.yaml_dict = self.add_to_yaml(matching_bugs, self.yaml_dict)
+            self.message = 0
+        else:
+            msg = "{} does not exist - cannot search for bugs!".format(path)
+            self.cli.LOG.error(msg)
+            self.message = -1

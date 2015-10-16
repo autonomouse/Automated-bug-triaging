@@ -42,10 +42,15 @@ class OilSpill(DobermanBase):
         xml_files_parsed = []
 
         if not self.cli.offline_mode:
-            build_details =\
+            build_details_list =\
                 [build_info for build_info in self.jenkins.jenkins_api
                  [self.jobname]._poll()['builds']
-                 if build_info['number'] == int(self.build_number)][0]
+                 if build_info['number'] == int(self.build_number)]
+            if build_details_list != []:
+                build_details = build_details_list[0]
+            else:
+                build_details = {}
+
             build_status = (build_details['result'] if 'result' in
                             build_details else 'Unknown')
         else:
@@ -58,10 +63,15 @@ class OilSpill(DobermanBase):
             else:
                 timestamp = None
 
-            # Create build:
-            self.build_uuid = self.weebl.create_build(
-                self.build_number, self.pipeline, self.jobname, build_status,
-                build_finished_at=timestamp)
+            # Create/Update build:
+            params = (
+                self.build_number, self.pipeline, self.jobname, build_status)
+            if self.build_exists(build_id, pipeline) is None:
+                self.build_uuid = self.create_build(
+                    *params, build_finished_at=timestamp)
+            else:
+                self.build_uuid = self.weebl.update_build(
+                    *params, build_finished_at=timestamp)
         #
         bug_unmatched = True
         if not self.cli.bugs:
@@ -337,8 +347,14 @@ class OilSpill(DobermanBase):
                     # <ACTIONPOINT>
                     if self.cli.use_weebl:
                         # Create bug occurrence:
-                        self.weebl.create_bug_occurrence(
+                        bug_occurrence_uuid = self.weebl.create_bug_occurrence(
                             self.build_uuid, self.regex_uuid)
+                        if bug_occurrence_uuid is not None:
+                            msg = "Bug Occurrence created "
+                            msg += "(bugoccurrence uuid: {})"
+                        else:
+                            msg = "(Bug Occurrence has already been reported)."
+                        self.cli.LOG.info(msg.format(bug_occurrence_uuid))
                     #
 
                     if '*' in orig_filename_in_db:
