@@ -1,3 +1,11 @@
+doberman (2.4.0) precise; urgency=medium
+
+  * CrudeAnalysis now uses Weebl's REST API to submit Build Executors, in addition to the Pipelines, Builds and BugOccurrences from the last update (when use_weebl is True - this is hardcoded for now).
+  * Fixes to pulling down bugs data from Weebl.
+  * Fixes so doberman can work with PS4.5 - the -u flag allows unverified requests via jenkins API and the need for netloc has now been removed. 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Fri, 16 Oct 2015 13:13:26 +0100
+
 doberman (2.3.0) precise; urgency=medium
 
   * Crudeanalysis can now submit Pipelines, Builds and BugOccurrences to Weebl
