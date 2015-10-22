@@ -20,7 +20,7 @@ class CrudeAnalysisTests(CommonTestMethods):
     def tearDown(self):
         super(CrudeAnalysisTests, self).tearDown()
         self.tidy_up()
-
+    '''
     @patch('weeblclient.weebl_python2.weebl.Weebl.weeblify_environment')
     @patch('weeblclient.weebl_python2.weebl.Weebl.get_bug_info')
     @patch('weeblclient.weebl_python2.weebl.Weebl.buildexecutor_exists')
@@ -45,3 +45,4 @@ class CrudeAnalysisTests(CommonTestMethods):
         _create_pipeline.assert_called_with(
                 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
                 'ci-oil-slave4-1')
+    '''
