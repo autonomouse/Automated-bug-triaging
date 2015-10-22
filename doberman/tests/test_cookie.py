@@ -11,7 +11,6 @@ class DobermanTestCookies(CommonTestMethods):
             exception = True
         self.assertFalse(exception)
 
-    '''
     def test_use_cookie_pysid(self):
         cli = self.populate_cli_var("blank_database.yml")
         cli.pysid = 'afafafafafafafafafafafafafafafaf'
@@ -20,6 +19,5 @@ class DobermanTestCookies(CommonTestMethods):
             from doberman.analysis.crude_jenkins import Jenkins
             jenkins = Jenkins(cli)
             jenkins.connect_to_jenkins()
-            mocked_jenkins.assert_called_with(baseurl=cli.jenkins_host,
-                                              cookies={'pysid': cli.pysid})
-    '''
+            mocked_jenkins.assert_called_with(
+                cli.jenkins_host, cookies={'pysid': cli.pysid})
