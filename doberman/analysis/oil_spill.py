@@ -66,11 +66,11 @@ class OilSpill(DobermanBase):
             # Create/Update build:
             params = (
                 self.build_number, self.pipeline, self.jobname, build_status)
-            if self.build_exists(build_id, pipeline) is None:
-                self.build_uuid = self.create_build(
+            if self.build_exists(build_id, pipeline):
+                self.build_uuid = self.weebl.update_build(
                     *params, build_finished_at=timestamp)
             else:
-                self.build_uuid = self.weebl.update_build(
+                self.build_uuid = self.create_build(
                     *params, build_finished_at=timestamp)
         #
         bug_unmatched = True
@@ -347,14 +347,16 @@ class OilSpill(DobermanBase):
                     # <ACTIONPOINT>
                     if self.cli.use_weebl:
                         # Create bug occurrence:
-                        bug_occurrence_uuid = self.weebl.create_bug_occurrence(
-                            self.build_uuid, self.regex_uuid)
-                        if bug_occurrence_uuid is not None:
-                            msg = "Bug Occurrence created "
-                            msg += "(bugoccurrence uuid: {})"
+                        if not weebl.bugoccurrence_exists(self.build_uuid,
+                                                          self.regex_uuid):
+                            bug_occurrence_uuid =\
+                                self.weebl.create_bugoccurrence(
+                                    self.build_uuid, self.regex_uuid)
+                            msg = "Bug Occurrence created (uuid: {})".format(
+                                bug_occurrence_uuid)
                         else:
                             msg = "(Bug Occurrence has already been reported)."
-                        self.cli.LOG.info(msg.format(bug_occurrence_uuid))
+                        self.cli.LOG.info(msg)
                     #
 
                     if '*' in orig_filename_in_db:
