@@ -2,14 +2,15 @@ import os
 import yaml
 import pytz
 from common_test_methods import CommonTestMethods
-from doberman.analysis.analysis import CrudeAnalysis
+from doberman.analysis.analysis import CrudeAnalysis, Jenkins
 from doberman.common.options_parser import OptionsParser
 from datetime import datetime
 from mock import (
     Mock,
+    MagicMock,
     patch,
     )
-
+from mock import patch, MagicMock
 
 class CrudeAnalysisTests(CommonTestMethods):
     def setUp(self):
@@ -42,6 +43,6 @@ class CrudeAnalysisTests(CommonTestMethods):
         analysis = CrudeAnalysis(cli)
         _weeblify_environment.assert_called_with(
             analysis.cli.jenkins_host, analysis.jenkins)
-        _create_pipeline.assert_called_with(
-                'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-                'ci-oil-slave4-1')
+        jenkins_object = _weeblify_environment.call_args[0][1]
+        _weeblify_environment.assert_called_with(
+            cli.external_jenkins_url, jenkins_object)
