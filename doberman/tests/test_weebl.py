@@ -1,7 +1,6 @@
 import os
 import yaml
 import pytz
-import weeblclient
 from common_test_methods import CommonTestMethods
 from doberman.analysis.analysis import CrudeAnalysis
 from doberman.common.options_parser import OptionsParser
