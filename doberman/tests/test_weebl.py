@@ -7,7 +7,6 @@ from doberman.common.options_parser import OptionsParser
 from datetime import datetime
 from mock import (
     Mock,
-    MagicMock,
     patch,
     )
 from mock import patch, MagicMock
@@ -43,6 +42,3 @@ class CrudeAnalysisTests(CommonTestMethods):
         analysis = CrudeAnalysis(cli)
         _weeblify_environment.assert_called_with(
             analysis.cli.jenkins_host, analysis.jenkins)
-        jenkins_object = _weeblify_environment.call_args[0][1]
-        _weeblify_environment.assert_called_with(
-            cli.external_jenkins_url, jenkins_object)

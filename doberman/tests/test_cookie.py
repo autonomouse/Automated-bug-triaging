@@ -19,5 +19,6 @@ class DobermanTestCookies(CommonTestMethods):
             from doberman.analysis.crude_jenkins import Jenkins
             jenkins = Jenkins(cli)
             jenkins.connect_to_jenkins()
+            requester = mocked_jenkins._mock_call_args_list[0][1]['requester']
             mocked_jenkins.assert_called_with(
-                cli.jenkins_host, cookies={'pysid': cli.pysid})
+                baseurl=cli.jenkins_host, requester=requester)
