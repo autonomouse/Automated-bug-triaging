@@ -20,5 +20,4 @@ class DobermanTestCookies(CommonTestMethods):
             jenkins = Jenkins(cli)
             jenkins.connect_to_jenkins()
             mocked_jenkins.assert_called_with(baseurl=cli.jenkins_host,
-                                              cookies={'pysid': cli.pysid},
-                                              netloc=cli.netloc)
+                                              cookies={'pysid': cli.pysid})

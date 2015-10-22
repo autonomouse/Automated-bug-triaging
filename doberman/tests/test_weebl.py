@@ -22,12 +22,21 @@ class CrudeAnalysisTests(CommonTestMethods):
         self.tidy_up()
 
     @patch('weeblclient.weebl_python2.weebl.Weebl.weeblify_environment')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.create_pipeline')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.create_build')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.create_bug_occurrence')
     @patch('weeblclient.weebl_python2.weebl.Weebl.get_bug_info')
-    def test_use_weebl(self, _get_bug_info, _create_bug_occurrence, _create_build, 
-                       _create_pipeline, _weeblify_environment):
+    @patch('weeblclient.weebl_python2.weebl.Weebl.buildexecutor_exists')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.create_buildexecutor')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.pipeline_exists')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.create_pipeline')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.build_exists')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.create_build')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.update_build')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.bugoccurrence_exists')
+    @patch('weeblclient.weebl_python2.weebl.Weebl.create_bugoccurrence')
+    def test_use_weebl(self, _create_bugoccurrence, _bugoccurrence_exists,
+                       _update_build, _create_build, _build_exists,
+                       _create_pipeline, _pipeline_exists,
+                       _create_buildexecutor, _buildexecutor_exists,
+                       _get_bug_info, _weeblify_environment):
         cli = self.populate_cli_var("blank_database.yml")
         cli.use_weebl = True
         analysis = CrudeAnalysis(cli)

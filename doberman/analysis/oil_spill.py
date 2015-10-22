@@ -66,7 +66,7 @@ class OilSpill(DobermanBase):
             # Create/Update build:
             params = (
                 self.build_number, self.pipeline, self.jobname, build_status)
-            if self.build_exists(build_id, pipeline):
+            if self.weebl.build_exists(self.build_number, self.pipeline):
                 self.build_uuid = self.weebl.update_build(
                     *params, build_finished_at=timestamp)
             else:
