@@ -43,8 +43,8 @@ class CrudeAnalysis(DobermanBase):
         if not self.cli.offline_mode:
             self.remove_dirs(self.cli.job_names)
         doberman_finish_time = datetime.now()
-        self.cli.LOG.info(self.report_time_taken(doberman_start_time,
-                                                 doberman_finish_time))
+        self.cli.LOG.info(
+            self.report_time_taken(doberman_start_time, doberman_finish_time))
 
     def determine_jobs_to_process(self):
         """Makes sure it does not process pipeline_start job."""
