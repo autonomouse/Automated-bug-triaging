@@ -35,10 +35,9 @@ class TestCatalog(DobermanBase):
                 self.cli.LOG.error(emsg)
                 raise Exception(emsg)
         elif len(self.cli.database):
-            self.cli.LOG.info("Connecting to database file: %s"
-                              % (self.cli.database))
-            with open(self.cli.database, "r") as mock_db_file:
-                self.bugs = yaml.load(mock_db_file)['bugs']
+            self.cli.LOG.info("Loading bugs from database file: %s"
+                                   % (self.cli.database))
+            self.bugs = self.load_bugs_from_yaml_file(self.cli.database)
         else:
             self.cli.LOG.error('Unknown database: %s' % (self.cli.database))
             raise Exception('Invalid Database configuration')

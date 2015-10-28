@@ -446,3 +446,7 @@ class DobermanBase(object):
                                     ts_format='%a %d %b %Y %H:%M:%S'):
         dt_obj = self.convert_timestamp_to_dt_obj(timestamp)
         return dt_obj.strftime(ts_format)
+
+    def load_bugs_from_yaml_file(self, db_yaml):
+        with open(db_yaml, "r") as mock_db_file:
+            return yaml.load(mock_db_file).get('bugs')

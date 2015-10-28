@@ -28,7 +28,14 @@ class CrudeAnalysis(DobermanBase):
                                weebl_url=self.cli.weebl_url)
             self.weebl.weeblify_environment(
                 self.cli.jenkins_host, self.jenkins)
-            self.cli.bugs = self.weebl.get_bug_info().get('bugs')
+            if self.cli.database != 'None':
+                # Use database file:
+                self.cli.LOG.info("Loading bugs from database file: %s"
+                                       % (self.cli.database))
+                self.cli.bugs = self.load_bugs_from_yaml_file(
+                    self.cli.database)
+            else:
+                self.cli.bugs = self.weebl.get_bug_info().get('bugs')
         else:
             self.cli.bugs = None
         #
