@@ -28,7 +28,14 @@ class CrudeAnalysis(DobermanBase):
                                weebl_url=self.cli.weebl_url)
             self.weebl.weeblify_environment(
                 self.cli.jenkins_host, self.jenkins)
-            self.cli.bugs = self.weebl.get_bug_info().get('bugs')
+            if self.cli.database != 'None':
+                # Use database file:
+                self.cli.LOG.info("Loading bugs from database file: %s"
+                                  % (self.cli.database))
+                self.cli.bugs = self.load_bugs_from_yaml_file(
+                    self.cli.database)
+            else:
+                self.cli.bugs = self.weebl.get_bug_info().get('bugs')
         else:
             self.cli.bugs = None
         #
@@ -43,8 +50,8 @@ class CrudeAnalysis(DobermanBase):
         if not self.cli.offline_mode:
             self.remove_dirs(self.cli.job_names)
         doberman_finish_time = datetime.now()
-        self.cli.LOG.info(self.report_time_taken(doberman_start_time,
-                                                 doberman_finish_time))
+        self.cli.LOG.info(
+            self.report_time_taken(doberman_start_time, doberman_finish_time))
 
     def determine_jobs_to_process(self):
         """Makes sure it does not process pipeline_start job."""

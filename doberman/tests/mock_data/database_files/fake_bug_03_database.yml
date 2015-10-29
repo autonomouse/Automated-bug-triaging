@@ -1,6 +1,7 @@
 bugs:
   "0000000":
     category: None
+    regex_uuid: 02d06743-de4b-46d2-b504-d1373f0a7087
     description: "test bug"
     pipeline_deploy:
       -
@@ -27,13 +28,13 @@ bugs:
         "console.txt":
             regexp:
             - "this line of text really shouldn't be in there"
-            
+
   "fake_bug_03":
     category: None
+    regex_uuid: 02d06743-de4b-46d2-b504-d1373f0a7087
     description: "A catch all bug"
     pipeline_deploy:
       -
         "console.txt":
             regexp:
             - "."
-

@@ -1,3 +1,9 @@
+doberman (2.4.2) precise; urgency=medium
+
+  * Prodstack update
+
+ -- Nuno Santos <nuno.santos@canonical.com>  Thu, 22 Oct 2015 14:39:40 -0400
+
 doberman (2.4.1) precise; urgency=medium
 
   * Minor changes to fix some tests
