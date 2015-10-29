@@ -36,7 +36,7 @@ class TestCatalog(DobermanBase):
                 raise Exception(emsg)
         elif len(self.cli.database):
             self.cli.LOG.info("Loading bugs from database file: %s"
-                                   % (self.cli.database))
+                              % (self.cli.database))
             self.bugs = self.load_bugs_from_yaml_file(self.cli.database)
         else:
             self.cli.LOG.error('Unknown database: %s' % (self.cli.database))

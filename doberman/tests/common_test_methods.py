@@ -127,7 +127,8 @@ class CommonTestMethods(DobermanTestBase):
             testsuite = etree.SubElement(root, "testsuite")
             for (bug_number, line) in add_to_xml_dict[xml_file]:
                 testcase = etree.SubElement(testsuite, "testcase")
-                testcase.attrib['classname'] = "fake_class_{}".format(bug_number)
+                testcase.attrib['classname'] =\
+                    "fake_class_{}".format(bug_number)
                 testcase.attrib['name'] = "fake_testname_{}".format(bug_number)
                 failure = etree.SubElement(testcase, "failure")
                 failure.attrib['type'] = "fake_type_{}".format(bug_number)

@@ -31,7 +31,7 @@ class CrudeAnalysis(DobermanBase):
             if self.cli.database != 'None':
                 # Use database file:
                 self.cli.LOG.info("Loading bugs from database file: %s"
-                                       % (self.cli.database))
+                                  % (self.cli.database))
                 self.cli.bugs = self.load_bugs_from_yaml_file(
                     self.cli.database)
             else:

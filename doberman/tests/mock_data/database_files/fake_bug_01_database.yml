@@ -1,6 +1,7 @@
 bugs:
   "0000000":
     category: None
+    regex_uuid: 02d06743-de4b-46d2-b504-d1373f0a7087
     description: "test bug"
     pipeline_deploy:
       -
@@ -30,6 +31,7 @@ bugs:
 
   "fake_bug_01":
     category: None
+    regex_uuid: 02d06743-de4b-46d2-b504-d1373f0a7087
     description: "A fake bug for testing purposes"
     pipeline_deploy:
       -
