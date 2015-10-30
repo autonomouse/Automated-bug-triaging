@@ -1,3 +1,9 @@
+doberman (2.4.3) precise; urgency=medium
+
+  * Fixes. 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Fri, 30 Oct 2015 09:19:49 +0000
+
 doberman (2.4.2) precise; urgency=medium
 
   * Prodstack update

@@ -223,11 +223,11 @@ class Build(OilSpill):
             weebl = Weebl(self.cli.uuid, self.cli.environment,
                           weebl_url=self.cli.weebl_url)
             if not weebl.buildexecutor_exists(build_executor):
-                self.LOG.info("Creating new build executor: {}"
+                self.cli.LOG.info("Creating new build executor: {}"
                               .format(build_executor))
                 weebl.create_buildexecutor(build_executor)
             if not weebl.pipeline_exists(self.pipeline):
-                self.LOG.info("Creating new build pipeline: {} on {}"
+                self.cli.LOG.info("Creating new build pipeline: {} on {}"
                               .format(self.pipeline, build_executor))
                 weebl.create_pipeline(self.pipeline, build_executor)
         #
