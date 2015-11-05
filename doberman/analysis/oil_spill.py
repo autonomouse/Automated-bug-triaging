@@ -65,8 +65,8 @@ class OilSpill(DobermanBase):
                 timestamp = None
 
             # Create/Update build:
-            params = (
-                self.build_number, self.pipeline, self.jobname, build_status)
+            params = (self.build_number, self.pipeline, self.jobname,
+                      build_status.lower())
             try:
                 self.build_uuid = self.weebl.create_build(
                     *params, build_finished_at=timestamp)
