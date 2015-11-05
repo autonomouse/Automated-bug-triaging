@@ -68,7 +68,7 @@ class OilSpill(DobermanBase):
             params = (
                 self.build_number, self.pipeline, self.jobname, build_status)
             try:
-                self.build_uuid = self.create_build(
+                self.build_uuid = self.weebl.create_build(
                     *params, build_finished_at=timestamp)
             except UnexpectedStatusCode as e:
                 if 'duplicate key value violates unique constraint' in str(e):
