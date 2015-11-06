@@ -1,3 +1,12 @@
+doberman (2.4.4) precise; urgency=medium
+
+  * Fix for build_exists call.
+  * CudeAnalysis relies on try-except blocks when making API calls to Weebl. 
+  * CrudeAnalysis lowercases build_statuses. 
+  * Now also listens out for an InstanceAlreadyExistsexception instead of searching through the error message for the 'duplicate key value violates unique constraint' string.
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Fri, 06 Nov 2015 17:41:16 +0000
+
 doberman (2.4.3) precise; urgency=medium
 
   * Fixes. 
