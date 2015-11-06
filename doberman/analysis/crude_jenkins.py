@@ -12,7 +12,8 @@ from jenkinsapi.custom_exceptions import *
 # <ACTIONPOINT>
 try:
     from weeblclient.weebl_python2.weebl import Weebl
-    from weeblclient.weebl_python2.exception import UnexpectedStatusCode
+    from weeblclient.weebl_python2.exception import (
+        UnexpectedStatusCode, InstanceAlreadyExists)
 except ImportError as e:
     pass
 #
@@ -227,16 +228,20 @@ class Build(OilSpill):
                 self.cli.LOG.info("Creating new build executor: {}"
                                   .format(build_executor))
                 weebl.create_buildexecutor(build_executor)
+            except InstanceAlreadyExists as e:
+                self.cli.LOG.info("Build executor '{}' already exists."
+                                  .format(build_executor))
             except UnexpectedStatusCode as e:
-                if 'duplicate key value violates unique' not in str(e):
-                    raise(e)
+                raise(e)
             try:
                 self.cli.LOG.info("Creating new build pipeline: {} on {}"
                                   .format(self.pipeline, build_executor))
                 weebl.create_pipeline(self.pipeline, build_executor)
+            except InstanceAlreadyExists as e:
+                self.cli.LOG.info("Pipeline '{}' already exists."
+                                  .format(self.pipeline))
             except UnexpectedStatusCode as e:
-                if 'duplicate key value violates unique' not in str(e):
-                    raise(e)
+                raise(e)
         #
         if os.path.exists(path):
             matching_bugs = self.oil_survey(

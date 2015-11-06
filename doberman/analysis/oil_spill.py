@@ -9,7 +9,8 @@ from glob import glob
 # <ACTIONPOINT>
 try:
     from weeblclient.weebl_python2.weebl import Weebl
-    from weeblclient.weebl_python2.exception import UnexpectedStatusCode
+    from weeblclient.weebl_python2.exception import (
+        UnexpectedStatusCode, InstanceAlreadyExists)
 except ImportError as e:
     pass
 #
@@ -70,12 +71,11 @@ class OilSpill(DobermanBase):
             try:
                 self.build_uuid = self.weebl.create_build(
                     *params, build_finished_at=timestamp)
+            except InstanceAlreadyExists as e:
+                self.build_uuid = self.weebl.update_build(
+                    *params, build_finished_at=timestamp)
             except UnexpectedStatusCode as e:
-                if 'duplicate key value violates unique constraint' in str(e):
-                    self.build_uuid = self.weebl.update_build(
-                        *params, build_finished_at=timestamp)
-                else:
-                    raise(e)
+                raise(e)
         #
         bug_unmatched = True
         if not self.cli.bugs:
@@ -357,11 +357,12 @@ class OilSpill(DobermanBase):
                                     self.build_uuid, self.regex_uuid)
                             msg = "Bug Occurrence created (uuid: {})".format(
                                 bug_occurrence_uuid)
+                        except InstanceAlreadyExists as e:
+                            msg = "Bug Occurrence for '{}' with build: '{}'"
+                            msg += "already reported.".format(self.regex_uuid,
+                                                              self.build_uuid)
                         except UnexpectedStatusCode as e:
-                            if 'duplicate key value violates' in str(e):
-                                msg = "(Bug Occurrence already reported)."
-                            else:
-                                raise(e)
+                            raise(e)
                         self.cli.LOG.info(msg)
                     #
 
