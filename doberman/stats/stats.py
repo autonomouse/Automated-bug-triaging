@@ -116,8 +116,8 @@ class Stats(DobermanBase):
                     self.jenkins.get_triage_data(build_number, job, op_dir)
 
                 try:
-                    this_build = [b for b in all_builds[job] if b['number']
-                                  == int(build_number)][0]
+                    this_build = [b for b in all_builds[job] if b['number'] ==
+                                  int(build_number)][0]
                 except IndexError:
                     continue
 

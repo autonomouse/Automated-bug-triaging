@@ -143,8 +143,8 @@ class CrudeAnalysis(DobermanBase):
             with open(file_path, 'r+') as pp_file:
                 existing_content = pp_file.read()
                 pp_file.seek(0, 0)  # Put at beginning of file
-                pp_file.write("\n" + str(datetime.now())
-                              + "\n--------------------------\n")
+                pp_file.write("\n" + str(datetime.now()) +
+                              "\n--------------------------\n")
                 for problem_pipeline in problem_pipelines:
                     probs = "* {} ({}: {}):\n{}\n\n"
                     pp_file.write(probs.format(*problem_pipeline))
@@ -172,8 +172,8 @@ class CrudeAnalysis(DobermanBase):
             with open(file_path, 'r+') as pp_file:
                 existing_content = pp_file.read()
                 pp_file.seek(0, 0)  # Put at beginning of file
-                pp_file.write("\n" + str(datetime.now())
-                              + "\n--------------------------\n")
+                pp_file.write("\n" + str(datetime.now()) +
+                              "\n--------------------------\n")
                 pp_file.write(" ".join(self.pipeline_ids))
                 pp_file.write("\n" + existing_content)
                 info_msg = "All processed pipelines recorded to {0}"
