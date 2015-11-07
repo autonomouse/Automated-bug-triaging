@@ -358,9 +358,7 @@ class OilSpill(DobermanBase):
                             msg = "Bug Occurrence created (uuid: {})".format(
                                 bug_occurrence_uuid)
                         except InstanceAlreadyExists as e:
-                            msg = "Bug Occurrence for '{}' with build: '{}'"
-                            msg += "already reported.".format(self.regex_uuid,
-                                                              self.build_uuid)
+                            pass
                         except UnexpectedStatusCode as e:
                             raise(e)
                         self.cli.LOG.info(msg)
