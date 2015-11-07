@@ -355,13 +355,10 @@ class OilSpill(DobermanBase):
                             bug_occurrence_uuid =\
                                 self.weebl.create_bugoccurrence(
                                     self.build_uuid, self.regex_uuid)
-                            msg = "Bug Occurrence created (uuid: {})".format(
-                                bug_occurrence_uuid)
                         except InstanceAlreadyExists as e:
                             pass
                         except UnexpectedStatusCode as e:
                             raise(e)
-                        self.cli.LOG.info(msg)
                     #
 
                     if '*' in orig_filename_in_db:
