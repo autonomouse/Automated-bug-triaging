@@ -334,7 +334,7 @@ class Refinery(DobermanBase):
                     op_dir = (self.cli.op_dir_structure.format(
                               self.cli.reportdir, job, build_num, crude_job))
 
-                    if ('unfiled' in bug):
+                    if ('unfiled' in str(bug)):
                         # Unless If this unfiled bug has multiple bugs per
                         # pipeline (e.g. an XML file):
                         if job not in self.cli.multi_bugs_in_pl:
