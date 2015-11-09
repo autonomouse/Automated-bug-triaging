@@ -540,7 +540,7 @@ class Refinery(DobermanBase):
         unfiled_bugs = {}
         for pipeline in unified_bugdict:
             for bug_no in unified_bugdict[pipeline]:
-                if 'unfiled' in bug_no:
+                if 'unfiled' in str(bug_no):
                     unfiled_bugs[bug_no] = unified_bugdict[pipeline][bug_no]
 
         grouped_bugs = {}
