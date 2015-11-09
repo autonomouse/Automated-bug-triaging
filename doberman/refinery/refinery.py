@@ -413,7 +413,7 @@ class Refinery(DobermanBase):
 
         for pipeline in unified_bugdict:
             for bug_no in unified_bugdict[pipeline]:
-                if 'unfiled' not in bug_no:
+                if 'unfiled' not in str(bug_no):
                     job = unified_bugdict[pipeline][bug_no]['job']
                     if job not in bug_prevalence:
                         bug_prevalence[job] = {}
@@ -540,7 +540,7 @@ class Refinery(DobermanBase):
         unfiled_bugs = {}
         for pipeline in unified_bugdict:
             for bug_no in unified_bugdict[pipeline]:
-                if 'unfiled' in bug_no:
+                if 'unfiled' in str(bug_no):
                     unfiled_bugs[bug_no] = unified_bugdict[pipeline][bug_no]
 
         grouped_bugs = {}
@@ -649,7 +649,7 @@ class Refinery(DobermanBase):
                     top_ten.append("No non-generic bugs found.")
                 for bug in job_ranking[:10]:
                     msg = "{0} - {1} {2} hit"
-                    if 'unfiled' not in bug[0]:
+                    if 'unfiled' not in str(bug[0]):
                         bug_tuple = list((url.format(bug[0]), bug[1]))
                     else:
                         bug_tuple = list(bug)
