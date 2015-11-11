@@ -885,7 +885,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "console.txt":
             regexp:
-            - "oil_ci.cli.{1,5} Inspection failed. Authorization Failed. An unexpected error prevented the server from fulfilling your request"
+            - "An unexpected error prevented the server from fulfilling your request"
 
   "1453954":
     category: None
@@ -1410,4 +1410,24 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "juju_debug_log.txt":
             regexp:
             - "Failure to connect to NSX control cluster until .{0,20} is rebooted...Max retries exceeded with url .{5,30} (Caused by .class .socket.error... .Errno 104. Connection reset by peer"
-            
+
+  "1515198":
+    category: None
+    description: "[Production] PLUMgrid Plugin/Provider Network Error - Physical interface does not exist in PLUMgrid Platform  (prepare fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "PLUMgrid Plugin Error. Provider Network Error. Physical interface .{10,35} does not exist in PLUMgrid Platform. Please specify correct interface name"
+
+  "1515212":
+    category: None
+    description: "[Production] S3ResponseError (tempest fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "S3ResponseError. S3ResponseError.{1,6}404 Not Found"
+
+          
+          
