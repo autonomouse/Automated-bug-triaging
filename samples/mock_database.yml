@@ -1383,3 +1383,31 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "IpAddressInUseClient. Unable to complete operation for network .{36}. The IP address .{4,20} is in use"
+
+  "1515046":
+    category: None
+    description: "Prodstack: get_static_ip() - AttributeError: 'unicode' object has no attribute 'get'"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "AttributeError. .unicode. object has no attribute .get"
+
+  "1515049":
+    category: None
+    description: "plumgrid-director hook failed: 'install'- Unable to locate package plumgrid-lxc"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "Unable to locate package plumgrid-lxc"
+
+  "1515056":
+    category: None
+    description: "Failure to connect to NSX control cluster until Master is rebooted - Max retries exceeded with url /ws.v1/login (Caused by <class 'socket.error'>: [Errno 104] Connection reset by peer)"
+    pipeline_deploy:
+      -
+        "juju_debug_log.txt":
+            regexp:
+            - "Failure to connect to NSX control cluster until .{0,20} is rebooted...Max retries exceeded with url .{5,30} (Caused by .class .socket.error... .Errno 104. Connection reset by peer"
+            
