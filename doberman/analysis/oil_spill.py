@@ -27,8 +27,12 @@ class OilSpill(DobermanBase):
         self.pipeline = pipeline
         # <ACTIONPOINT>
         if self.cli.use_weebl:
-            self.weebl = Weebl(self.cli.uuid, self.cli.environment,
-                               weebl_url=self.cli.weebl_url)
+            self.weebl = Weebl(
+                self.cli.uuid,
+                self.cli.environment,
+                username=self.cli.weebl_username,
+                apikey=self.cli.weebl_apikey,
+                weebl_url=self.cli.weebl_url)
         #
 
     def bug_hunt(self, path, announce=True):

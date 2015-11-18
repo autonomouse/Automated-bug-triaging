@@ -24,8 +24,12 @@ class CrudeAnalysis(DobermanBase):
         if self.cli.use_weebl:
             self.cli.LOG.info("Connecting to Weebl @ {}"
                               .format(self.cli.weebl_url))
-            self.weebl = Weebl(self.cli.uuid, self.cli.environment,
-                               weebl_url=self.cli.weebl_url)
+            self.weebl = Weebl(
+                self.cli.uuid,
+                self.cli.environment,
+                username=self.cli.weebl_username,
+                apikey=self.cli.weebl_apikey,
+                weebl_url=self.cli.weebl_url)
             self.weebl.weeblify_environment(
                 self.cli.jenkins_host, self.jenkins)
             if self.cli.database != 'None':
