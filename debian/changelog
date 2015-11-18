@@ -1,3 +1,13 @@
+doberman (2.5.0) precise; urgency=medium
+
+  * Added support for Weebl's new REST API authentication.
+  * Added a str() method so can work with weebl and with old-style test-catalog bugs (Weebl bug-tracker-bug numbers are ints not strings)
+  * Deduplicated weebl error messages.
+  * Removed redundant bug occurrence created message.
+  * Refinery bug fixes.
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 18 Nov 2015 15:40:34 +0000
+
 doberman (2.4.4) precise; urgency=medium
 
   * Fix for build_exists call.

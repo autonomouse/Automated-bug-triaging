@@ -28,6 +28,11 @@ class CLI(DobermanBase):
 
     def add_options_to_parser(self):
         prsr = self.parser
+        #
+        prsr.add_option('-a', '--apikey', action='store',
+                        dest='weebl_apikey', default=None,
+                        help='Api key for Weebl REST API authentication')
+        #
         prsr.add_option('-b', '--usebuildnos', action='store_true',
                         dest='use_deploy', default=False,
                         help='use pipeline_deploy build numbers not pipelines')
@@ -57,6 +62,11 @@ class CLI(DobermanBase):
         prsr.add_option('-n', '--netloc', action='store', dest='netloc',
                         default=None,
                         help='Specify an IP to rewrite URLs')
+        #
+        prsr.add_option('-N', '--username', action='store',
+                        dest='weebl_username', default=None,
+                        help='Name of user for Weebl REST API authentication')
+        #
         prsr.add_option('-o', '--output', action='store', dest='report_dir',
                         default=None,
                         help='specific the report output directory')

@@ -138,6 +138,9 @@ class OptionsParser(object):
         else:
             self.weebl_url = cfg.get('DEFAULT', 'weebl_url')
 
+        if self.use_weebl is True:
+            self.weebl_username = cfg.get('DEFAULT', 'weebl_username')
+            self.weebl_apikey = cfg.get('DEFAULT', 'weebl_apikey')
         #
 
         self.logpipelines = True if opts.logpipelines else False
