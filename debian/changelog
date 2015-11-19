@@ -1,3 +1,16 @@
+doberman (2.5.2ubuntu1) precise; urgency=medium
+
+  * prodstack update
+    * 303: Darren Hoyland 2015-11-19 Version bump
+    * 302: Darren Hoyland 2015-11-19 Doberman will now assume that the pipeline has already been created by oil-ci
+    * 301: Darren Hoyland 2015-11-19 Removed superfluous weebl instance
+    * 300: Darren Hoyland 2015-11-19 Fixed some bugs. When looking for bugs, it usually helps if you actually run the unit tests.
+    * 299: Darren Hoyland 2015-11-18 [merge] Added support for Weebl's new REST API authentication. Version bump to 2.5.0. [merge] lp:~autonomouse/oil-ci/doberman+apikeys_for_weebl
+    * 298: Darren Hoyland 2015-11-11 Added regexs for 1515198 and 1515212 and ammended 1447210
+    * 297: Darren Hoyland 2015-11-11 Added regexs for 1515046, 1515049 and 1515056
+
+ -- Ashley Lai <ashley@ashleylai.com>  Thu, 19 Nov 2015 13:51:14 -0600
+
 doberman (2.5.1) precise; urgency=medium
 
   * Bug fixes 
