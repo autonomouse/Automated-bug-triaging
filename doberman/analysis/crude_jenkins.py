@@ -213,40 +213,7 @@ class Build(OilSpill):
         file_parser = FileParser(path=path, job=self.jobname)
         for err in file_parser.status:
             self.cli.LOG.error(err)
-        build_executor = file_parser.extracted_info['build_executor']
-        if build_executor in [None, '']:
-            build_executor = 'unknown'
-        self.cli.LOG.info("Processing pipeline: {} (on {})".format(
-                          self.pipeline, build_executor))
 
-        # <ACTIONPOINT>
-        if self.cli.use_weebl:
-            # Create build_executor and pipeline:
-            self.weebl = Weebl(
-                self.cli.uuid,
-                self.cli.environment,
-                username=self.cli.weebl_username,
-                apikey=self.cli.weebl_apikey,
-                weebl_url=self.cli.weebl_url)
-            try:
-                self.cli.LOG.info("Creating new build executor: {}"
-                                  .format(build_executor))
-                self.weebl.create_buildexecutor(build_executor)
-            except InstanceAlreadyExists as e:
-                self.cli.LOG.info("Build executor '{}' already exists."
-                                  .format(build_executor))
-            except UnexpectedStatusCode as e:
-                raise(e)
-            try:
-                self.cli.LOG.info("Creating new build pipeline: {} on {}"
-                                  .format(self.pipeline, build_executor))
-                self.weebl.create_pipeline(self.pipeline, build_executor)
-            except InstanceAlreadyExists as e:
-                self.cli.LOG.info("Pipeline '{}' already exists."
-                                  .format(self.pipeline))
-            except UnexpectedStatusCode as e:
-                raise(e)
-        #
         if os.path.exists(path):
             matching_bugs = self.oil_survey(
                 path, self.pipeline, file_parser.extracted_info)
