@@ -370,11 +370,6 @@ class OilSpill(DobermanBase):
                         return {target_file: {'regexp': regexps}}
 
     def oil_survey(self, path, pipeline, extracted_info):
-        # <ACTIONPOINT>
-        if self.cli.use_weebl:
-            self.weebl = Weebl(self.cli.uuid, self.cli.environment,
-                               weebl_url=self.cli.weebl_url)
-        #
         self.oil_df = extracted_info['oil_df']
         (matching_bugs, build_status) = self.bug_hunt(path)
         self.matching_bugs = matching_bugs
