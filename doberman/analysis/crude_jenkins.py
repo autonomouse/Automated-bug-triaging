@@ -231,7 +231,7 @@ class Build(OilSpill):
             try:
                 self.cli.LOG.info("Creating new build executor: {}"
                                   .format(build_executor))
-                weebl.create_buildexecutor(build_executor)
+                self.weebl.create_buildexecutor(build_executor)
             except InstanceAlreadyExists as e:
                 self.cli.LOG.info("Build executor '{}' already exists."
                                   .format(build_executor))
@@ -240,7 +240,7 @@ class Build(OilSpill):
             try:
                 self.cli.LOG.info("Creating new build pipeline: {} on {}"
                                   .format(self.pipeline, build_executor))
-                weebl.create_pipeline(self.pipeline, build_executor)
+                self.weebl.create_pipeline(self.pipeline, build_executor)
             except InstanceAlreadyExists as e:
                 self.cli.LOG.info("Pipeline '{}' already exists."
                                   .format(self.pipeline))

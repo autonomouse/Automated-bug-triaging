@@ -356,9 +356,8 @@ class OilSpill(DobermanBase):
                     if self.cli.use_weebl:
                         # Create bug occurrence:
                         try:
-                            bug_occurrence_uuid =\
-                                self.weebl.create_bugoccurrence(
-                                    self.build_uuid, self.regex_uuid)
+                            self.weebl.create_bugoccurrence(self.build_uuid,
+                                                            self.regex_uuid)
                         except InstanceAlreadyExists as e:
                             pass
                         except UnexpectedStatusCode as e:

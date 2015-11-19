@@ -1409,7 +1409,7 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
       -
         "juju_debug_log.txt":
             regexp:
-            - "Failure to connect to NSX control cluster until .{0,20} is rebooted...Max retries exceeded with url .{5,30} (Caused by .class .socket.error... .Errno 104. Connection reset by peer"
+            - "Failure to connect to NSX control cluster until .{0,20} is rebooted...Max retries exceeded with url .{5,30} .Caused by .class .socket.error... .Errno 104. Connection reset by peer"
 
   "1515198":
     category: None
@@ -1428,6 +1428,3 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "S3ResponseError. S3ResponseError.{1,6}404 Not Found"
-
-          
-          

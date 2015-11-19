@@ -100,6 +100,8 @@ class CommonTestMethods(DobermanTestBase):
         # WEEBL:
         cli.use_weebl = False
         cli.weebl_url = "http://localhost:8000"
+        cli.weebl_username = 'weebl_username'
+        cli.weebl_apikey = 'weebl_apikey'
         #
 
         LOG = utils.get_logger('doberman.analysis')
