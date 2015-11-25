@@ -1,4 +1,5 @@
 import os
+import fnmatch
 from lxml import etree
 from doberman.common.base import DobermanBase
 from jenkinsapi.custom_exceptions import *
@@ -127,7 +128,7 @@ class OilSpill(DobermanBase):
                                 target = target_location.split(os.sep)[-1]
                             except:
                                 target = target_file
-                            if target not in parse_as_xml:
+                            if fnmatch.fnmatch(target, parse_as_xml):
                                 with open(target_location, 'r') as grep_me:
                                     text = grep_me.read()
                                 hit = self.rematch(and_dict, target,

@@ -103,4 +103,5 @@ class CLI(DobermanBase):
         #
         prsr.add_option('-x', '--xmls', action='store', dest='xmls',
                         default=None,
-                        help='XUnit files to parse as XML, not as plain text')
+                        help=('XUnit files to parse as XML, not as plain ' +
+                              'text (must be in quotes, seperated by commas)'))
