@@ -62,11 +62,6 @@ class CLI(DobermanBase):
         prsr.add_option('-n', '--netloc', action='store', dest='netloc',
                         default=None,
                         help='Specify an IP to rewrite URLs')
-        #
-        prsr.add_option('-N', '--username', action='store',
-                        dest='weebl_username', default=None,
-                        help='Name of user for Weebl REST API authentication')
-        #
         prsr.add_option('-o', '--output', action='store', dest='report_dir',
                         default=None,
                         help='specific the report output directory')
@@ -93,6 +88,11 @@ class CLI(DobermanBase):
         prsr.add_option('-U', '--uuid', action='store',
                         dest='uuid', default=None,
                         help='Unique identifier of environment.')
+        #
+        prsr.add_option('--username', action='store',
+                        dest='weebl_username', default=None,
+                        help='Name of user for Weebl REST API authentication')
+        #
         prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
                         default=False, help='Reduced text in output yaml.')
         #
