@@ -88,6 +88,11 @@ class CLI(DobermanBase):
         prsr.add_option('-U', '--uuid', action='store',
                         dest='uuid', default=None,
                         help='Unique identifier of environment.')
+        #
+        prsr.add_option('--username', action='store',
+                        dest='weebl_username', default=None,
+                        help='Name of user for Weebl REST API authentication')
+        #
         prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
                         default=False, help='Reduced text in output yaml.')
         #
@@ -99,8 +104,3 @@ class CLI(DobermanBase):
         prsr.add_option('-x', '--xmls', action='store', dest='xmls',
                         default=None,
                         help='XUnit files to parse as XML, not as plain text')
-        #
-        prsr.add_option('--username', action='store',
-                        dest='weebl_username', default=None,
-                        help='Name of user for Weebl REST API authentication')
-        #
