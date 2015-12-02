@@ -100,7 +100,7 @@ class CLI(DobermanBase):
                         default=None,
                         help='XUnit files to parse as XML, not as plain text')
         #
-        prsr.add_option('-Z', '--username', action='store',
+        prsr.add_option('--username', action='store',
                         dest='weebl_username', default=None,
                         help='Name of user for Weebl REST API authentication')
         #
