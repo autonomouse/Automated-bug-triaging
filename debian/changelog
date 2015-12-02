@@ -1,3 +1,9 @@
+doberman (2.5.3) precise; urgency=medium
+
+  * Fix for conflicting option string between analysis and stats 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 02 Dec 2015 15:57:03 +0000
+
 doberman (2.5.2ubuntu1) precise; urgency=medium
 
   * prodstack update
