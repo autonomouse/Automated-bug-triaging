@@ -85,14 +85,14 @@ class CLI(DobermanBase):
         prsr.add_option('-u', '--unverified', action='store_true',
                         dest='unverified', default=False,
                         help='set to allow unverified certificate requests')
-        prsr.add_option('-U', '--uuid', action='store',
-                        dest='uuid', default=None,
-                        help='Unique identifier of environment.')
         #
         prsr.add_option('--username', action='store',
                         dest='weebl_username', default=None,
                         help='Name of user for Weebl REST API authentication')
         #
+        prsr.add_option('-U', '--uuid', action='store',
+                        dest='uuid', default=None,
+                        help='Unique identifier of environment.')
         prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
                         default=False, help='Reduced text in output yaml.')
         #
