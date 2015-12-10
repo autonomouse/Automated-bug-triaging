@@ -1,6 +1,7 @@
 doberman (2.5.3) precise; urgency=medium
 
-  * Fix for conflicting option string between analysis and stats 
+  * Fix for conflicting option string between analysis and stats
+  * Minor changes required to handle multiple xml jobs so can cope with test_bundlestests. 
 
  -- Darren Hoyland <darren.hoyland@canonical.com>  Wed, 02 Dec 2015 15:57:03 +0000
 
