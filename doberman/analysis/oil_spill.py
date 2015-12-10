@@ -130,7 +130,7 @@ class OilSpill(DobermanBase):
                                 target = target_file
                             present = True in [fnmatch.fnmatch(target, pax)
                                                for pax in parse_as_xml]
-                            if present:
+                            if not present:
                                 with open(target_location, 'r') as grep_me:
                                     text = grep_me.read()
                                 hit = self.rematch(and_dict, target,
