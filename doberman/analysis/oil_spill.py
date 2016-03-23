@@ -72,33 +72,33 @@ class OilSpill(DobermanBase):
 
             # Try to create testframework
             try:
-                testframework_uuid = weebl.create_testframework(
+                testframework_uuid = self.weebl.create_testframework(
                     name=self.jobname, version="notapplicable")
             except InstanceAlreadyExists:
                 testframework_uuid =\
-                    weebl.get_testframework_uuid_from_name_and_ver(
+                    self.weebl.get_testframework_uuid_from_name_and_ver(
                         name=self.jobname, version="notapplicable")
             except UnexpectedStatusCode as e:
                 raise(e)
 
             # Try to create testcaseclass
             try:
-                testcaseclass_uuid = weebl.create_testcaseclass(
+                testcaseclass_uuid = self.weebl.create_testcaseclass(
                     name=self.jobname, testframework_uuid=testframework_uuid)
             except InstanceAlreadyExists:
                 testcaseclass_uuid =\
-                    weebl.get_testcaseclass_uuid_from_name_testfw_uuid(
+                    self.weebl.get_testcaseclass_uuid_from_name_testfw_uuid(
                         name=self.jobname, testframework_uuid=testframework_uuid)
             except UnexpectedStatusCode as e:
                 raise(e)
 
             # Try to create testcase
             try:
-                testcase_uuid = weebl.create_testcase(
+                testcase_uuid = self.weebl.create_testcase(
                     name=self.jobname, testcaseclass_uuid=testcaseclass_uuid)
             except InstanceAlreadyExists:
                 testcase_uuid =\
-                    weebl.get_testcase_uuid_from_name_and_testcaseclass_uuid(
+                    self.weebl.get_testcase_uuid_from_name_and_testcaseclass_uuid(
                         name=self.jobname,
                         testcaseclass_uuid=testcaseclass_uuid)
             except UnexpectedStatusCode as e:
