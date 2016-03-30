@@ -9,14 +9,6 @@ from doberman.common import pycookiecheat
 from doberman.common.base import DobermanBase
 from doberman.analysis.oil_spill import OilSpill
 from jenkinsapi.custom_exceptions import *
-# <ACTIONPOINT>
-try:
-    from weeblclient.weebl_python2.weebl import Weebl
-    from weeblclient.weebl_python2.exception import (
-        UnexpectedStatusCode, InstanceAlreadyExists)
-except ImportError as e:
-    pass
-#
 
 
 class Jenkins(DobermanBase):

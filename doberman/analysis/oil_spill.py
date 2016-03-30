@@ -63,25 +63,6 @@ class OilSpill(DobermanBase):
         else:
             build_status = 'Unknown'
         matching_bugs = {}
-        # <ACTIONPOINT>
-        if self.cli.use_weebl:
-            if not self.cli.offline_mode:
-                timestamp = build_details.get('timestamp')
-            else:
-                timestamp = None
-
-            # Create/Update build:
-            params = (self.build_number, self.pipeline, self.jobname,
-                      build_status.lower())
-            try:
-                self.build_uuid = self.weebl.create_build(
-                    *params, build_finished_at=timestamp)
-            except InstanceAlreadyExists as e:
-                self.build_uuid = self.weebl.update_build(
-                    *params, build_finished_at=timestamp)
-            except UnexpectedStatusCode as e:
-                raise(e)
-        #
         bug_unmatched = True
         if not self.cli.bugs:
             raise Exception("No bugs in database!")
