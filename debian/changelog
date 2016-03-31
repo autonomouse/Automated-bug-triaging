@@ -1,3 +1,9 @@
+doberman (2.5.6) trusty; urgency=medium
+
+  * Removed the create_build (on Weebl) step - this has now been moved into oil-ci instead. 
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Thu, 31 Mar 2016 12:31:35 +0100
+
 doberman (2.5.3) precise; urgency=medium
 
   * Fix for conflicting option string between analysis and stats
