@@ -71,6 +71,7 @@ class OilSpill(DobermanBase):
         for bug_id, bug_info in self.cli.bugs.items():
             if self.jobname in self.cli.bugs[bug_id]:
                 # <ACTIONPOINT>
+                self.regex_uuid = None
                 if self.cli.use_weebl:
                     self.regex_uuid = bug_info['regex_uuid']
                 #
