@@ -24,6 +24,7 @@ class OilSpill(DobermanBase):
         self.jobname = jobname
         self.yaml_dict = yaml_dict
         self.pipeline = pipeline
+        self.build_uuid = None
         # <ACTIONPOINT>
         if self.cli.use_weebl:
             self.weebl = Weebl(
@@ -32,6 +33,10 @@ class OilSpill(DobermanBase):
                 username=self.cli.weebl_username,
                 apikey=self.cli.weebl_apikey,
                 weebl_url=self.cli.weebl_url)
+            # Build should have been created by oil-ci already
+            self.build_uuid =\
+                self.weebl.get_build_uuid_from_build_id_and_pipeline(
+                    self.build_number, self.pipeline)
         #
 
     def bug_hunt(self, path, announce=True):
