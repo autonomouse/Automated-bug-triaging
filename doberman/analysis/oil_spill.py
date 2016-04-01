@@ -347,19 +347,23 @@ class OilSpill(DobermanBase):
                              testcaseclass_name, testframework_name,
                              testframework_version="notapplicable"):
         """ Create bug occurrence. """
-        if self.cli.use_weebl:
-            testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
-                build_uuid, testcase_name, testcaseclass_name,
-                testframework_name, testframework_version)
+        if not self.cli.use_weebl:
+            msg = "use_weebl set to False: "
+            msg += "This bug occurrence has not been submitted to Weebl"
+            self.cli.LOG.warn(msg)
+            return
+        testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
+            build_uuid, testcase_name, testcaseclass_name,
+            testframework_name, testframework_version)
 
-            if testcaseinstance_uuid is None:
-                testcaseinstance_uuid = get_testcaseinstance_uuid(
-                    weebl, testcase_uuid, build_uuid)
-            knownbugregex_uri =\
-                self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
-                    regex_uuid)
-            self.weebl.create_bugoccurrence(
-                testcaseinstance, knownbugregex_uri)
+        if testcaseinstance_uuid is None:
+            testcaseinstance_uuid = get_testcaseinstance_uuid(
+                weebl, testcase_uuid, build_uuid)
+        knownbugregex_uri =\
+            self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
+                regex_uuid)
+        self.weebl.create_bugoccurrence(
+            testcaseinstance, knownbugregex_uri)
 
     def oil_survey(self, path, pipeline, extracted_info):
         self.oil_df = extracted_info['oil_df']
