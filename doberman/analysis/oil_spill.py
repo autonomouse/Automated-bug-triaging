@@ -10,8 +10,6 @@ from glob import glob
 # <ACTIONPOINT>
 try:
     from weeblclient.weebl_python2.weebl import Weebl
-    from weeblclient.weebl_python2.exception import (
-        UnexpectedStatusCode, InstanceAlreadyExists)
 except ImportError as e:
     pass
 #
@@ -335,23 +333,31 @@ class OilSpill(DobermanBase):
             matches = re.compile(regexp, re.DOTALL).findall(text)
             if matches:
                 if len(set(matches)) >= len(set_re):
-
-                    # <ACTIONPOINT>
-                    if self.cli.use_weebl:
-                        # Create bug occurrence:
-                        try:
-                            self.weebl.create_bugoccurrence(self.build_uuid,
-                                                            self.regex_uuid)
-                        except InstanceAlreadyExists as e:
-                            pass
-                        except UnexpectedStatusCode as e:
-                            raise(e)
-                    #
-
+                    self.report_bugoccurrence(
+                        self.regex_uuid, self.build_uuid, self.jobname,
+                        self.jobname, self.jobname)
                     if '*' in orig_filename_in_db:
                         return {orig_filename_in_db: {'regexp': regexps}}
                     else:
                         return {target_file: {'regexp': regexps}}
+
+    def report_bugoccurrence(self, regex_uuid, build_uuid, testcase_name,
+                             testcaseclass_name, testframework_name,
+                             testframework_version="notapplicable"):
+        """ Create bug occurrence. """
+        if not self.cli.use_weebl:
+            msg = "use_weebl set to False: "
+            msg += "This bug occurrence has not been submitted to Weebl"
+            self.cli.LOG.warn(msg)
+            return
+        testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
+            build_uuid, testcase_name, testcaseclass_name,
+            testframework_name, testframework_version)
+        knownbugregex_uri =\
+            self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
+                regex_uuid)
+        self.weebl.create_bugoccurrence(
+            testcaseinstance, knownbugregex_uri)
 
     def oil_survey(self, path, pipeline, extracted_info):
         self.oil_df = extracted_info['oil_df']
