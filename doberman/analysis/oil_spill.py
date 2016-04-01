@@ -10,8 +10,6 @@ from glob import glob
 # <ACTIONPOINT>
 try:
     from weeblclient.weebl_python2.weebl import Weebl
-    from weeblclient.weebl_python2.exception import (
-        UnexpectedStatusCode, InstanceAlreadyExists)
 except ImportError as e:
     pass
 #
@@ -355,10 +353,6 @@ class OilSpill(DobermanBase):
         testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
             build_uuid, testcase_name, testcaseclass_name,
             testframework_name, testframework_version)
-
-        if testcaseinstance_uuid is None:
-            testcaseinstance_uuid = get_testcaseinstance_uuid(
-                weebl, testcase_uuid, build_uuid)
         knownbugregex_uri =\
             self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
                 regex_uuid)
