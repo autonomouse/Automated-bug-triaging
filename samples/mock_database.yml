@@ -1428,3 +1428,13 @@ Prodstack: Failed to prepare deployed cloud (NeutronClientException)"
         "console.txt":
             regexp:
             - "S3ResponseError. S3ResponseError.{1,6}404 Not Found"
+
+  "1565792":
+    category: None
+    description: "[production] Could not determine vcs backend for cs:trusty/nova-cloud-controller (deploy fail)"
+    pipeline_deploy:
+      -
+        "console.txt":
+            regexp:
+            - "ValueError. Could not determine vcs backend for cs:trusty/nova-cloud-controller"
+
