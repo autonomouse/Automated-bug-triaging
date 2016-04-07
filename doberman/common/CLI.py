@@ -85,6 +85,9 @@ class CLI(DobermanBase):
         prsr.add_option('-u', '--unverified', action='store_true',
                         dest='unverified', default=False,
                         help='set to allow unverified certificate requests')
+        prsr.add_option('-v', '--testframework_version', action='store',
+                        dest='testframework_version', default=None,
+                        help='version of testframework used')
         #
         prsr.add_option('--username', action='store',
                         dest='weebl_username', default=None,
