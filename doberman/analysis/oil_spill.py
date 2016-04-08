@@ -121,7 +121,7 @@ class OilSpill(DobermanBase):
                                 hit = self.rematch(
                                     and_dict, target, target_file, text,
                                     self.jobname, self.jobname, self.jobname,
-                                    self.cli.testframework_version)
+                                    "notapplicable")
                                 if hit:
                                     failed_to_hit_any_flag = False
                                     glob_hits.append(
