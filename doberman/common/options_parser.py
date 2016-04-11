@@ -181,11 +181,7 @@ class OptionsParser(object):
             self.LOG.error("Missing test-catalog configuration")
             raise Exception("Missing test-catalog configuration")
 
-        # cli wins, otherwise default to "notapplicable":
-        if opts.testframework_version:
-            self.testframework_version = opts.testframework_version
-        else:
-            self.testframework_version = "notapplicable"
+        self.testframework_version = opts.testframework_version
 
         # Cookie for test-catalog:
         tc_auth = cfg.get('DEFAULT', 'tc_auth')

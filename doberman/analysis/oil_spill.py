@@ -121,7 +121,7 @@ class OilSpill(DobermanBase):
                                 hit = self.rematch(
                                     and_dict, target, target_file, text,
                                     self.jobname, self.jobname, self.jobname,
-                                    "notapplicable")
+                                    const.DEFAULT_VERSION_FOR_BUILD)
                                 if hit:
                                     failed_to_hit_any_flag = False
                                     glob_hits.append(
@@ -162,7 +162,7 @@ class OilSpill(DobermanBase):
                                         unfiled_xml_fails)
                                 testframework = "_".join([
                                     self.jobname.split('test_')[1],
-                                    target.split('.')[0].split('_')[0]]])
+                                    target.split('.')[0].split('_')[0]])
                                 for num, fail in enumerate(errors_and_fails):
                                     pre_log = fail.get('message')
                                     if not self.cli.reduced_output_text:
