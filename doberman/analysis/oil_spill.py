@@ -1,12 +1,12 @@
-import os
-import fnmatch
-from lxml import etree
-from doberman.common.base import DobermanBase
-from jenkinsapi.custom_exceptions import *
+
 import re
+import os
 import uuid
-from jenkinsapi.custom_exceptions import *
+import fnmatch
 from glob import glob
+from lxml import etree
+from doberman.common import const
+from doberman.common.base import DobermanBase
 # <ACTIONPOINT>
 try:
     from weeblclient.weebl_python2.weebl import Weebl
