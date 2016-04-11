@@ -118,8 +118,10 @@ class OilSpill(DobermanBase):
                             if not present:
                                 with open(target_location, 'r') as grep_me:
                                     text = grep_me.read()
-                                hit = self.rematch(and_dict, target,
-                                                   target_file, text)
+                                hit = self.rematch(
+                                    and_dict, target, target_file, text,
+                                    self.jobname, self.jobname, self.jobname,
+                                    const.DEFAULT_VERSION_FOR_BUILD)
                                 if hit:
                                     failed_to_hit_any_flag = False
                                     glob_hits.append(
@@ -158,6 +160,9 @@ class OilSpill(DobermanBase):
                                         errors_and_fails, info, target,
                                         bug_unmatched, build_status,
                                         unfiled_xml_fails)
+                                testframework = "_".join([
+                                    self.jobname.split('test_')[1],
+                                    target.split('.')[0].split('_')[0]])
                                 for num, fail in enumerate(errors_and_fails):
                                     pre_log = fail.get('message')
                                     if not self.cli.reduced_output_text:
@@ -167,8 +172,12 @@ class OilSpill(DobermanBase):
                                         fail.getparent().get('classname')
                                     info['xunit name'] =\
                                         fail.getparent().get('name')
-                                    hit = self.rematch(and_dict, target,
-                                                       target_file, pre_log)
+                                    hit = self.rematch(
+                                        and_dict, target, target_file, pre_log,
+                                        info['xunit name'],
+                                        info['xunit class'],
+                                        testframework,
+                                        self.cli.testframework_version)
                                     if hit:
                                         failed_to_hit_any_flag = False
                                         # Add to hit_dict:
@@ -315,7 +324,9 @@ class OilSpill(DobermanBase):
 
         return uxf_dict
 
-    def rematch(self, bugs, target_file, orig_filename_in_db, text):
+    def rematch(self, bugs, target_file, orig_filename_in_db, text,
+                testcase_name, testcaseclass_name, testframework_name,
+                testframework_version):
         """ Search files in bugs for multiple matching regexps. """
         if target_file == "{}_console.txt".format(self.jobname):
             orig_filename_in_db = "console.txt"
@@ -340,8 +351,9 @@ class OilSpill(DobermanBase):
             if matches:
                 if len(set(matches)) >= len(set_re):
                     self.report_bugoccurrence(
-                        self.regex_uuid, self.build_uuid, self.jobname,
-                        self.jobname, self.jobname)
+                        self.regex_uuid, self.build_uuid, testcase_name,
+                        testcaseclass_name, testframework_name,
+                        testframework_version)
                     if '*' in orig_filename_in_db:
                         return {orig_filename_in_db: {'regexp': regexps}}
                     else:
@@ -349,7 +361,7 @@ class OilSpill(DobermanBase):
 
     def report_bugoccurrence(self, regex_uuid, build_uuid, testcase_name,
                              testcaseclass_name, testframework_name,
-                             testframework_version="notapplicable"):
+                             testframework_version):
         """ Create bug occurrence. """
         if not self.cli.use_weebl:
             msg = "use_weebl set to False: "

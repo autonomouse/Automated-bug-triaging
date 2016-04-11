@@ -2,6 +2,7 @@ import optparse
 from doberman.common.base import DobermanBase
 from doberman.common.options_parser import OptionsParser
 from doberman.common import utils
+from doberman.common import const
 from doberman.__init__ import __version__
 
 
@@ -85,6 +86,10 @@ class CLI(DobermanBase):
         prsr.add_option('-u', '--unverified', action='store_true',
                         dest='unverified', default=False,
                         help='set to allow unverified certificate requests')
+        prsr.add_option('-v', '--testframework_version', action='store',
+                        dest='testframework_version',
+                        default=const.DEFAULT_VERSION_FOR_BUILD,
+                        help='version of testframework used')
         #
         prsr.add_option('--username', action='store',
                         dest='weebl_username', default=None,

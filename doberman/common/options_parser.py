@@ -181,6 +181,8 @@ class OptionsParser(object):
             self.LOG.error("Missing test-catalog configuration")
             raise Exception("Missing test-catalog configuration")
 
+        self.testframework_version = opts.testframework_version
+
         # Cookie for test-catalog:
         tc_auth = cfg.get('DEFAULT', 'tc_auth')
 
