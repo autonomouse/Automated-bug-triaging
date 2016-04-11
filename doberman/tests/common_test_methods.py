@@ -102,6 +102,7 @@ class CommonTestMethods(DobermanTestBase):
         cli.weebl_url = "http://localhost:8000"
         cli.weebl_username = 'weebl_username'
         cli.weebl_apikey = 'weebl_apikey'
+        cli.testframework_version = "kilo"
         #
 
         LOG = utils.get_logger('doberman.analysis')
