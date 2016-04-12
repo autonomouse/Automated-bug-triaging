@@ -98,7 +98,7 @@ class CLI(DobermanBase):
         prsr.add_option('-U', '--uuid', action='store',
                         dest='uuid', default=None,
                         help='Unique identifier of environment.')
-        prsr.add_option('-v', '--verbose', action='store_true', dest='verbose',
+        prsr.add_option('-V', '--verbose', action='store_true', dest='verbose',
                         default=False, help='Reduced text in output yaml.')
         #
         prsr.add_option('-W', '--weebl', action='store_true', dest='use_weebl',
