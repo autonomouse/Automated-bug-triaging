@@ -10,6 +10,7 @@ from doberman.common.base import DobermanBase
 # <ACTIONPOINT>
 try:
     from weeblclient.weebl_python2.weebl import Weebl
+    from weeblclient.weebl_python2.exception import UnrecognisedInstance
 except ImportError as e:
     pass
 #
@@ -177,7 +178,8 @@ class OilSpill(DobermanBase):
                                         info['xunit name'],
                                         info['xunit class'],
                                         testframework,
-                                        self.cli.testframework_version)
+                                        self.cli.testframework_version,
+                                        fail.tag)
                                     if hit:
                                         failed_to_hit_any_flag = False
                                         # Add to hit_dict:
@@ -326,7 +328,7 @@ class OilSpill(DobermanBase):
 
     def rematch(self, bugs, target_file, orig_filename_in_db, text,
                 testcase_name, testcaseclass_name, testframework_name,
-                testframework_version):
+                testframework_version, test_result="unknown"):
         """ Search files in bugs for multiple matching regexps. """
         if target_file == "{}_console.txt".format(self.jobname):
             orig_filename_in_db = "console.txt"
@@ -353,7 +355,7 @@ class OilSpill(DobermanBase):
                     self.report_bugoccurrence(
                         self.regex_uuid, self.build_uuid, testcase_name,
                         testcaseclass_name, testframework_name,
-                        testframework_version)
+                        testframework_version, test_result)
                     if '*' in orig_filename_in_db:
                         return {orig_filename_in_db: {'regexp': regexps}}
                     else:
@@ -361,16 +363,25 @@ class OilSpill(DobermanBase):
 
     def report_bugoccurrence(self, regex_uuid, build_uuid, testcase_name,
                              testcaseclass_name, testframework_name,
-                             testframework_version):
+                             testframework_version, test_result):
         """ Create bug occurrence. """
         if not self.cli.use_weebl:
             msg = "use_weebl set to False: "
             msg += "This bug occurrence has not been submitted to Weebl"
             self.cli.LOG.warn(msg)
             return
-        testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
-            build_uuid, testcase_name, testcaseclass_name,
-            testframework_name, testframework_version)
+        try:
+            testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
+                build_uuid, testcase_name, testcaseclass_name,
+                testframework_name, testframework_version)
+        except UnrecognisedInstance:
+            testcase_uuid =\
+                self.weebl.set_up_test_framework_caseclass_and_case(
+                testframework_name, testframework_version, testcaseclass_name,
+                testcase_name)
+            testcaseinstance = self.weebl.create_testcaseinstance(
+                build_uuid, testcase_uuid, self.pipeline,
+                test_result)
         knownbugregex_uri =\
             self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
                 regex_uuid)
