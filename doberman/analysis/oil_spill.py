@@ -385,8 +385,10 @@ class OilSpill(DobermanBase):
         knownbugregex_uri =\
             self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
                 regex_uuid)
+        testcaseinstance_uri = self.weebl.get_testcaseinstance_uri_from_uuid(
+            testcaseinstance)
         self.weebl.create_bugoccurrence(
-            testcaseinstance, knownbugregex_uri)
+            testcaseinstance_uri, knownbugregex_uri)
 
     def oil_survey(self, path, pipeline, extracted_info):
         self.oil_df = extracted_info['oil_df']
