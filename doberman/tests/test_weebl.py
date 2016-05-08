@@ -33,8 +33,8 @@ class CrudeAnalysisTests(CommonTestMethods):
     @patch('weeblclient.weebl_python2.weebl.Weebl.bugoccurrence_exists')
     @patch('weeblclient.weebl_python2.weebl.Weebl.create_bugoccurrence')
     @patch('weeblclient.weebl_python2.weebl.Weebl.'
-           + 'get_build_uuid_from_build_id_and_pipeline')
-    def test_use_weebl(self, _get_build_uuid_from_build_id_and_pipeline,
+           + 'get_build_uuid_from_build_id_job_and_pipeline')
+    def test_use_weebl(self, _get_build_uuid_from_build_id_job_and_pipeline,
                        _create_bugoccurrence, _bugoccurrence_exists,
                        _update_build, _create_build, _build_exists,
                        _create_pipeline, _pipeline_exists,
