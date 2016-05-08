@@ -36,8 +36,8 @@ class OilSpill(DobermanBase):
                 weebl_url=self.cli.weebl_url)
             # Build should have been created by oil-ci already
             self.build_uuid =\
-                self.weebl.get_build_uuid_from_build_id_and_pipeline(
-                    self.build_number, self.pipeline)
+                self.weebl.get_build_uuid_from_build_id_job_and_pipeline(
+                    self.build_number, self.jobname, self.pipeline)
         #
 
     def bug_hunt(self, path, announce=True):
