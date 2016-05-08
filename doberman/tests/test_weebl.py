@@ -11,6 +11,7 @@ from mock import (
     )
 from mock import patch, MagicMock
 
+
 class CrudeAnalysisTests(CommonTestMethods):
     def setUp(self):
         super(CrudeAnalysisTests, self).setUp()
