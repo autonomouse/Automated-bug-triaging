@@ -376,8 +376,8 @@ class OilSpill(DobermanBase):
         except UnrecognisedInstance:
             testcase_uuid =\
                 self.weebl.set_up_test_framework_caseclass_and_case(
-                testframework_name, testframework_version, testcaseclass_name,
-                testcase_name)
+                    testframework_name, testframework_version,
+                    testcaseclass_name, testcase_name)
             testcaseinstance = self.weebl.create_testcaseinstance(
                 self.build_uuid, testcase_uuid, self.pipeline,
                 test_result)
