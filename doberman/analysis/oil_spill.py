@@ -353,17 +353,16 @@ class OilSpill(DobermanBase):
             if matches:
                 if len(set(matches)) >= len(set_re):
                     self.report_bugoccurrence(
-                        self.regex_uuid, self.build_uuid, testcase_name,
-                        testcaseclass_name, testframework_name,
+                        testcase_name, testcaseclass_name, testframework_name,
                         testframework_version, test_result)
                     if '*' in orig_filename_in_db:
                         return {orig_filename_in_db: {'regexp': regexps}}
                     else:
                         return {target_file: {'regexp': regexps}}
 
-    def report_bugoccurrence(self, regex_uuid, build_uuid, testcase_name,
-                             testcaseclass_name, testframework_name,
-                             testframework_version, test_result):
+    def report_bugoccurrence(self, testcase_name, testcaseclass_name,
+                             testframework_name, testframework_version,
+                             test_result):
         """ Create bug occurrence. """
         if not self.cli.use_weebl:
             msg = "use_weebl set to False: "
@@ -372,7 +371,7 @@ class OilSpill(DobermanBase):
             return
         try:
             testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
-                build_uuid, testcase_name, testcaseclass_name,
+                self.build_number, testcase_name, testcaseclass_name,
                 testframework_name, testframework_version)
         except UnrecognisedInstance:
             testcase_uuid =\
@@ -380,11 +379,11 @@ class OilSpill(DobermanBase):
                 testframework_name, testframework_version, testcaseclass_name,
                 testcase_name)
             testcaseinstance = self.weebl.create_testcaseinstance(
-                build_uuid, testcase_uuid, self.pipeline,
+                self.build_uuid, testcase_uuid, self.pipeline,
                 test_result)
         knownbugregex_uri =\
             self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
-                regex_uuid)
+                self.regex_uuid)
         testcaseinstance_uri = self.weebl.get_testcaseinstance_uri_from_uuid(
             testcaseinstance)
         self.weebl.create_bugoccurrence(
