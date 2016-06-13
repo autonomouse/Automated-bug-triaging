@@ -1,3 +1,11 @@
+doberman (2.6.2) trusty; urgency=medium
+
+  * Removed specific version of weeblclient as was not building.
+  * Fix for using build_uuid instead of build_id.
+  * Fix for oil_spill treating the resource_uri as a uuid in cases where a testcaseinstance already exists.
+
+ -- Darren Hoyland <darren.hoyland@canonical.com>  Mon, 13 Jun 2016 10:32:13 +0100
+
 doberman (2.6.1) trusty; urgency=medium
 
   * Client method get_build_uuid_from_build_id_and_pipeline changed to get_build_uuid_from_build_id_job_and_pipeline and now also required the jobtype passing in.

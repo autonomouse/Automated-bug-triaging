@@ -370,9 +370,10 @@ class OilSpill(DobermanBase):
             self.cli.LOG.warn(msg)
             return
         try:
-            testcaseinstance = self.weebl.get_testcaseinstance_resource_uri(
-                self.build_number, testcase_name, testcaseclass_name,
-                testframework_name, testframework_version)
+            testcaseinstance_uri =\
+                self.weebl.get_testcaseinstance_resource_uri(
+                    self.build_number, testcase_name, testcaseclass_name,
+                    testframework_name, testframework_version)
         except UnrecognisedInstance:
             testcase_uuid =\
                 self.weebl.set_up_test_framework_caseclass_and_case(
@@ -381,11 +382,11 @@ class OilSpill(DobermanBase):
             testcaseinstance = self.weebl.create_testcaseinstance(
                 self.build_uuid, testcase_uuid, self.pipeline,
                 test_result)
+            testcaseinstance_uri =\
+                self.weebl.get_testcaseinstance_uri_from_uuid(testcaseinstance)
         knownbugregex_uri =\
             self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
                 self.regex_uuid)
-        testcaseinstance_uri = self.weebl.get_testcaseinstance_uri_from_uuid(
-            testcaseinstance)
         self.weebl.create_bugoccurrence(
             testcaseinstance_uri, knownbugregex_uri)
 
