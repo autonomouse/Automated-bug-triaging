@@ -123,8 +123,8 @@ class FileParser(DobermanBase):
         self.extracted_info['state'] = state
 
         row = 0
-        for service in self.data['services']:
-            serv = self.data['services'][service]
+        for service in self.data['applications']:
+            serv = self.data['applications'][service]
             charm = serv['charm'] if 'charm' in serv else 'Unknown'
             if 'units' in serv:
                 units = serv['units']

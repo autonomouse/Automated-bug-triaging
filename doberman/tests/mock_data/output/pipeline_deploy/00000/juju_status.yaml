@@ -114,7 +114,7 @@ machines:
     hardware: arch=amd64 cpu-cores=8 mem=32768M tags=hw-ok,oil-slave-2
     instance-id: /MAAS/api/1.0/nodes/node-4cb16f16-ae98-11e3-b194-00163efc5068/
     series: precise
-services:
+applications:
   ceilometer:
     charm: local:precise/ceilometer-44
     exposed: false
