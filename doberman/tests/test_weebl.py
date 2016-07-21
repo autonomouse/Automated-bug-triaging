@@ -22,6 +22,8 @@ class CrudeAnalysisTests(CommonTestMethods):
         super(CrudeAnalysisTests, self).tearDown()
         self.tidy_up()
 
+    @patch('weeblclient.weebl_python2.tastypie_client.ApiClient.'
+           + '_populate_resources')
     @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.weeblify_environment')
     @patch('weeblclient.weebl_python2.weebl.Weebl.get_bug_info')
     @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.buildexecutor_exists')
@@ -40,7 +42,8 @@ class CrudeAnalysisTests(CommonTestMethods):
                        _update_build, _create_build, _build_exists,
                        _create_pipeline, _pipeline_exists,
                        _create_buildexecutor, _buildexecutor_exists,
-                       _get_bug_info, _weeblify_environment):
+                       _get_bug_info, _weeblify_environment,
+                       _populate_resources):
         cli = self.populate_cli_var("blank_database.yml")
         cli.use_weebl = True
         analysis = CrudeAnalysis(cli)
