@@ -22,18 +22,18 @@ class CrudeAnalysisTests(CommonTestMethods):
         super(CrudeAnalysisTests, self).tearDown()
         self.tidy_up()
 
-    @patch('weeblclient.weebl_python2.weebl.Weebl.weeblify_environment')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.weeblify_environment')
     @patch('weeblclient.weebl_python2.weebl.Weebl.get_bug_info')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.buildexecutor_exists')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.create_buildexecutor')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.pipeline_exists')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.buildexecutor_exists')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.create_buildexecutor')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.pipeline_exists')
     @patch('weeblclient.weebl_python2.weebl.Weebl.create_pipeline')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.build_exists')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.create_build')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.update_build')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.bugoccurrence_exists')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.create_bugoccurrence')
-    @patch('weeblclient.weebl_python2.weebl.Weebl.'
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.build_exists')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.create_build')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.update_build')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.bugoccurrence_exists')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.create_bugoccurrence')
+    @patch('weeblclient.weebl_python2.oldweebl.OldWeebl.'
            + 'get_build_uuid_from_build_id_job_and_pipeline')
     def test_use_weebl(self, _get_build_uuid_from_build_id_job_and_pipeline,
                        _create_bugoccurrence, _bugoccurrence_exists,
