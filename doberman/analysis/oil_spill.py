@@ -394,7 +394,7 @@ class OilSpill(DobermanBase):
         except InstanceAlreadyExists:
             msg = "There is already a bug occurrence logged for regex: '{}' "
             msg += "in testcaseinstance: '{}'"
-            self.cli.LOG.error(
+            self.cli.LOG.warn(
                 msg.format(knownbugregex_uri, testcaseinstance_uri))
 
     def oil_survey(self, path, pipeline, extracted_info):
