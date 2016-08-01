@@ -11,6 +11,7 @@ from doberman.common.base import DobermanBase
 try:
     from weeblclient.weebl_python2.weebl import Weebl
     from weeblclient.weebl_python2.exception import UnrecognisedInstance
+    from weeblclient.weebl_python2.exception import InstanceAlreadyExists
 except ImportError as e:
     pass
 #
@@ -387,8 +388,14 @@ class OilSpill(DobermanBase):
         knownbugregex_uri =\
             self.weebl.get_knownbugregex_resource_uri_from_regex_uuid(
                 self.regex_uuid)
-        self.weebl.create_bugoccurrence(
-            testcaseinstance_uri, knownbugregex_uri)
+        try:
+            self.weebl.create_bugoccurrence(
+                testcaseinstance_uri, knownbugregex_uri)
+        except InstanceAlreadyExists:
+            msg = "There is already a bug occurrence logged for regex: '{}' "
+            msg += "in testcaseinstance: '{}'"
+            self.cli.LOG.warn(
+                msg.format(knownbugregex_uri, testcaseinstance_uri))
 
     def oil_survey(self, path, pipeline, extracted_info):
         self.oil_df = extracted_info['oil_df']
