@@ -60,3 +60,5 @@ parts:
       etc/doberman/doberman.conf: etc/doberman/doberman.conf
       tools/release_package.sh: usr/share/doberman/tools/release_package.sh
       samples/mock_database.yml: usr/share/doberman/samples/mock_database.yml
+      prime/etc/test-catalog/lp-credentials.conf: etc/test-catalog/lp-credentials.conf
+      prime/etc/test-catalog/test-catalog.conf: etc/test-catalog/test-catalog.conf
