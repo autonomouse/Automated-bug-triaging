@@ -54,4 +54,9 @@ parts:
       - python-mock
       - python-weeblclient
       - test-catalog-common
-
+  copy:
+    plugin: copy
+    files:
+      etc/doberman/doberman.conf: etc/doberman/doberman.conf
+      tools/release_package.sh: usr/share/doberman/tools/release_package.sh
+      samples/mock_database.yml: usr/share/doberman/samples/mock_database.yml
