@@ -25,4 +25,33 @@ parts:
     plugin: python2
     source: .
     build-packages:
+      - python-jenkinsapi
+      - python-all 
+      - python-bzrlib
+      - python-crypto 
+      - python-coverage
+      - python-keyring
+      - python-lxml
+      - python-nose
+      - python-requests
+      - python-setuptools
+      - python-test-catalog
+      - python-testtools
       - python-yaml
+      - python-matplotlib
+      - python-mock
+      - python-weeblclient
+      - test-catalog-common
+    stage-packages:
+      - python-jenkinsapi
+      - python-crypto
+      - python-keyring
+      - python-lxml
+      - python-requests
+      - python-test-catalog
+      - python-yaml
+      - python-matplotlib
+      - python-mock
+      - python-weeblclient
+      - test-catalog-common
+
