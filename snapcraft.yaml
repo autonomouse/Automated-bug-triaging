@@ -21,7 +21,7 @@ apps:
     command: filing-station
 
 parts:
-  script:
+  doberman:
     plugin: python2
     source: .
     build-packages:
