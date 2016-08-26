@@ -46,8 +46,8 @@ class Jenkins(DobermanBase):
         try:
             try:
                 requester = Requester(baseurl=url, cookies=self.cookie,
-                                  ssl_verify=self.cli.verify,
-                                  netloc=self.netloc)
+                                      ssl_verify=self.cli.verify,
+                                      netloc=self.netloc)
             except TypeError:
                 requester = Requester(baseurl=url, ssl_verify=self.cli.verify)
             self.jenkins_api = JenkinsAPI(baseurl=url, requester=requester)
