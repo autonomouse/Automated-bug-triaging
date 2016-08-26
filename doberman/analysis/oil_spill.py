@@ -233,8 +233,6 @@ class OilSpill(DobermanBase):
                           if "_console.txt" not in k]
                     original_hit_dict = dict(d1 + d2)
 
-                    [value.pop('uuids', None)
-                     for key, value in and_dict.items()]
                     if and_dict == original_hit_dict:
                         links = []
                         url = self.cli.external_jenkins_url
