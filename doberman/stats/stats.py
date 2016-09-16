@@ -10,7 +10,7 @@ from stats_cli import CLI
 from pprint import pprint
 from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
-from doberman.analysis.crude_test_catalog import TestCatalog
+from doberman.analysis.crude_weebl import WeeblClass
 
 
 class Stats(DobermanBase):
@@ -23,7 +23,7 @@ class Stats(DobermanBase):
                       .format(self.cli.environment,
                               self.cli.external_jenkins_url))
         self.cli.LOG.info(self.intro)
-        self.test_catalog = TestCatalog(self.cli)
+        self.test_catalog = WeeblClass(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
         self.op_dirs = []
@@ -104,7 +104,9 @@ class Stats(DobermanBase):
         for job in self.non_crude_job_names:
             jenkins_job = self.jenkins_api[job]
             self.cli.LOG.info("Polling Jenkins for {} data".format(job))
-            all_builds[job] = jenkins_job._poll()['builds']
+            url = jenkins_job.python_api_url(jenkins_job.baseurl)
+            all_builds[job] = jenkins_job.get_data(
+                url, params={'depth': 1}, tree=None)['builds']
             actives[job] = []
             for pipeline, build_dict in self.build_numbers.items():
                 build_number = build_dict.get(job)
