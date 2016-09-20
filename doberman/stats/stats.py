@@ -104,7 +104,9 @@ class Stats(DobermanBase):
         for job in self.non_crude_job_names:
             jenkins_job = self.jenkins_api[job]
             self.cli.LOG.info("Polling Jenkins for {} data".format(job))
-            all_builds[job] = jenkins_job._poll()['builds']
+            url = jenkins_job.python_api_url(jenkins_job.baseurl)
+            all_builds[job] = jenkins_job.get_data(
+                url, params={'depth': 1}, tree=None)['builds']
             actives[job] = []
             for pipeline, build_dict in self.build_numbers.items():
                 build_number = build_dict.get(job)
