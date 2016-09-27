@@ -11,6 +11,7 @@ from pprint import pprint
 from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
 from doberman.analysis.crude_test_catalog import TestCatalog
+from jenkinsapi.custom_exceptions import UnknownJob
 
 
 class Stats(DobermanBase):
@@ -102,7 +103,11 @@ class Stats(DobermanBase):
         if self.build_numbers in [None, {}]:
             return {}, {}, None
         for job in self.non_crude_job_names:
-            jenkins_job = self.jenkins_api[job]
+            try:
+                jenkins_job = self.jenkins_api[job]
+            except UnknownJob:
+                self.cli.LOG.error("{} job is not recognised.".format(job))
+                continue
             self.cli.LOG.info("Polling Jenkins for {} data".format(job))
             url = jenkins_job.python_api_url(jenkins_job.baseurl)
             all_builds[job] = jenkins_job.get_data(
