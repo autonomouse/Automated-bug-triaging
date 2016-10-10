@@ -10,7 +10,7 @@ from stats_cli import CLI
 from pprint import pprint
 from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
-from doberman.analysis.crude_test_catalog import TestCatalog
+from doberman.analysis.crude_weebl import WeeblClass
 from jenkinsapi.custom_exceptions import UnknownJob
 
 
@@ -24,7 +24,7 @@ class Stats(DobermanBase):
                       .format(self.cli.environment,
                               self.cli.external_jenkins_url))
         self.cli.LOG.info(self.intro)
-        self.test_catalog = TestCatalog(self.cli)
+        self.weebl = WeeblClass(self.cli)
         self.jenkins = Jenkins(self.cli)
         self.jenkins_api = self.jenkins.jenkins_api
         self.op_dirs = []
@@ -36,7 +36,7 @@ class Stats(DobermanBase):
 
     def run_stats(self, stats_file="stats.txt"):
         self.build_numbers = self.build_pl_ids_and_check(
-            self.jenkins, self.test_catalog)
+            self.jenkins, self.weebl)
 
         # Make a list of jobs that aren't the crude job:
         self.non_crude_job_names = [job for job in self.cli.job_names if
