@@ -154,6 +154,8 @@ class Stats(DobermanBase):
             self.build_numbers.pop(pipeline)
 
         for job in self.non_crude_job_names:
+            if job not in all_builds:
+                continue
             completed_builds = [
                 int(bs[job]) for pl, bs in self.build_numbers.items()
                 if bs.get(job) is not None]
