@@ -73,7 +73,7 @@ def find_config(conf=None, config_filename='doberman.conf'):
             raise exception.InvalidConfig(
                 'Specified config file not found at %s' % conf)
 
-    env_conf = os.getenv('DOBERMAN_ROOT', None)
+    env_conf = os.getenv('SNAP', None)
     env_conf = (env_conf and
                 os.path.join(env_conf, 'etc', 'doberman', config_filename))
     if env_conf and os.path.isfile(env_conf):

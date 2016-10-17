@@ -80,9 +80,6 @@ class CLI(DobermanBase):
         prsr.add_option('-s', '--start', action='store', dest='start',
                         default=None,
                         help='starting date string. Default: \'24 hours ago\'')
-        prsr.add_option('-T', '--testcatalog', action='store', dest='tc_host',
-                        default=None,
-                        help='URL to test-catalog API server')
         prsr.add_option('-u', '--unverified', action='store_true',
                         dest='unverified', default=False,
                         help='set to allow unverified certificate requests')

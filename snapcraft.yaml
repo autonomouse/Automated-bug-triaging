@@ -1,5 +1,6 @@
 name: doberman
-version: 2.6.2
+version: 2.6.3
+grade: stable
 summary: Statistical Analysis of OIL
 description: Statistical Analysis of OIL (oil-stats, crude-analysis, refinery, filing-station)
 confinement: strict
@@ -22,7 +23,7 @@ apps:
 
 parts:
   doberman:
-    plugin: python2
+    plugin: python
     source: .
     build-packages:
       - python-jenkinsapi
@@ -35,28 +36,27 @@ parts:
       - python-nose
       - python-requests
       - python-setuptools
-      - python-test-catalog
       - python-testtools
       - python-yaml
       - python-matplotlib
       - python-mock
       - python-weeblclient
-      - test-catalog-common
     stage-packages:
       - python-jenkinsapi
+      - jenkinsapi
       - python-crypto
       - python-keyring
       - python-lxml
       - python-requests
-      - python-test-catalog
       - python-yaml
       - python-matplotlib
       - python-mock
       - python-weeblclient
-      - test-catalog-common
+      - python-parsedatetime
+    python-version: python2
   copy:
-    plugin: copy
-    files:
-      etc/doberman/doberman.conf: etc/doberman/doberman.conf
-      tools/release_package.sh: usr/share/doberman/tools/release_package.sh
-      samples/mock_database.yml: usr/share/doberman/samples/mock_database.yml
+    plugin: dump
+    source: etc/doberman
+    organize:
+      doberman.conf: etc/doberman/doberman.conf
+
