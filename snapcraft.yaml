@@ -1,0 +1,62 @@
+name: doberman
+version: 2.6.2
+summary: Statistical Analysis of OIL
+description: Statistical Analysis of OIL (oil-stats, crude-analysis, refinery, filing-station)
+confinement: strict
+
+apps:
+  oil-stats:
+    command: stats
+    plugs: [network-bind]
+  oil-cookie:
+    command: oil-cookie
+    plugs: [network-bind]
+  crude-analysis:
+    command: crude-analysis
+    plugs: [network-bind]
+  refinery:
+    command: refinery
+    plugs: [network-bind]
+  filing-station:
+    command: filing-station
+
+parts:
+  doberman:
+    plugin: python2
+    source: .
+    build-packages:
+      - python-jenkinsapi
+      - python-all 
+      - python-bzrlib
+      - python-crypto 
+      - python-coverage
+      - python-keyring
+      - python-lxml
+      - python-nose
+      - python-requests
+      - python-setuptools
+      - python-test-catalog
+      - python-testtools
+      - python-yaml
+      - python-matplotlib
+      - python-mock
+      - python-weeblclient
+      - test-catalog-common
+    stage-packages:
+      - python-jenkinsapi
+      - python-crypto
+      - python-keyring
+      - python-lxml
+      - python-requests
+      - python-test-catalog
+      - python-yaml
+      - python-matplotlib
+      - python-mock
+      - python-weeblclient
+      - test-catalog-common
+  copy:
+    plugin: copy
+    files:
+      etc/doberman/doberman.conf: etc/doberman/doberman.conf
+      tools/release_package.sh: usr/share/doberman/tools/release_package.sh
+      samples/mock_database.yml: usr/share/doberman/samples/mock_database.yml
