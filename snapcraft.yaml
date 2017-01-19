@@ -1,0 +1,61 @@
+name: doberman
+version: 2.6.3
+grade: stable
+summary: Statistical Analysis of OIL
+description: Statistical Analysis of OIL (oil-stats, crude-analysis, refinery, filing-station)
+confinement: strict
+
+apps:
+  oil-stats:
+    command: stats
+    plugs: [network-bind]
+  oil-cookie:
+    command: oil-cookie
+    plugs: [network-bind]
+  crude-analysis:
+    command: crude-analysis
+    plugs: [network-bind]
+  refinery:
+    command: refinery
+    plugs: [network-bind]
+  filing-station:
+    command: filing-station
+
+parts:
+  doberman:
+    plugin: python
+    source: .
+    build-packages:
+      - python-jenkinsapi
+      - python-all
+      - python-bzrlib
+      - python-crypto
+      - python-coverage
+      - python-keyring
+      - python-lxml
+      - python-nose
+      - python-requests
+      - python-setuptools
+      - python-testtools
+      - python-yaml
+      - python-matplotlib
+      - python-mock
+      - python-weeblclient
+    stage-packages:
+      - python-jenkinsapi
+      - jenkinsapi
+      - python-crypto
+      - python-keyring
+      - python-lxml
+      - python-requests
+      - python-yaml
+      - python-matplotlib
+      - python-mock
+      - python-weeblclient
+      - python-parsedatetime
+    python-version: python2
+  copy:
+    plugin: dump
+    source: etc/doberman
+    organize:
+      doberman.conf: etc/doberman/doberman.conf

@@ -5,3 +5,4 @@ graft samples
 include TODO
 include run_tests.sh
 include .coveragerc
+include snapcraft.yaml

@@ -125,3 +125,12 @@ class WeeblClass(DobermanBase):
             completed_at__lte=end.strftime(ts_format),
             limit=limit)
         return [obj['uuid'] for obj in pipeline_objects]
+
+    def get_pipeline_from_deploy_build(self, id_number,
+                                       job='jenkins-pipeline_deploy'):
+        builds_generator = self.weebl.resources.build.objects(
+            build_id='600143', jobtype__name='pipeline_start')
+        builds = [build.data for build in builds]
+        if len(builds) > 1:
+            raise Exception("There are multiple '{}' builds with id of '{}'")
+        return build.data['pipeline'].rstrip('/').split('/')[-1]

@@ -8,7 +8,7 @@ import shutil
 from jenkinsapi.custom_exceptions import *
 from doberman.common.base import DobermanBase
 from doberman.analysis.crude_jenkins import Jenkins
-from doberman.analysis.crude_test_catalog import TestCatalog
+from doberman.analysis.crude_weebl import WeeblClass
 from plotting import Plotting
 from difflib import SequenceMatcher
 from refinery_cli import CLI
@@ -56,9 +56,9 @@ class Refinery(DobermanBase):
         marker = 'triage'
         self.jenkins = Jenkins(self.cli)
         if not self.cli.offline_mode:
-            self.test_catalog = TestCatalog(self.cli)
+            self.weebl_tools = WeeblClass(self.cli)
             self.build_numbers = self.build_pl_ids_and_check(
-                self.jenkins, self.test_catalog)
+                self.jenkins, self.weebl_tools)
             self.download_triage_files(self.cli.crude_job, marker,
                                        self.cli.reportdir)
         else:
