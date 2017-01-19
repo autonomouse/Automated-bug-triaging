@@ -129,7 +129,7 @@ class WeeblClass(DobermanBase):
     def get_pipeline_from_deploy_build(self, id_number,
                                        job='jenkins-pipeline_deploy'):
         builds_generator = self.weebl.resources.build.objects(
-            build_id='600143', jobtype__name='pipeline_start')
+            build_id=id_number, jobtype__name=job)
         builds = [build.data for build in builds]
         if len(builds) > 1:
             raise Exception("There are multiple '{}' builds with id of '{}'")
