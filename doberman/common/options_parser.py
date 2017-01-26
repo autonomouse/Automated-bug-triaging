@@ -100,11 +100,6 @@ class OptionsParser(object):
         else:
             self.reportdir = cfg.get('DEFAULT', 'analysis_report_dir')
 
-        if opts.tc_host:
-            self.tc_host = opts.tc_host
-        else:
-            self.tc_host = cfg.get('DEFAULT', 'oil_api_url')
-
         if opts.keep_data:
             self.keep_data = opts.keep_data
         else:
@@ -177,23 +172,7 @@ class OptionsParser(object):
             self.LOG.error("Missing jenkins configuration")
             raise Exception("Missing jenkins configuration")
 
-        if self.tc_host in [None, 'None', 'none', '']:
-            self.LOG.error("Missing test-catalog configuration")
-            raise Exception("Missing test-catalog configuration")
-
         self.testframework_version = opts.testframework_version
-
-        # Cookie for test-catalog:
-        tc_auth = cfg.get('DEFAULT', 'tc_auth')
-
-        if not self.offline_mode:
-            try:
-                self.tc_auth = json.load(open(tc_auth))
-            except:
-                msg = "Cannot find cookie for test-catalog: %s" % tc_auth
-                self.LOG.error(msg)
-                raise Exception(msg)
-            self.LOG.debug('tc_auth token=%s' % self.tc_auth)
 
         if (not opts.start) and (not opts.end):
             if not set(args):

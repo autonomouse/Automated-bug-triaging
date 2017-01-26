@@ -1,10 +1,12 @@
+#! /usr/bin/env python2
+
 import sys
 import os
 from datetime import datetime
 from jenkinsapi.custom_exceptions import *
 from doberman.common.base import DobermanBase
 from crude_jenkins import Jenkins, Build
-from crude_test_catalog import TestCatalog
+from doberman.analysis.crude_weebl import WeeblClass
 from doberman.common.CLI import CLI
 # <ACTIONPOINT>
 try:
@@ -43,11 +45,11 @@ class CrudeAnalysis(DobermanBase):
         else:
             self.cli.bugs = None
         #
-        self.test_catalog = TestCatalog(self.cli, self.cli.bugs)
+        self.weebl_tools = WeeblClass(self.cli)
         if self.cli.bugs is None:
-            self.cli.bugs = self.test_catalog.bugs
+            self.cli.bugs = self.weebl_tools.bugs
         self.build_numbers = self.build_pl_ids_and_check(
-            self.jenkins, self.test_catalog)
+            self.jenkins, self.weebl_tools)
         jobs_to_process = self.determine_jobs_to_process()
         yamldict, problem_pipelines = self.pipeline_processor(jobs_to_process)
         self.generate_output_files(yamldict, problem_pipelines)
