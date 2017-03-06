@@ -9,9 +9,9 @@ from doberman.common import const
 from doberman.common.base import DobermanBase
 # <ACTIONPOINT>
 try:
-    from weeblclient.weebl_python2.weebl import Weebl
-    from weeblclient.weebl_python2.exception import UnrecognisedInstance
-    from weeblclient.weebl_python2.exception import InstanceAlreadyExists
+    from weeblclient.weeblclient.weebl import Weebl
+    from weeblclient.weeblclient.exception import UnrecognisedInstance
+    from weeblclient.weeblclient.exception import InstanceAlreadyExists
 except ImportError as e:
     pass
 #
