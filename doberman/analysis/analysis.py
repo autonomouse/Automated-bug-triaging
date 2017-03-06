@@ -10,7 +10,7 @@ from doberman.analysis.crude_weebl import WeeblClass
 from doberman.common.CLI import CLI
 # <ACTIONPOINT>
 try:
-    from weeblclient.weeblclient.weebl import Weebl
+    from weeblclient.weebl import Weebl
 except ImportError as e:
     pass
 #

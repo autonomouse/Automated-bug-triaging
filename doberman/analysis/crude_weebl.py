@@ -1,6 +1,6 @@
 import os
 import yaml
-from weeblclient.weeblclient.weebl import Weebl
+from weeblclient.weebl import Weebl
 from doberman.common import pycookiecheat
 from doberman.common.base import DobermanBase
 from jenkinsapi.custom_exceptions import *
