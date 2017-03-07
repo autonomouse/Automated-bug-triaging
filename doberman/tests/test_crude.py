@@ -36,11 +36,6 @@ class CrudeAnalysisTests(CommonTestMethods):
         self.assertNotIn("fake_bug_01", data['bugs'])
         self.assertIn("unfiled-", data['bugs'].keys()[0])
 
-    def test_bug_loaded_into_in_bugs_dictionary(self):
-        cli = self.populate_cli_var("glob_matched_filename_bug_database.yml")
-        analysis = CrudeAnalysis(cli)
-        self.assertIn('fake_bug_02', analysis.test_catalog.bugs)
-
     def test_returns_zero_unless_error(self):
         cli = self.populate_cli_var("glob_matched_filename_bug_database.yml")
         analysis = CrudeAnalysis(cli)
@@ -125,8 +120,3 @@ class CrudeAnalysisTests(CommonTestMethods):
         response2 = options_parser.date_parse(input_str2)
         correct_response = datetime(1980, 12, 1, 0, 0, tzinfo=pytz.utc)
         self.assertEqual(response1, response2, correct_response)
-
-    def test_catch_all_bug_works(self):
-        cli = self.populate_cli_var("fake_bug_03_database.yml")
-        analysis = CrudeAnalysis(cli)
-        self.assertIn('fake_bug_03', analysis.test_catalog.bugs)
