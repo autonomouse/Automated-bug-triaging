@@ -28,7 +28,6 @@ Architecture: all
 Section: python
 Depends: jenkinsapi (>= 0.2.16),
  python-crypto (>= 2.6-1),
- python-jenkinsapi,
  python-keyring,
  python-lxml,
  python-parsedatetime,
