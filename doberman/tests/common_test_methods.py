@@ -83,7 +83,6 @@ class CommonTestMethods(DobermanTestBase):
         cli.reduced_output_text = False
         cli.reportdir = reportdir
         cli.run_remote = True
-        cli.tc_host = 'https://oil.canonical.com/api'
         cli.use_date_range = False
         cli.use_deploy = False
         cli.verify = True
