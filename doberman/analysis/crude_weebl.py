@@ -93,7 +93,7 @@ class WeeblClass(DobermanBase):
         return build_numbers
 
     def get_pipelines(self, pipeline):
-        """ Using test-catalog, return the build numbers for the jobs that are
+        """ Using weebl, return the build numbers for the jobs that are
             part of the given pipeline.
         """
         try:

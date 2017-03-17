@@ -24,7 +24,6 @@ class DobermanBase(object):
         Creates a yaml dict and populates with data in the right format and
         merges with existing yaml dict.
         """
-        # TODO: Change this to take in the pipeline and tc_host
         # Make dict
         pipeline_dict = {}
         yaml_dict = {}
@@ -35,8 +34,6 @@ class DobermanBase(object):
             if hasattr(self, 'build_number'):
                 pipeline_dict[self.pipeline]['build'] = self.build_number
 
-            pipeline_dict[self.pipeline]['link to test-catalog'] = \
-                self.cli.tc_host.replace('api', "pipeline/" + self.pipeline)
             pipeline_dict[self.pipeline]['Crude-Analysis timestamp'] = \
                 datetime.utcnow().strftime('%Y-%B-%d %H:%M:%S.%f')
             try:

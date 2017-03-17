@@ -326,8 +326,6 @@ class Refinery(DobermanBase):
                     bug_output['Crude-Analysis timestamp'] = crude_ts
                     link_to_jkns = bug_output.get('link to jenkins')
                     bug_output['link to jenkins'] = link_to_jkns
-                    link_to_tcat = plop.get('link to test-catalog')
-                    bug_output['link to test-catalog'] = link_to_tcat
                     bug_output['job'] = job
                     build_num = plop.get('build')
 
